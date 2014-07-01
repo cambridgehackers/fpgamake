@@ -114,7 +114,7 @@ def process_modules():
                 os.makedirs(instdir)
 
 synth_template='''
-Synth/%(module)s/%(module)s_synth.dcp: %(module_path)s %(module_netlists)s
+Synth/%(module)s/%(module)s-synth.dcp: %(module_path)s %(module_netlists)s
 	MODULE=%(module)s \\
 	VFILES="%(vfiles)s" \\
 	IP="%(xcifiles)s" \\
@@ -123,7 +123,7 @@ Synth/%(module)s/%(module)s_synth.dcp: %(module_path)s %(module_netlists)s
 '''
 
 impl_template='''
-Impl/%(inst)s/%(inst)s_post_route.dcp: Synth/%(module)s/%(module)s_synth.dcp Impl/%(inst)s/%(inst)s-ooc.xdc
+Impl/%(inst)s/%(inst)s_post_route.dcp: Synth/%(module)s/%(module)s-synth.dcp Impl/%(inst)s/%(inst)s-ooc.xdc
 	MODULE=%(module)s \\
 	INST=%(inst)s \\
         XDC="%(xdc_files)s" \\
@@ -132,7 +132,7 @@ Impl/%(inst)s/%(inst)s_post_route.dcp: Synth/%(module)s/%(module)s_synth.dcp Imp
 Impl/%(inst)s/%(inst)s-ooc.xdc: Impl/TopDown/top-post-place.dcp
 '''
 topdown_template='''
-Impl/TopDown/%(inst)s-post-place.dcp: Synth/%(module)s/%(module)s_synth.dcp
+Impl/TopDown/%(inst)s-post-place.dcp: Synth/%(module)s/%(module)s-synth.dcp
 	MODULE=%(module)s \\
 	INST=%(inst)s \\
         SUBINST="%(subinst)s" \\
@@ -149,7 +149,7 @@ def write_makefile():
                                    'module_path': find_in_path(module, options.vpath, '.v'),
                                    'fpgamakedir': fpgamakedir,
                                    'vfiles': ' '.join([find_in_path(vfile, options.vpath, '.v') for vfile in set(verilog_used[module])]) if module in verilog_used else '',
-                                   'module_netlists': ' '.join(['./Synth/%s/%s_synth.dcp' % (m, m) for m in set(modules_used[module])]) if module in modules_used else '',
+                                   'module_netlists': ' '.join(['./Synth/%s/%s-synth.dcp' % (m, m) for m in set(modules_used[module])]) if module in modules_used else '',
                                    'xcifiles': ' '.join(options.xci)
                                    })
         for inst in module_instances[module]:

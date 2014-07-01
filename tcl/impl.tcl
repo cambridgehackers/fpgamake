@@ -53,8 +53,7 @@ set rfh [open "$runLog.log" w]
 set cfh [open "$commandLog.log" w]
 set wfh [open "$criticalLog.log" w]
 
-set dcp_name "./Synth/$module/$module"
-append dcp_name "_synth.dcp"
+set dcp_name "./Synth/$module/$module-synth.dcp"
 read_checkpoint $dcp_name
 foreach xdc $env(XDC) {
     read_xdc $xdc

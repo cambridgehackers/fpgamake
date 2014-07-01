@@ -70,6 +70,5 @@ foreach ip $env(IP) {
 #
 log_command "synth_design -name $module -top $module -part $partname -flatten rebuilt -mode $mode" "$outputDir/synth_design.log"
 
-set dcp_name "$outputDir/$module"
-append dcp_name "_synth.dcp"
+set dcp_name "$outputDir/$module-synth.dcp"
 log_command "write_checkpoint -force $dcp_name" $outputDir/temp.log
