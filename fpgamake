@@ -175,12 +175,13 @@ def write_makefile():
                                    'module_stubs': ' '.join(['Synth/stubs/%s-stub.v' % (m) for m in set(modules_used[module])]) if module in modules_used else '',
                                    'xcifiles': ' '.join(options.xci)
                                    })
-        for inst in module_instances[module]:
+        for inst in set(module_instances[module]):
             subinst_routed_netlists = []
             if module in modules_used:
-                submodules = modules_used[module]
-                for submodule in submodules:
+                for submodule in set(modules_used[module]):
+                    print 'inst', inst, 'submodule', submodule
                     for subinst in module_instances[submodule]:
+                        print '\t', subinst
                         subinst_routed_netlists.append('Impl/%s/%s-post-route.dcp' % (subinst, subinst))
 
 
