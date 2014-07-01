@@ -52,7 +52,7 @@ foreach dcp $env(MODULE_NETLISTS) {
     log_command "read_checkpoint $dcp" $outputDir/temp.log
 }
 foreach xdc $env(XDC) {
-    read_xdc $xdc
+    log_command "read_xdc $xdc" $outputDir/temp.log
 }
 
 log_command "link_design -top $module" $outputDir/temp.log

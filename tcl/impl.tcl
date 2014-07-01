@@ -54,9 +54,12 @@ set cfh [open "$commandLog.log" w]
 set wfh [open "$criticalLog.log" w]
 
 set dcp_name "./Synth/$module/$module-synth.dcp"
-read_checkpoint $dcp_name
+log_command "read_checkpoint $dcp_name" $outputDir/temp.log
+foreach dcp $env(MODULE_NETLISTS) {
+    log_command "read_checkpoint $dcp" $outputDir/temp.log
+}
 foreach xdc $env(XDC) {
-    read_xdc $xdc
+    log_command "read_xdc $xdc" $outputDir/temp.log
 }
 
 log_command link_design $outputDir/temp.log
