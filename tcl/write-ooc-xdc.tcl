@@ -40,14 +40,15 @@ set scriptsdir [file dirname $argv0]
 source $scriptsdir/log.tcl
 
 ### logs
-set commandlog "Synth/$module/command"
-set errorlog "Synth/$module/critical"
+set commandlog "Impl/TopDown/command.write-ooc-xdc"
+set errorlog "Impl/TopDown/critical.write-ooc-xdc"
 
 set commandfilehandle [open "$commandlog.log" w]
 set errorfilehandle [open "$errorlog.log" w]
 
-set dcp_name "$outputDir/$instance-post-place.dcp"
-read_checkpoint $dcp_name
+set dcp_name "$outputDir/top-post-place.dcp"
+log_command "read_checkpoint $dcp_name" $outputDir/temp.log
+log_command "link_design" $outputDir/temp.log
 
 set subinsts $env(SUBINST)
 
@@ -64,17 +65,18 @@ foreach subinst $subinsts {
     report_property $pblock
 
     set pins [get_pins -of [get_cells $subinst] -filter DIRECTION==IN]
-    puts "pins $pins"
     foreach pin $pins {
 	set port [get_property REF_PIN_NAME $pin]
-	set clock [get_clocks -of $pin]
+	set clock [get_clocks -quiet -of $pin]
 	if {[llength $clock] > 0} {
 	    set period [get_property PERIOD $clock]
 	    puts $xdcHandle "create_clock -period $period -name $clock \[get_ports \{$port\}\]"
 
 	    set clock_nets [get_nets -of_objects $pin]
 	    set clock_src_pin [get_pins -of_objects $clock_nets -filter {DIRECTION==OUT}]
-	    set clock_src_loc [get_property LOC $clock_src_pin]
+	    set clock_src_cell [get_cells -of_objects $clock_src_pin]
+	    set clock_src_loc [get_property LOC $clock_src_cell]
+	    report_property $clock_src_cell
 	    puts $xdcHandle "set_property HD.CLK_SRC $clock_src_loc \[get_ports \{$port\}\]"
 	}
     }
