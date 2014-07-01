@@ -36,6 +36,7 @@ argparser.add_argument('-o', '--output', help='Output make file', default='synth
 argparser.add_argument('-s', '--synth', help='File to synthesize separately', default=[], action='append')
 argparser.add_argument('--xci', help='XCI file to use', default=[], action='append')
 argparser.add_argument('--xdc', help='XDC file to use', default=[], action='append')
+argparser.add_argument('--floorplan', help='Floorplan XDC', default=None)
 argparser.add_argument('-t', '--top', help='Top verilog file')
 argparser.add_argument('-v', '--verbose', help='Verbose output', default=False)
 
@@ -116,11 +117,6 @@ def process_modules():
         stubpath = 'Synth/stubs/%s-stub.v' % module
         make_stub(vpath, stubpath)
 
-        for inst in module_instances[module]:
-            instdir = os.path.join('Implement', inst)
-            if not os.path.isdir(instdir):
-                os.makedirs(instdir)
-
 def make_stub(vpath, stubpath):
     stubdir = os.path.dirname(stubpath)
     if not os.path.isdir(stubdir):
@@ -156,7 +152,7 @@ Impl/TopDown/%(inst)s-post-place.dcp: Synth/%(module)s/%(module)s-synth.dcp %(mo
 	INST=%(inst)s \\
         SUBINST="%(subinst)s" \\
         MODULE_NETLISTS="%(module_synth_netlists)s" \\
-        XDC="%(xdc_files)s" \\
+        XDC="%(xdc_files)s %(floorplan)s" \\
 	vivado -notrace -mode batch -source %(fpgamakedir)s/tcl/topdown.tcl
 
 %(oocxdc)s: Impl/TopDown/%(inst)s-post-place.dcp
@@ -212,6 +208,7 @@ def write_makefile():
                                                                for inst in module_instances[submodule]])
                                                      for submodule in set(modules_used[options.top])]),
                                  'xdc_files': topdown_xdc_files,
+                                 'floorplan': os.path.abspath(options.floorplan) if options.floorplan else '',
                                  'module_synth_netlists': ' '.join(submodule_synth_netlists),
                                  'fpgamakedir': fpgamakedir
             })
