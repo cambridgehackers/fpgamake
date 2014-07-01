@@ -70,7 +70,8 @@ foreach subinst $subinsts {
 	set clock [get_clocks -quiet -of $pin]
 	if {[llength $clock] > 0} {
 	    set period [get_property PERIOD $clock]
-	    puts $xdcHandle "create_clock -period $period -name $clock \[get_ports \{$port\}\]"
+	    set clock_name "$subinst-$port"
+	    puts $xdcHandle "create_clock -period $period -name $clock_name \[get_ports \{$port\}\]"
 
 	    set clock_nets [get_nets -of_objects $pin]
 	    set clock_src_pin [get_pins -of_objects $clock_nets -filter {DIRECTION==OUT}]
