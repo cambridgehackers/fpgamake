@@ -28,7 +28,7 @@ proc log_command { command { logfile ""}} {
     puts "$command"
     puts $commandfilehandle "$command"
     if { [cat "$command > $logfile" errMessage] } {
-	show_errors $log
+	show_errors $logfile
 	error $errMessage
     }
     show_errors $logfile
