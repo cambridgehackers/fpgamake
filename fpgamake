@@ -1,0 +1,182 @@
+#!/usr/bin/python
+
+## Copyright (c) 2014 Quanta Research Cambridge, Inc.
+
+## Permission is hereby granted, free of charge, to any person
+## obtaining a copy of this software and associated documentation
+## files (the "Software"), to deal in the Software without
+## restriction, including without limitation the rights to use, copy,
+## modify, merge, publish, distribute, sublicense, and/or sell copies
+## of the Software, and to permit persons to whom the Software is
+## furnished to do so, subject to the following conditions:
+
+## The above copyright notice and this permission notice shall be
+## included in all copies or substantial portions of the Software.
+
+## THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+## EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+## MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+## NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+## BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+## ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+## CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+## SOFTWARE.
+
+import os
+import sys
+import re
+import glob
+import shutil
+import argparse
+import subprocess
+
+argparser = argparse.ArgumentParser("Hierarchical verilog build.")
+argparser.add_argument('vpath', help='BSV files to parse', nargs='+')
+argparser.add_argument('-o', '--output', help='Output make file', default='synth.mk')
+argparser.add_argument('-s', '--synth', help='File to synthesize separately', default=[], action='append')
+argparser.add_argument('--xci', help='XCI file to use', default=[], action='append')
+argparser.add_argument('--xdc', help='XDC file to use', default=[], action='append')
+argparser.add_argument('-t', '--top', help='Top verilog file')
+
+module_instances={}
+modules_used={}
+verilog_used={}
+xdc_files={}
+
+parameterizedModuleRe = r'^\s+(\w+)\s*#'
+plainModuleRe = r'^\s+(\w+)\s*(\w+)\('
+
+def find_in_path(fname, path, suffix='.v'):
+    if not fname.endswith(suffix):
+        fname = fname + suffix
+    for p in path:
+        if os.path.exists(os.path.join(p, fname)):
+            return os.path.join(p, fname)
+    print 'Not in path', fname, path
+    return None
+
+def scan_module(module, parent_module=None):
+    print 'scanning module %s ====================' % module
+    vpath = find_in_path(module, options.vpath, '.v')
+    if not parent_module:
+        parent_module = module
+    submodules=[]
+    if not vpath or not os.path.exists(vpath):
+        return
+    for line in open(vpath):
+        m = re.match(plainModuleRe, line)
+        m2 = re.match(parameterizedModuleRe, line)
+        if m:
+            print 'found block', m.group(1), m.group(2)
+            submodule=m.group(1)
+            submodules.append(submodule)
+            inst=m.group(2)
+            if submodule in options.synth:
+                print 'separate synth', submodule, inst
+                if module_instances.has_key(submodule):
+                    module_instances[submodule].append(inst)
+                else:
+                    module_instances[submodule] = [inst]
+                if modules_used.has_key(parent_module):
+                    modules_used[parent_module].append(submodule)
+                else:
+                    modules_used[parent_module] = [submodule]
+            else:
+                submodulepath=find_in_path(submodule, options.vpath, '.v')
+                if submodulepath and os.path.exists(submodulepath):
+                    if verilog_used.has_key(parent_module):
+                        verilog_used[parent_module].append(submodule)
+                    else:
+                        verilog_used[parent_module] = [submodule]
+        elif m2:
+            submodule = m2.group(1)
+            submodules.append(submodule)
+            submodulepath=os.path.join('verilog', '%s.v' % submodule)
+            if os.path.exists(submodulepath):
+                if verilog_used.has_key(parent_module):
+                    verilog_used[parent_module].append(submodule)
+                else:
+                    verilog_used[parent_module] = [submodule]
+    for submodule in set(submodules):
+        scan_module(submodule, parent_module)
+
+def process_modules():
+    for module in module_instances:
+        vfile = '%s.v' % module
+        vpath = find_in_path(module, options.vpath, '.v')
+        synthdir = os.path.join('Synth', module)
+        if not os.path.isdir(synthdir):
+            os.makedirs(synthdir)
+        shutil.copyfile(vpath, os.path.join(synthdir, vfile))
+        for inst in module_instances[module]:
+            instdir = os.path.join('Implement', inst)
+            if not os.path.isdir(instdir):
+                os.makedirs(instdir)
+
+synth_template='''
+Synth/%(module)s/%(module)s_synth.dcp: %(module_path)s %(module_netlists)s
+	MODULE=%(module)s \\
+	VFILES="%(vfiles)s" \\
+	IP="%(xcifiles)s" \\
+	MODULE_NETLISTS="%(module_netlists)s" \\
+	vivado -mode batch -source %(fpgamakedir)s/tcl/synth.tcl
+'''
+
+impl_template='''
+Impl/%(inst)s/%(inst)s_post_route.dcp: Synth/%(module)s/%(module)s_synth.dcp Impl/%(inst)s/%(inst)s-ooc.xdc
+	MODULE=%(module)s \\
+	INST=%(inst)s \\
+        XDC="%(xdc_files)s" \\
+	vivado -mode batch -source %(fpgamakedir)s/tcl/impl.tcl
+
+Impl/%(inst)s/%(inst)s-ooc.xdc: Impl/TopDown/top-post-place.dcp
+'''
+topdown_template='''
+Impl/TopDown/%(inst)s-post-place.dcp: Synth/%(module)s/%(module)s_synth.dcp
+	MODULE=%(module)s \\
+	INST=%(inst)s \\
+        SUBINST="%(subinst)s" \\
+        XDC="%(xdc_files)s" \\
+	vivado -mode batch -source %(fpgamakedir)s/tcl/topdown.tcl
+'''
+
+def write_makefile():
+    f = open(options.output, 'w')
+    f.write('all: Impl/TopDown/top-post-place.dcp\n\n')
+    for module in module_instances:
+        print module, module_instances[module]
+        f.write(synth_template % { 'module': module,
+                                   'module_path': find_in_path(module, options.vpath, '.v'),
+                                   'fpgamakedir': fpgamakedir,
+                                   'vfiles': ' '.join([find_in_path(vfile, options.vpath, '.v') for vfile in set(verilog_used[module])]) if module in verilog_used else '',
+                                   'module_netlists': ' '.join(['./Synth/%s/%s_synth.dcp' % (m, m) for m in set(modules_used[module])]) if module in modules_used else '',
+                                   'xcifiles': ' '.join(options.xci)
+                                   })
+        for inst in module_instances[module]:
+            f.write(impl_template % { 'module': module,
+                                      'inst': inst,
+                                      'xdc_files': ' '.join([os.path.abspath(xdc) for xdc in xdc_files[inst]]) if inst in xdc_files else '',
+                                      'fpgamakedir': fpgamakedir
+                                      })
+    f.write(topdown_template % { 'module': options.top,
+                                 'inst': ' '.join(module_instances[options.top]),
+                                 'subinst': ' '.join([' '.join(module_instances[submodule]) for submodule in set(modules_used[options.top])]),
+                                 'xdc_files': ' '.join([os.path.abspath(xdc) for xdc in xdc_files[inst]]) if inst in xdc_files else '',
+                                 'fpgamakedir': fpgamakedir
+            })
+    f.close()
+
+if __name__=='__main__':
+    exename = os.path.abspath(sys.argv[0])
+    fpgamakedir = os.path.dirname(exename)
+    options = argparser.parse_args()
+    module_instances[options.top] = ['top']
+    scan_module(options.top)
+    for m in options.synth:
+        scan_module(m)
+    print module_instances
+    print modules_used
+    print verilog_used
+    xdc_files['top'] = options.xdc
+    process_modules()
+    write_makefile()
