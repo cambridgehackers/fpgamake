@@ -39,19 +39,15 @@ file mkdir $outputDir
 set scriptsdir [file dirname $argv0]
 source $scriptsdir/log.tcl
 
-####Report and DCP controls - values: 0-required min; 1-few extra; 2-all
-set verbose      2
-set dcpLevel     1
+set scriptsdir [file dirname $argv0]
+source $scriptsdir/log.tcl
 
 ### logs
-set runLog "Impl/$instance/run"
-set commandLog "Impl/$instance/command"
-set criticalLog "Impl/$instance/critical"
+set commandlog "Impl/TopDown/command"
+set errorlog "Impl/TopDown/critical"
 
-set logs [list $runLog $commandLog $criticalLog]
-set rfh [open "$runLog.log" w]
-set cfh [open "$commandLog.log" w]
-set wfh [open "$criticalLog.log" w]
+set commandfilehandle [open "$commandlog.log" w]
+set errorfilehandle [open "$errorlog.log" w]
 
 set dcp_name "./Synth/$module/$module-synth.dcp"
 log_command "read_checkpoint $dcp_name" $outputDir/temp.log
