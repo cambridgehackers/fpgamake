@@ -43,29 +43,32 @@ set scriptsdir [file dirname $argv0]
 source $scriptsdir/log.tcl
 
 ### logs
-set commandlog "Impl/TopDown/command"
-set errorlog "Impl/TopDown/critical"
+set commandlog "Impl/$instance/command"
+set errorlog "Impl/$instance/critical"
 
 set commandfilehandle [open "$commandlog.log" w]
 set errorfilehandle [open "$errorlog.log" w]
 
 set dcp_name "./Synth/$module/$module-synth.dcp"
-log_command "read_checkpoint $dcp_name" $outputDir/temp.log
+log_command "read_checkpoint $dcp_name" "$outputDir/[file tail $dcp_name].log"
 foreach dcp $env(MODULE_NETLISTS) {
-    log_command "read_checkpoint $dcp" $outputDir/temp.log
+    log_command "read_checkpoint $dcp" "$outputDir/[file tail $dcp].log"
 }
 foreach xdc $env(XDC) {
-    log_command "read_xdc $xdc" $outputDir/temp.log
+    log_command "read_xdc $xdc" "$outputDir/[file tail $xdc].log"
 }
 
-log_command link_design $outputDir/temp.log
+log_command "link_design -top $module" $outputDir/link_design.log
 log_command "write_checkpoint -force $outputDir/$instance-post-link.dcp" $outputDir/temp.log
+report_timing_summary > $outputDir/$instance-link-timing-summary.rpt
 
 log_command opt_design $outputDir/opt_design.log
 log_command place_design    $outputDir/place_design.log
+report_timing_summary > $outputDir/$instance-place-timing-summary.rpt
 log_command phys_opt_design $outputDir/phys_opt_design.log
 log_command "write_checkpoint -force $outputDir/$instance-post-place.dcp" $outputDir/temp.log
 
 log_command route_design $outputDir/route_design.log
 log_command "write_checkpoint -force $outputDir/$instance-post-route.dcp" $outputDir/temp.log
+report_timing_summary > $outputDir/$instance-route-timing-summary.rpt
 

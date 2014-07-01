@@ -47,12 +47,12 @@ set commandfilehandle [open "$commandlog.log" w]
 set errorfilehandle [open "$errorlog.log" w]
 
 set dcp_name "./Synth/$module/$module-synth.dcp"
-log_command "read_checkpoint $dcp_name" "$outputDir/[file basename $dcp_name].log"
+log_command "read_checkpoint $dcp_name" "$outputDir/[file tail $dcp_name].log"
 foreach dcp $env(MODULE_NETLISTS) {
-    log_command "read_checkpoint $dcp" "$outputDir/[file basename $dcp].log"
+    log_command "read_checkpoint $dcp" "$outputDir/[file tail $dcp].log"
 }
 foreach xdc $env(XDC) {
-    log_command "read_xdc $xdc" "$outputDir/[file basename $xdc].log"
+    log_command "read_xdc $xdc" "$outputDir/[file tail $xdc].log"
 }
 
 log_command "link_design -top $module" $outputDir/link_design.log
