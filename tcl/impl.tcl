@@ -51,14 +51,17 @@ set errorfilehandle [open "$errorlog.log" w]
 
 set dcp_name "./Synth/$module/$module-synth.dcp"
 log_command "read_checkpoint $dcp_name" "$outputDir/[file tail $dcp_name].log"
+
 foreach dcp $env(MODULE_NETLISTS) {
-    log_command "read_checkpoint $dcp" "$outputDir/[file tail $dcp].log"
+    set instname [file tail [file dirname $dcp]]
+    puts "$instname\n\t $dcp"
+    log_command "read_checkpoint -cell $instname $dcp -strict" "$outputDir/[file tail $dcp].log"
 }
 foreach xdc $env(XDC) {
     log_command "read_xdc $xdc" "$outputDir/[file tail $xdc].log"
 }
+log_command "link_design -mode out_of_context -top $module" $outputDir/link_design.log
 
-log_command "link_design -top $module" $outputDir/link_design.log
 log_command "write_checkpoint -force $outputDir/$instance-post-link.dcp" $outputDir/temp.log
 report_timing_summary > $outputDir/$instance-link-timing-summary.rpt
 
