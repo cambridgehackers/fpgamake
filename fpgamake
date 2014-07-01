@@ -119,7 +119,7 @@ Synth/%(module)s/%(module)s-synth.dcp: %(module_path)s %(module_netlists)s
 	VFILES="%(vfiles)s" \\
 	IP="%(xcifiles)s" \\
 	MODULE_NETLISTS="%(module_netlists)s" \\
-	vivado -mode batch -source %(fpgamakedir)s/tcl/synth.tcl
+	vivado -notrace -mode batch -source %(fpgamakedir)s/tcl/synth.tcl
 '''
 
 impl_template='''
@@ -127,13 +127,7 @@ Impl/%(inst)s/%(inst)s_post_route.dcp: Synth/%(module)s/%(module)s-synth.dcp Imp
 	MODULE=%(module)s \\
 	INST=%(inst)s \\
         XDC="%(xdc_files)s" \\
-	vivado -mode batch -source %(fpgamakedir)s/tcl/impl.tcl
-
-Impl/%(inst)s/%(inst)s-ooc.xdc: Impl/TopDown/top-post-place.dcp
-	MODULE=%(module)s \\
-	INST=%(inst)s \\
-        XDC="%(xdc_files)s" \\
-	vivado -mode batch -source %(fpgamakedir)s/tcl/write-ooc-xdc.tcl
+	vivado -notrace -mode batch -source %(fpgamakedir)s/tcl/impl.tcl
 '''
 topdown_template='''
 Impl/TopDown/%(inst)s-post-place.dcp: Synth/%(module)s/%(module)s-synth.dcp
@@ -141,7 +135,14 @@ Impl/TopDown/%(inst)s-post-place.dcp: Synth/%(module)s/%(module)s-synth.dcp
 	INST=%(inst)s \\
         SUBINST="%(subinst)s" \\
         XDC="%(xdc_files)s" \\
-	vivado -mode batch -source %(fpgamakedir)s/tcl/topdown.tcl
+	vivado -notrace -mode batch -source %(fpgamakedir)s/tcl/topdown.tcl
+
+%(oocxdc)s: Impl/TopDown/%(inst)s-post-place.dcp
+	MODULE=%(module)s \\
+	INST=%(inst)s \\
+        SUBINST="%(subinst)s" \\
+        XDC="%(xdc_files)s" \\
+	vivado -notrace -mode batch -source %(fpgamakedir)s/tcl/write-ooc-xdc.tcl
 '''
 
 def write_makefile():
@@ -165,6 +166,7 @@ def write_makefile():
     f.write(topdown_template % { 'module': options.top,
                                  'inst': ' '.join(module_instances[options.top]),
                                  'subinst': ' '.join([' '.join(module_instances[submodule]) for submodule in set(modules_used[options.top])]),
+                                 'oocxdc': ' '.join([' '.join(['Impl/%(inst)s/%(inst)s-ooc.xdc' % {'inst': inst} for inst in module_instances[submodule]]) for submodule in set(modules_used[options.top])]),
                                  'xdc_files': ' '.join([os.path.abspath(xdc) for xdc in xdc_files[inst]]) if inst in xdc_files else '',
                                  'fpgamakedir': fpgamakedir
             })
