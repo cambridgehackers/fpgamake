@@ -40,8 +40,8 @@ set scriptsdir [file dirname $argv0]
 source $scriptsdir/log.tcl
 
 ### logs
-set commandlog "Synth/$module/command"
-set errorlog "Synth/$module/critical"
+set commandlog "Impl/TopDown/command"
+set errorlog "Impl/TopDown/critical"
 
 set commandfilehandle [open "$commandlog.log" w]
 set errorfilehandle [open "$errorlog.log" w]
