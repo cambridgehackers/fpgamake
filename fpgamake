@@ -37,6 +37,7 @@ argparser.add_argument('-s', '--synth', help='File to synthesize separately', de
 argparser.add_argument('--xci', help='XCI file to use', default=[], action='append')
 argparser.add_argument('--xdc', help='XDC file to use', default=[], action='append')
 argparser.add_argument('-t', '--top', help='Top verilog file')
+argparser.add_argument('-v', '--verbose', help='Verbose output', default=False)
 
 module_instances={}
 modules_used={}
@@ -52,11 +53,13 @@ def find_in_path(fname, path, suffix='.v'):
     for p in path:
         if os.path.exists(os.path.join(p, fname)):
             return os.path.join(p, fname)
-    print 'Not in path', fname, path
+    if options.verbose:
+        print 'Not in path', fname, path
     return None
 
 def scan_module(module, parent_module=None):
-    print 'scanning module %s ====================' % module
+    if options.verbose:
+        print 'scanning module %s ====================' % module
     vpath = find_in_path(module, options.vpath, '.v')
     if not parent_module:
         parent_module = module
@@ -72,7 +75,8 @@ def scan_module(module, parent_module=None):
             submodules.append(submodule)
             inst=m.group(2)
             if submodule in options.synth:
-                print 'separate synth', submodule, inst
+                if options.verbose:
+                    print 'separate synth', submodule, inst
                 if module_instances.has_key(submodule):
                     module_instances[submodule].append(inst)
                 else:
@@ -151,6 +155,7 @@ Impl/TopDown/%(inst)s-post-place.dcp: Synth/%(module)s/%(module)s-synth.dcp %(mo
 	MODULE=%(module)s \\
 	INST=%(inst)s \\
         SUBINST="%(subinst)s" \\
+        MODULE_NETLISTS="%(module_synth_netlists)s" \\
         XDC="%(xdc_files)s" \\
 	vivado -notrace -mode batch -source %(fpgamakedir)s/tcl/topdown.tcl
 
@@ -166,7 +171,6 @@ def write_makefile():
     f = open(options.output, 'w')
     f.write('all: Impl/TopDown/top-post-place.dcp Impl/top/top-post-route.dcp\n\n')
     for module in module_instances:
-        print module, module_instances[module]
         f.write(synth_template % { 'module': module,
                                    'module_path': find_in_path(module, options.vpath, '.v'),
                                    'fpgamakedir': fpgamakedir,
@@ -178,12 +182,9 @@ def write_makefile():
         for inst in module_instances[module]:
             subinst_routed_netlists = []
             if module in modules_used:
-                print 'here module', module, inst
                 submodules = modules_used[module]
-                print 'submodules', submodules
                 for submodule in submodules:
                     for subinst in module_instances[submodule]:
-                        print 'subinst', subinst
                         subinst_routed_netlists.append('Impl/%s/%s-post-route.dcp' % (subinst, subinst))
 
 
@@ -221,9 +222,10 @@ if __name__=='__main__':
     scan_module(options.top)
     for m in options.synth:
         scan_module(m)
-    print module_instances
-    print modules_used
-    #print verilog_used
+    if options.verbose:
+        print module_instances
+        print modules_used
+
     xdc_files['top'] = options.xdc
     process_modules()
     write_makefile()
