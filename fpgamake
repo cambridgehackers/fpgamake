@@ -130,6 +130,10 @@ Impl/%(inst)s/%(inst)s_post_route.dcp: Synth/%(module)s/%(module)s-synth.dcp Imp
 	vivado -mode batch -source %(fpgamakedir)s/tcl/impl.tcl
 
 Impl/%(inst)s/%(inst)s-ooc.xdc: Impl/TopDown/top-post-place.dcp
+	MODULE=%(module)s \\
+	INST=%(inst)s \\
+        XDC="%(xdc_files)s" \\
+	vivado -mode batch -source %(fpgamakedir)s/tcl/write-ooc-xdc.tcl
 '''
 topdown_template='''
 Impl/TopDown/%(inst)s-post-place.dcp: Synth/%(module)s/%(module)s-synth.dcp

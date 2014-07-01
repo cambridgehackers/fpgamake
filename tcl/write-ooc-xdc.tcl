@@ -46,16 +46,41 @@ set errorlog "Synth/$module/critical"
 set commandfilehandle [open "$commandlog.log" w]
 set errorfilehandle [open "$errorlog.log" w]
 
-set dcp_name "./Synth/$module/$module-synth.dcp"
+set dcp_name "$outputDir/$instance-post-place.dcp"
 read_checkpoint $dcp_name
-foreach xdc $env(XDC) {
-    read_xdc $xdc
+
+set subinsts $env(SUBINST)
+
+foreach subinst $subinsts {
+    set subinstCell [get_cells $subinst]
+    set module [get_property REF_NAME $subinstCell]
+    file mkdir "./Impl/$subinst"
+    set xdcHandle [open "./Impl/$subinst/$subinst-ooc-clocks.xdc" w]
+
+    puts "$subinst $module ============================================================"
+    report_property $subinstCell
+    set pblock [get_pblocks -of [get_cells $subinst]]
+    puts "pblock $pblock"
+    report_property $pblock
+
+    set pins [get_pins -of [get_cells $subinst] -filter DIRECTION==IN]
+    puts "pins $pins"
+    foreach pin $pins {
+	set port [get_property REF_PIN_NAME $pin]
+	set clock [get_clocks -of $pin]
+	if {[llength $clock] > 0} {
+	    set period [get_property PERIOD $clock]
+	    puts $xdcHandle "create_clock -period $period -name $clock \[get_ports \{$port\}\]"
+
+	    set clock_nets [get_nets -of_objects $pin]
+	    set clock_src_pin [get_pins -of_objects $clock_nets -filter {DIRECTION==OUT}]
+	    set clock_src_loc [get_property LOC $clock_src_pin]
+	    puts $xdcHandle "set_property HD.CLK_SRC $clock_src_loc \[get_ports \{$port\}\]"
+	}
+    }
+    close $xdcHandle
+    
+    set_property HD.LOC_FIXED 1 [get_pins $subinstCell/*]
+    write_xdc -force -cell $subinstCell "./Impl/$subinst/$subinst-ooc.xdc"
 }
-
-log_command link_design $outputDir/temp.log
-log_command "write_checkpoint -force $outputDir/$instance-post-link.dcp" $outputDir/temp.log
-
-log_command opt_design $outputDir/opt_design.log
-log_command place_design    $outputDir/place_design.log
-log_command "write_checkpoint -force $outputDir/$instance-post-place.dcp" $outputDir/temp.log
 
