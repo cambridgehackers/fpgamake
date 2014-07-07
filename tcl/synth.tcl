@@ -72,5 +72,13 @@ foreach ip $env(IP) {
 #
 log_command "synth_design -name $module -top $module -part $partname -flatten rebuilt -mode $mode" "$outputDir/synth_design.log"
 
+# Remove unused clocks that bluespec compiler exports
+foreach {pat} {CLK_GATE_hdmi_clock_if CLK_*deleteme_unused_clock* CLK_GATE_*deleteme_unused_clock* RST_N_*deleteme_unused_reset*} {
+    foreach {net} [get_nets -quiet $pat] {
+        puts "disconnecting net $net"
+	disconnect_net -net $net -objects [get_pins -quiet -of_objects $net]
+    }
+}
+
 set dcp_name "$outputDir/$module-synth.dcp"
 log_command "write_checkpoint -force $dcp_name" $outputDir/temp.log
