@@ -34,7 +34,11 @@ if [file exists {board.tcl}] {
 set module $env(MODULE)
 set outputDir ./Synth/$module
 file mkdir $outputDir
-set mode out_of_context
+if {$module == {mkZynqTop} || $module == {mkPcieTop}} {
+    set mode default
+} else {
+    set mode out_of_context
+}
 
 set scriptsdir [file dirname $argv0]
 source $scriptsdir/log.tcl
@@ -54,6 +58,11 @@ create_project $module -in_memory -part $partname
 log_command "read_verilog ./verilog/$module.v" $outputDir/temp.log
 foreach vfile $env(VFILES) {
     log_command "read_verilog $vfile" $outputDir/temp.log
+}
+if {[info exists env(MODULE_NETLISTS)]} {
+    foreach dcp $env(MODULE_NETLISTS) {
+	log_command "read_checkpoint $dcp" "$outputDir/[file tail $dcp].log"
+    }
 }
 foreach ip $env(IP) {
     log_command "read_ip $ip" $outputDir/temp.log
