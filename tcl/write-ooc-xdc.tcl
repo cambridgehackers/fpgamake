@@ -71,12 +71,18 @@ foreach subinst $subinsts {
 	if {[llength $clock] > 0} {
 	    set period [get_property PERIOD $clock]
 	    set clock_name "$subinst-$port"
+	    puts $xdcHandle "# clock pin $pin"
+	    puts $xdcHandle "# clock $clock"
 	    puts $xdcHandle "create_clock -period $period -name $clock_name \[get_ports \{$port\}\]"
 
-	    set clock_nets [get_nets -of_objects $pin]
+	    set clock_nets [get_nets -of_objects $clock]
+	    puts $xdcHandle "# clock_nets $clock_nets"
 	    set clock_src_pin [get_pins -of_objects $clock_nets -filter {DIRECTION==OUT}]
+	    puts $xdcHandle "# clock_src_pin $clock_src_pin"
 	    set clock_src_cell [get_cells -of_objects $clock_src_pin]
+	    puts $xdcHandle "# clock_src_cell $clock_src_cell"
 	    set clock_src_loc [get_property LOC $clock_src_cell]
+	    puts $xdcHandle "# clock_src_loc $clock_src_loc"
 	    report_property $clock_src_cell
 	    puts $xdcHandle "set_property HD.CLK_SRC $clock_src_loc \[get_ports \{$port\}\]"
 	}
