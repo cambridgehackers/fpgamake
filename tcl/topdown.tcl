@@ -57,8 +57,10 @@ foreach xdc $env(XDC) {
 
 log_command "link_design -top $module" $outputDir/link_design.log
 log_command "write_checkpoint -force $outputDir/$instance-post-link.dcp" $outputDir/temp.log
+report_utilization -file $outputDir/$instance-post-link-util.rpt
 
 log_command opt_design $outputDir/opt_design.log
 log_command place_design    $outputDir/place_design.log
 log_command "write_checkpoint -force $outputDir/$instance-post-place.dcp" $outputDir/temp.log
+report_utilization -file $outputDir/$instance-post-place-util.rpt
 
