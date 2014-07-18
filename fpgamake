@@ -38,6 +38,7 @@ argparser.add_argument('--xci', help='XCI file to use', default=[], action='appe
 argparser.add_argument('--xdc', help='XDC file to use', default=[], action='append')
 argparser.add_argument('--floorplan', help='Floorplan XDC', default=None)
 argparser.add_argument('-t', '--top', help='Top verilog file')
+argparser.add_argument('-b', '--bitfile', help='Bit file to generate', default=None)
 argparser.add_argument('-v', '--verbose', help='Verbose output', default=False)
 
 module_instances={}
@@ -146,6 +147,7 @@ Impl/%(inst)s/%(inst)s-post-route.dcp: Synth/%(module)s/%(module)s-synth.dcp %(o
 	INST=%(inst)s \\
         XDC="%(xdc_files)s %(oocxdc)s" \\
         MODULE_NETLISTS="%(module_routed_netlists)s" \\
+	BITFILE=%(bitfile)s \\
 	vivado -notrace -mode batch -source %(fpgamakedir)s/tcl/impl.tcl
 '''
 topdown_template='''
@@ -198,7 +200,8 @@ def write_makefile():
                                       'xdc_files': ' '.join([os.path.abspath(xdc) for xdc in xdc_files[inst]]) if inst in xdc_files else '',
                                       'module_routed_netlists': ' '.join(subinst_routed_netlists),
                                       'oocxdc': 'Impl/%(inst)s/%(inst)s-ooc.xdc Impl/%(inst)s/%(inst)s-ooc-clocks.xdc' % {'inst': inst} if inst != 'top' else '',
-                                      'fpgamakedir': fpgamakedir
+                                      'fpgamakedir': fpgamakedir,
+                                      'bitfile': options.bitfile if (inst == 'top' and options.bitfile) else ''
                                       })
 
     submodule_synth_netlists = []
