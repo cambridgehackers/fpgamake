@@ -131,11 +131,13 @@ def make_stub(vpath, stubpath):
 
 synth_template='''
 Synth/%(module)s/%(module)s-synth.dcp: %(module_path)s
+	test -f Synth/%(module)s/%(module)s-source.md5sum && md5sum -c Synth/%(module)s/%(module)s-source.md5sum || \\
 	MODULE=%(module)s \\
 	VFILES="%(vfiles)s %(module_stubs)s" \\
 	IP="%(xcifiles)s" \\
         SUBINST="%(subinst)s" \\
 	vivado -notrace -mode batch -source %(fpgamakedir)s/tcl/synth.tcl
+	md5sum %(vfiles)s > Synth/%(module)s/%(module)s-source.md5sum
 '''
 
 impl_template='''
