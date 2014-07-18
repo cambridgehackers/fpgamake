@@ -64,15 +64,18 @@ foreach xdc $env(XDC) {
 }
 
 log_command "write_checkpoint -force $outputDir/$instance-post-link.dcp" $outputDir/temp.log
-report_timing_summary > $outputDir/$instance-link-timing-summary.rpt
+report_timing_summary -file $outputDir/$instance-link-timing-summary.rpt
 
 log_command opt_design $outputDir/opt_design.log
-log_command place_design    $outputDir/place_design.log
-report_timing_summary > $outputDir/$instance-place-timing-summary.rpt
-log_command phys_opt_design $outputDir/phys_opt_design.log
+report_timing_summary -file $outputDir/$instance-opt-timing-summary.rpt
+log_command place_design  $outputDir/place_design.log
 log_command "write_checkpoint -force $outputDir/$instance-post-place.dcp" $outputDir/temp.log
+report_timing_summary -file $outputDir/$instance-place-timing-summary.rpt
+log_command phys_opt_design $outputDir/phys_opt_design.log
+log_command "write_checkpoint -force $outputDir/$instance-post-phys-opt.dcp" $outputDir/temp.log
+report_timing_summary -file $outputDir/$instance-phys-opt-timing-summary.rpt
 
 log_command route_design $outputDir/route_design.log
 log_command "write_checkpoint -force $outputDir/$instance-post-route.dcp" $outputDir/temp.log
-report_timing_summary > $outputDir/$instance-route-timing-summary.rpt
+report_timing_summary -file $outputDir/$instance-route-timing-summary.rpt
 
