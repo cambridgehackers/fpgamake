@@ -169,7 +169,8 @@ Impl/TopDown/%(inst)s-post-place.dcp:
 
 def write_makefile():
     f = open(options.output, 'w')
-    f.write('all: Impl/TopDown/top-post-place.dcp Impl/top/top-post-route.dcp\n\n')
+    f.write('SYNTH_NETLISTS=%s\n' % ' \\\n\t'.join(['Synth/%s/%s-synth.dcp' % (module, module) for module in module_instances]))
+    f.write('all: $(SYNTH_NETLISTS) Impl/TopDown/top-post-place.dcp Impl/top/top-post-route.dcp\n\n')
     for module in module_instances:
         subinst = []
         module_stubs = []
