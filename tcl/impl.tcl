@@ -51,7 +51,12 @@ set errorfilehandle [open "$errorlog.log" w]
 
 set dcp_name "./Synth/$module/$module-synth.dcp"
 log_command "read_checkpoint $dcp_name" "$outputDir/[file tail $dcp_name].log"
-log_command "link_design -mode out_of_context -top $module" $outputDir/link_design.log
+if {$instance == "top"} {
+    set mode {default}
+} else {
+    set mode {out_of_context}
+}
+log_command "link_design -mode $mode -top $module" $outputDir/link_design.log
 
 foreach dcp $env(MODULE_NETLISTS) {
     set instname [file tail [file dirname $dcp]]
@@ -79,3 +84,6 @@ log_command route_design $outputDir/route_design.log
 log_command "write_checkpoint -force $outputDir/$instance-post-route.dcp" $outputDir/temp.log
 report_timing_summary -file $outputDir/$instance-route-timing-summary.rpt
 
+if {[info exists env(BITFILE)] && $env(BITFILE) != ""} {
+    log_command "write_bitstream -bin_file -force $env(BITFILE)" $outputDir/write_bitstream.log
+}
