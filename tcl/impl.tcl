@@ -57,13 +57,13 @@ if {$instance == "top"} {
     set mode {out_of_context}
 }
 
+log_command "link_design -mode $mode -top $module" $outputDir/link_design.log
 foreach dcp $env(MODULE_NETLISTS) {
     set instname [file tail [file dirname $dcp]]
     puts "$instname\n\t $dcp"
     log_command "read_checkpoint -cell $instname $dcp -strict" "$outputDir/[file tail $dcp]-read.log"
     log_command "lock_design -level Placement [get_cells $instname]" "$outputDir/[file tail $dcp]-lock.log"
 }
-log_command "link_design -mode $mode -top $module" $outputDir/link_design.log
 
 foreach xdc $env(XDC) {
     log_command "read_xdc $xdc" "$outputDir/[file tail $xdc].log"
