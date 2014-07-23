@@ -69,20 +69,20 @@ foreach xdc $env(XDC) {
 }
 
 log_command "write_checkpoint -force $outputDir/$instance-post-link.dcp" $outputDir/temp.log
-report_timing_summary -file $outputDir/$instance-link-timing-summary.rpt
+report_timing_summary -file $outputDir/$instance-post-link-timing-summary.rpt
 
 log_command opt_design $outputDir/opt_design.log
-report_timing_summary -file $outputDir/$instance-opt-timing-summary.rpt
+report_timing_summary -file $outputDir/$instance-post-opt-timing-summary.rpt
 log_command place_design  $outputDir/place_design.log
-log_command "write_checkpoint -force $outputDir/$instance-post-place.dcp" $outputDir/temp.log
-report_timing_summary -file $outputDir/$instance-place-timing-summary.rpt
+log_command "write_checkpoint -force $outputDir/$instance-post-post-place.dcp" $outputDir/temp.log
+report_timing_summary -file $outputDir/$instance-post-place-timing-summary.rpt
 log_command phys_opt_design $outputDir/phys_opt_design.log
-log_command "write_checkpoint -force $outputDir/$instance-post-phys-opt.dcp" $outputDir/temp.log
-report_timing_summary -file $outputDir/$instance-phys-opt-timing-summary.rpt
+log_command "write_checkpoint -force $outputDir/$instance-post-post-phys-opt.dcp" $outputDir/temp.log
+report_timing_summary -file $outputDir/$instance-post-phys-opt-timing-summary.rpt
 
 log_command route_design $outputDir/route_design.log
-log_command "write_checkpoint -force $outputDir/$instance-post-route.dcp" $outputDir/temp.log
-report_timing_summary -file $outputDir/$instance-route-timing-summary.rpt
+log_command "write_checkpoint -force $outputDir/$instance-post-post-route.dcp" $outputDir/temp.log
+report_timing_summary -file $outputDir/$instance-post-route-timing-summary.rpt
 
 if {[info exists env(BITFILE)] && $env(BITFILE) != ""} {
     log_command "write_bitstream -bin_file -force $env(BITFILE)" $outputDir/write_bitstream.log
