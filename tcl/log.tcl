@@ -27,10 +27,14 @@ proc log_command { command { logfile ""}} {
 
     puts "$command"
     puts $commandfilehandle "$command"
+    set start_time [clock seconds]
     if { [cat "$command > $logfile" errMessage] } {
 	show_errors $logfile
 	error $errMessage
     }
+    set end_time [clock seconds]
+    puts "Elapsed time [expr $end_time - $start_time] seconds"
+    puts $commandfilehandle  "    Elapsed time [expr $end_time - $start_time] seconds"
     show_errors $logfile
 }
 

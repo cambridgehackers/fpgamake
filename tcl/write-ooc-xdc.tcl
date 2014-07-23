@@ -92,6 +92,6 @@ foreach subinst $subinsts {
     set_property HD.LOC_FIXED 1 [get_pins $subinstCell/*]
     write_xdc -force -cell $subinstCell "./Impl/$subinst/$subinst-ooc.xdc"
 
-    log_command "::debug::gen_hd_timing_constraints -percent 50 -of [get_cells $subinstCell] -file ./Impl/$subinst/$subinst-ooc-budget.xdc" $outputDir/budget_timing_sonstraints.log
+    ::debug::gen_hd_timing_constraints -percent 25 -of_objects [get_cells $subinstCell] -file ./Impl/$subinst/$subinst-ooc-budget.xdc
 }
 
