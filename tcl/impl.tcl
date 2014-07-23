@@ -56,7 +56,6 @@ if {$instance == "top"} {
 } else {
     set mode {out_of_context}
 }
-log_command "link_design -mode $mode -top $module" $outputDir/link_design.log
 
 foreach dcp $env(MODULE_NETLISTS) {
     set instname [file tail [file dirname $dcp]]
@@ -64,6 +63,8 @@ foreach dcp $env(MODULE_NETLISTS) {
     log_command "read_checkpoint -cell $instname $dcp -strict" "$outputDir/[file tail $dcp]-read.log"
     log_command "lock_design -level Placement [get_cells $instname]" "$outputDir/[file tail $dcp]-lock.log"
 }
+log_command "link_design -mode $mode -top $module" $outputDir/link_design.log
+
 foreach xdc $env(XDC) {
     log_command "read_xdc $xdc" "$outputDir/[file tail $xdc].log"
 }
@@ -74,14 +75,14 @@ report_timing_summary -file $outputDir/$instance-post-link-timing-summary.rpt
 log_command opt_design $outputDir/opt_design.log
 report_timing_summary -file $outputDir/$instance-post-opt-timing-summary.rpt
 log_command place_design  $outputDir/place_design.log
-log_command "write_checkpoint -force $outputDir/$instance-post-post-place.dcp" $outputDir/temp.log
+log_command "write_checkpoint -force $outputDir/$instance-post-place.dcp" $outputDir/temp.log
 report_timing_summary -file $outputDir/$instance-post-place-timing-summary.rpt
 log_command phys_opt_design $outputDir/phys_opt_design.log
-log_command "write_checkpoint -force $outputDir/$instance-post-post-phys-opt.dcp" $outputDir/temp.log
+log_command "write_checkpoint -force $outputDir/$instance-post-phys-opt.dcp" $outputDir/temp.log
 report_timing_summary -file $outputDir/$instance-post-phys-opt-timing-summary.rpt
 
 log_command route_design $outputDir/route_design.log
-log_command "write_checkpoint -force $outputDir/$instance-post-post-route.dcp" $outputDir/temp.log
+log_command "write_checkpoint -force $outputDir/$instance-post-route.dcp" $outputDir/temp.log
 report_timing_summary -file $outputDir/$instance-post-route-timing-summary.rpt
 
 if {[info exists env(BITFILE)] && $env(BITFILE) != ""} {
