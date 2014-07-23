@@ -153,7 +153,7 @@ Impl/%(inst)s/%(inst)s-post-route.dcp: Synth/%(module)s/%(module)s-synth.dcp %(o
 	vivado -notrace -mode batch -source %(fpgamakedir)s/tcl/impl.tcl
 '''
 topdown_template='''
-Impl/TopDown/%(inst)s-post-place.dcp:
+Impl/TopDown/%(inst)s-post-place.dcp: %(floorplan)s
 	MODULE=%(module)s \\
 	INST=%(inst)s \\
         SUBINST="%(subinst)s" \\
