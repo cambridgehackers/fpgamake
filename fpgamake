@@ -144,7 +144,7 @@ Synth/%(module)s/%(module)s-synth.dcp: %(module_path)s
 '''
 
 impl_template='''
-Impl/%(inst)s/%(inst)s-post-route.dcp: Synth/%(module)s/%(module)s-synth.dcp %(module_routed_netlists)s oocxdc
+Impl/%(inst)s/%(inst)s-post-route.dcp: Synth/%(module)s/%(module)s-synth.dcp %(module_routed_netlists)s Impl/oocxdc.timestamp
 	MODULE=%(module)s \\
 	INST=%(inst)s \\
         XDC="%(xdc_files)s %(oocxdc)s" \\
@@ -161,12 +161,13 @@ Impl/TopDown/%(inst)s-post-place.dcp: %(floorplan)s %(module_synth_netlists)s
         XDC="%(xdc_files)s %(floorplan)s" \\
 	vivado -notrace -mode batch -source %(fpgamakedir)s/tcl/topdown.tcl
 
-oocxdc: Impl/TopDown/%(inst)s-post-place.dcp
+Impl/oocxdc.timestamp: Impl/TopDown/%(inst)s-post-place.dcp
 	MODULE=%(module)s \\
 	INST=%(inst)s \\
         SUBINST="%(subinst)s" \\
         XDC="%(xdc_files)s" \\
 	vivado -notrace -mode batch -source %(fpgamakedir)s/tcl/write-ooc-xdc.tcl
+	touch Impl/oocxdc.timestamp
 '''
 
 def write_makefile():
