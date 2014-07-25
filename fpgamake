@@ -30,16 +30,27 @@ import shutil
 import argparse
 import subprocess
 
-argparser = argparse.ArgumentParser("Hierarchical verilog build.")
-argparser.add_argument('vpath', help='BSV files to parse', nargs='+')
+description='''
+Generates Makefiles to synthesize, place, and route verilog.
+
+Each module specified will be synthesized into a separate design
+checkpoint.
+
+If a floorplan is provided, each instance of the synthesized modules
+will be separately placed and routed and then combined into the top
+level design.
+'''
+
+argparser = argparse.ArgumentParser(description=description)
+argparser.add_argument('vpath', help='Verilog path', nargs='+')
 argparser.add_argument('-o', '--output', help='Output make file', default='synth.mk')
-argparser.add_argument('-s', '--synth', help='File to synthesize separately', default=[], action='append')
+argparser.add_argument('-s', '--synth', help='Module to synthesize separately', default=[], action='append')
 argparser.add_argument('--xci', help='XCI file to use', default=[], action='append')
 argparser.add_argument('--xdc', help='XDC file to use', default=[], action='append')
-argparser.add_argument('--floorplan', help='Floorplan XDC', default=None)
+argparser.add_argument('--floorplan', help='Floorplan XDC.', default=None)
 argparser.add_argument('-t', '--top', help='Top verilog file')
 argparser.add_argument('-b', '--bitfile', help='Bit file to generate', default=None)
-argparser.add_argument('-v', '--verbose', help='Verbose output', default=False)
+argparser.add_argument('-v', '--verbose', help='Verbose operation', default=False)
 
 module_instances={}
 modules_used={}
@@ -55,8 +66,6 @@ def find_in_path(fname, path, suffix='.v'):
     for p in path:
         if os.path.exists(os.path.join(p, fname)):
             return os.path.join(p, fname)
-    if options.verbose:
-        print 'Not in path', fname, path
     return None
 
 def scan_module(module, parent_module=None):
