@@ -132,7 +132,7 @@ def make_stub(vpath, stubpath):
 
 makefileHeaderTemplate='''
 FLOORPLAN=%(floorplan)s
-ifneq ($(FLOORPLAN),'')
+ifneq ("$(FLOORPLAN)","")
 POST_ROUTE_DCP=Impl/top/top-post-route.dcp
 endif
 
