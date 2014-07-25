@@ -194,8 +194,7 @@ Impl/oocxdc.timestamp: Impl/TopDown/%(inst)s-post-place.dcp
 def write_makefile():
     f = open(options.output, 'w')
     f.write('SYNTH_NETLISTS=%s\n' % ' \\\n\t'.join(['Synth/%s/%s-synth.dcp' % (module, module) for module in module_instances]))
-    f.write(makefileHeaderTemplate % { 'floorplan': os.path.abspath(options.floorplan) if options.floorplan else '',
-                                       'bitfile': options.bitfile if (options.bitfile) else ''
+    f.write(makefileHeaderTemplate % { 'floorplan': os.path.abspath(options.floorplan) if options.floorplan else ''
                                        })
     for module in module_instances:
         subinst = []
@@ -252,7 +251,7 @@ def write_makefile():
                                  'xdc_files': topdown_xdc_files,
                                  'floorplan': os.path.abspath(options.floorplan) if options.floorplan else '',
                                  'module_synth_netlists': ' '.join(submodule_synth_netlists),
-                                 'bitfile': options.bitfile if (inst == 'top' and options.bitfile) else '',
+                                 'bitfile': options.bitfile if options.bitfile else '',
                                  'fpgamakedir': fpgamakedir
             })
     f.close()
