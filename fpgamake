@@ -130,6 +130,16 @@ def make_stub(vpath, stubpath):
         f.write(line)
     f.close()
 
+makefileHeaderTemplate='''
+FLOORPLAN=%(floorplan)s
+ifneq ($(FLOORPLAN),'')
+POST_ROUTE_DCP=Impl/top/top-post-route.dcp
+endif
+
+all: $(SYNTH_NETLISTS) Impl/TopDown/top-post-place.dcp $(POST_ROUTE_DCP)
+
+'''
+
 synth_template='''
 %(module)s_VFILES = %(vfiles)s
 
@@ -158,7 +168,9 @@ Impl/TopDown/%(inst)s-post-place.dcp: %(floorplan)s %(module_synth_netlists)s
 	INST=%(inst)s \\
         SUBINST="%(subinst)s" \\
         MODULE_NETLISTS="%(module_synth_netlists)s" \\
-        XDC="%(xdc_files)s %(floorplan)s" \\
+        XDC="%(xdc_files)s" \\
+        FLOORPLAN="%(floorplan)s" \\
+	BITFILE=%(bitfile)s \\
 	vivado -notrace -mode batch -source %(fpgamakedir)s/tcl/topdown.tcl
 
 Impl/oocxdc.timestamp: Impl/TopDown/%(inst)s-post-place.dcp
@@ -173,7 +185,9 @@ Impl/oocxdc.timestamp: Impl/TopDown/%(inst)s-post-place.dcp
 def write_makefile():
     f = open(options.output, 'w')
     f.write('SYNTH_NETLISTS=%s\n' % ' \\\n\t'.join(['Synth/%s/%s-synth.dcp' % (module, module) for module in module_instances]))
-    f.write('all: $(SYNTH_NETLISTS) Impl/TopDown/top-post-place.dcp Impl/top/top-post-route.dcp\n\n')
+    f.write(makefileHeaderTemplate % { 'floorplan': os.path.abspath(options.floorplan) if options.floorplan else '',
+                                       'bitfile': options.bitfile if (options.bitfile) else ''
+                                       })
     for module in module_instances:
         subinst = []
         module_stubs = []
@@ -229,6 +243,7 @@ def write_makefile():
                                  'xdc_files': topdown_xdc_files,
                                  'floorplan': os.path.abspath(options.floorplan) if options.floorplan else '',
                                  'module_synth_netlists': ' '.join(submodule_synth_netlists),
+                                 'bitfile': options.bitfile if (inst == 'top' and options.bitfile) else '',
                                  'fpgamakedir': fpgamakedir
             })
     f.close()
