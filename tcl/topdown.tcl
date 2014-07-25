@@ -78,6 +78,7 @@ if {"$env(FLOORPLAN)" == ""} {
     log_command "phys_opt_design" $outputDir/phys-opt-design.log
     log_command "write_checkpoint -force $outputDir/$instance-post-phys-opt.dcp" $outputDir/temp.log
     log_command "route_design" $outputDir/route-design.log
+    log_command "write_checkpoint -force $outputDir/$instance-post-route.dcp" $outputDir/temp.log
     report_utilization -file $outputDir/$instance-post-route-util.rpt
     report_timing_summary -file $outputDir/$instance-post-route-timing-summary.rpt
     report_timing -sort_by group -max_paths 100 -path_type summary -file $outputDir/$instance-post-route-timing.rpt > hw/temp.log
