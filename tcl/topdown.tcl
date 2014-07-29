@@ -62,13 +62,28 @@ foreach xdc $env(FLOORPLAN) {
 
 log_command "link_design -top $module" $outputDir/link_design.log
 log_command "write_checkpoint -force $outputDir/$instance-post-link.dcp" $outputDir/temp.log
+report_timing -nworst 20 -sort_by slack -path_type summary -slack_lesser_than 0.2 -unique_pins
+puts "****************************************"
+puts "If timing report says 'No timing paths found.' then the design met the timing constraints."
+puts "If it reported negative slack, then the design did not meet the timing constraints."
+puts "****************************************"
 report_utilization -file $outputDir/$instance-post-link-util.rpt
 
 log_command opt_design $outputDir/opt_design.log
 log_command "write_checkpoint -force $outputDir/$instance-post-opt.dcp" $outputDir/temp.log
+report_timing -nworst 20 -sort_by slack -path_type summary -slack_lesser_than 0.2 -unique_pins
+puts "****************************************"
+puts "If timing report says 'No timing paths found.' then the design met the timing constraints."
+puts "If it reported negative slack, then the design did not meet the timing constraints."
+puts "****************************************"
 report_utilization -file $outputDir/$instance-post-link-util.rpt
 log_command place_design    $outputDir/place_design.log
 log_command "write_checkpoint -force $outputDir/$instance-post-place.dcp" $outputDir/temp.log
+report_timing -nworst 20 -sort_by slack -path_type summary -slack_lesser_than 0.2 -unique_pins
+puts "****************************************"
+puts "If timing report says 'No timing paths found.' then the design met the timing constraints."
+puts "If it reported negative slack, then the design did not meet the timing constraints."
+puts "****************************************"
 report_utilization -file $outputDir/$instance-post-place-util.rpt
 report_timing_summary -file $outputDir/$instance-post-place-timing-summary.rpt
 report_io -file $outputDir/$instance-post-place-io.rpt > hw/temp.log
@@ -79,6 +94,11 @@ if {"$env(FLOORPLAN)" == ""} {
     log_command "write_checkpoint -force $outputDir/$instance-post-phys-opt.dcp" $outputDir/temp.log
     log_command "route_design" $outputDir/route-design.log
     log_command "write_checkpoint -force $outputDir/$instance-post-route.dcp" $outputDir/temp.log
+    report_timing -nworst 20 -sort_by slack -path_type summary -slack_lesser_than 0.2 -unique_pins
+    puts "****************************************"
+    puts "If timing report says 'No timing paths found.' then the design met the timing constraints."
+    puts "If it reported negative slack, then the design did not meet the timing constraints."
+    puts "****************************************"
     report_utilization -file $outputDir/$instance-post-route-util.rpt
     report_timing_summary -file $outputDir/$instance-post-route-timing-summary.rpt
     report_timing -sort_by group -max_paths 100 -path_type summary -file $outputDir/$instance-post-route-timing.rpt > hw/temp.log
