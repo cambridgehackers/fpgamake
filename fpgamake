@@ -151,34 +151,40 @@ all: $(SYNTH_NETLISTS) Impl/TopDown/top-post-place.dcp $(POST_ROUTE_DCP)
 
 synth_template='''
 %(module)s_VFILES = %(vfiles)s
+%(module)s_IP = %(xcifiles)s
+%(module)s_SUBINST = %(subinst)s
+%(module)s_MD5SUM = Synth/%(module)s/%(module)s-source.md5sum
 
 Synth/%(module)s/%(module)s-synth.dcp: %(module_path)s
-	test -f Synth/%(module)s/%(module)s-source.md5sum && md5sum -c Synth/%(module)s/%(module)s-source.md5sum || \\
+	test -f $(%(module)s_MD5SUM)  && md5sum -c $(%(module)s_MD5SUM) || \\
 	MODULE=%(module)s \\
 	VFILES="$(%(module)s_VFILES) %(module_stubs)s" \\
-	IP="%(xcifiles)s" \\
-        SUBINST="%(subinst)s" \\
+	IP="$(%(module)s_IP)" \\
+        SUBINST="$(%(module)s_SUBINST)" \\
 	vivado -notrace -mode batch -source %(fpgamakedir)s/tcl/synth.tcl
 	md5sum $(%(module)s_VFILES) > Synth/%(module)s/%(module)s-source.md5sum
 '''
 
 impl_template='''
+%(module)s_XDC = %(xdc_files)s
+
 Impl/%(inst)s/%(inst)s-post-route.dcp: Synth/%(module)s/%(module)s-synth.dcp %(module_routed_netlists)s Impl/oocxdc.timestamp
 	MODULE=%(module)s \\
 	INST=%(inst)s \\
-        XDC="%(xdc_files)s %(oocxdc)s" \\
+        XDC="%(module)s_XDC %(oocxdc)s" \\
         MODULE_NETLISTS="%(module_routed_netlists)s" \\
 	BITFILE=%(bitfile)s \\
 	vivado -notrace -mode batch -source %(fpgamakedir)s/tcl/impl.tcl
 '''
 topdown_template='''
-Impl/TopDown/%(inst)s-post-place.dcp: %(floorplan)s %(module_synth_netlists)s
+TopDown_XDC = %(xdc_files)s
+Impl/TopDown/%(inst)s-post-place.dcp: $(FLOORPLAN) %(module_synth_netlists)s
 	MODULE=%(module)s \\
 	INST=%(inst)s \\
         SUBINST="%(subinst)s" \\
         MODULE_NETLISTS="%(module_synth_netlists)s" \\
-        XDC="%(xdc_files)s" \\
-        FLOORPLAN="%(floorplan)s" \\
+        XDC="$(TopDown_XDC)" \\
+        FLOORPLAN="$(FLOORPLAN)" \\
 	BITFILE=%(bitfile)s \\
 	vivado -notrace -mode batch -source %(fpgamakedir)s/tcl/topdown.tcl
 
