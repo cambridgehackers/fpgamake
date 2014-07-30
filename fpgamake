@@ -162,7 +162,7 @@ Synth/%(module)s/%(module)s-synth.dcp: %(module_path)s
 	IP="$(%(module)s_IP)" \\
         SUBINST="$(%(module)s_SUBINST)" \\
 	vivado -notrace -mode batch -source %(fpgamakedir)s/tcl/synth.tcl
-	md5sum $(%(module)s_VFILES) > Synth/%(module)s/%(module)s-source.md5sum
+	md5sum $(%(module)s_VFILES) > $(%(module)s_MD5SUM)
 '''
 
 impl_template='''
