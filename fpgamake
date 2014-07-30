@@ -171,7 +171,7 @@ impl_template='''
 Impl/%(inst)s/%(inst)s-post-route.dcp: Synth/%(module)s/%(module)s-synth.dcp %(module_routed_netlists)s Impl/oocxdc.timestamp
 	MODULE=%(module)s \\
 	INST=%(inst)s \\
-        XDC="%(module)s_XDC %(oocxdc)s" \\
+        XDC="$(%(module)s_XDC) %(oocxdc)s" \\
         MODULE_NETLISTS="%(module_routed_netlists)s" \\
 	BITFILE=%(bitfile)s \\
 	vivado -notrace -mode batch -source %(fpgamakedir)s/tcl/impl.tcl
@@ -192,7 +192,6 @@ Impl/oocxdc.timestamp: Impl/TopDown/%(inst)s-post-place.dcp
 	MODULE=%(module)s \\
 	INST=%(inst)s \\
         SUBINST="%(subinst)s" \\
-        XDC="%(xdc_files)s" \\
 	vivado -notrace -mode batch -source %(fpgamakedir)s/tcl/write-ooc-xdc.tcl
 	touch Impl/oocxdc.timestamp
 '''
