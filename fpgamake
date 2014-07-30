@@ -167,11 +167,12 @@ Synth/%(module)s/%(module)s-synth.dcp: %(module_path)s
 
 impl_template='''
 %(module)s_XDC = %(xdc_files)s
+%(module)s_OOCXDC = %(oocxdc)s
 
 Impl/%(inst)s/%(inst)s-post-route.dcp: Synth/%(module)s/%(module)s-synth.dcp %(module_routed_netlists)s Impl/oocxdc.timestamp
 	MODULE=%(module)s \\
 	INST=%(inst)s \\
-        XDC="$(%(module)s_XDC) %(oocxdc)s" \\
+        XDC="$(%(module)s_XDC) $(%(module)s_OOCXDC)" \\
         MODULE_NETLISTS="%(module_routed_netlists)s" \\
 	BITFILE=%(bitfile)s \\
 	vivado -notrace -mode batch -source %(fpgamakedir)s/tcl/impl.tcl
