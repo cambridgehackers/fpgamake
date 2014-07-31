@@ -50,6 +50,7 @@ argparser.add_argument('--xdc', help='XDC file to use', default=[], action='appe
 argparser.add_argument('--floorplan', help='Floorplan XDC.', default=None)
 argparser.add_argument('-t', '--top', help='Top verilog file')
 argparser.add_argument('-b', '--bitfile', help='Bit file to generate', default=None)
+argparser.add_argument('--cachedir', help='Cache directory', default='Cache')
 argparser.add_argument('-v', '--verbose', help='Verbose operation', default=False)
 
 module_instances={}
@@ -153,7 +154,8 @@ synth_template='''
 %(module)s_VFILES = %(vfiles)s
 %(module)s_IP = %(xcifiles)s
 %(module)s_SUBINST = %(subinst)s
-%(module)s_MD5SUM = Synth/%(module)s/%(module)s-source.md5sum
+%(module)s_CACHEDIR = %(cachedir)s/%(module)s
+%(module)s_MD5SUM = $(%(module)s_CACHEDIR)/%(module)s-source.md5sum
 
 Synth/%(module)s/%(module)s-synth.dcp: %(module_path)s
 	test -f $(%(module)s_MD5SUM)  && md5sum -c $(%(module)s_MD5SUM) || \\
@@ -162,32 +164,42 @@ Synth/%(module)s/%(module)s-synth.dcp: %(module_path)s
 	IP="$(%(module)s_IP)" \\
         SUBINST="$(%(module)s_SUBINST)" \\
 	vivado -notrace -mode batch -source %(fpgamakedir)s/tcl/synth.tcl
+	mkdir -p $(%(module)s_CACHEDIR)
 	md5sum $(%(module)s_VFILES) > $(%(module)s_MD5SUM)
 '''
 
 impl_template='''
-%(module)s_XDC = %(xdc_files)s
-%(module)s_OOCXDC = %(oocxdc)s
+%(inst)s_CACHEDIR = %(cachedir)s/%(inst)s
+%(inst)s_MD5SUM = $(%(inst)s_CACHEDIR)/%(inst)s-source.md5sum
+%(inst)s_XDC = %(xdc_files)s
+%(inst)s_OOCXDC = %(oocxdc)s
 
 Impl/%(inst)s/%(inst)s-post-route.dcp: Synth/%(module)s/%(module)s-synth.dcp %(module_routed_netlists)s Impl/oocxdc.timestamp
 	MODULE=%(module)s \\
 	INST=%(inst)s \\
-        XDC="$(%(module)s_XDC) $(%(module)s_OOCXDC)" \\
+        XDC="$(%(inst)s_XDC) $(%(inst)s_OOCXDC)" \\
         MODULE_NETLISTS="%(module_routed_netlists)s" \\
 	BITFILE=%(bitfile)s \\
 	vivado -notrace -mode batch -source %(fpgamakedir)s/tcl/impl.tcl
 '''
 topdown_template='''
+TopDown_CACHEDIR = %(cachedir)s/TopDown
+TopDown_MD5SUM = $(TopDown_CACHEDIR)/TopDown-source.md5sum
 TopDown_XDC = %(xdc_files)s
+TopDown_NETLISTS = %(module_synth_netlists)s
+
 Impl/TopDown/%(inst)s-post-place.dcp: $(FLOORPLAN) %(module_synth_netlists)s
+	test -f $(TopDown_MD5SUM)  && md5sum -c $(TopDown_MD5SUM) && cp -f $(TopDown_CACHEDIR)/* Impl/TopDown || \\
 	MODULE=%(module)s \\
 	INST=%(inst)s \\
         SUBINST="%(subinst)s" \\
-        MODULE_NETLISTS="%(module_synth_netlists)s" \\
+        MODULE_NETLISTS="$(TopDown_NETLISTS)" \\
         XDC="$(TopDown_XDC)" \\
         FLOORPLAN="$(FLOORPLAN)" \\
 	BITFILE=%(bitfile)s \\
-	vivado -notrace -mode batch -source %(fpgamakedir)s/tcl/topdown.tcl
+	strace -e open vivado -notrace -mode batch -source %(fpgamakedir)s/tcl/topdown.tcl
+	mkdir -p $(%(inst)s_CACHEDIR)
+	md5sum $(TopDown_NETLISTS) $(TopDown_XDC) $(FLOORPLAN) > $(%(module)s_MD5SUM)
 
 Impl/oocxdc.timestamp: Impl/TopDown/%(inst)s-post-place.dcp
 	MODULE=%(module)s \\
@@ -215,7 +227,8 @@ def write_makefile():
                                    'vfiles': ' '.join([find_in_path(module, options.vpath, '.v')] + [find_in_path(vfile, options.vpath, '.v') for vfile in set(verilog_used[module])]) if module in verilog_used else '',
                                    'subinst': ' '.join(subinst),
                                    'module_stubs': ' '.join(module_stubs),
-                                   'xcifiles': ' '.join(options.xci)
+                                   'xcifiles': ' '.join(options.xci),
+                                   'cachedir': os.path.abspath(options.cachedir)
                                    })
         for inst in set(module_instances[module]):
             subinst_routed_netlists = []
@@ -233,7 +246,8 @@ def write_makefile():
                                       'module_routed_netlists': ' '.join(subinst_routed_netlists),
                                       'oocxdc': 'Impl/%(inst)s/%(inst)s-ooc.xdc Impl/%(inst)s/%(inst)s-ooc-clocks.xdc Impl/%(inst)s/%(inst)s-ooc-budget.xdc' % {'inst': inst} if inst != 'top' else '',
                                       'fpgamakedir': fpgamakedir,
-                                      'bitfile': options.bitfile if (inst == 'top' and options.bitfile) else ''
+                                      'bitfile': options.bitfile if (inst == 'top' and options.bitfile) else '',
+                                      'cachedir': os.path.abspath(options.cachedir)
                                       })
 
     submodule_synth_netlists = []
@@ -258,7 +272,8 @@ def write_makefile():
                                  'floorplan': os.path.abspath(options.floorplan) if options.floorplan else '',
                                  'module_synth_netlists': ' '.join(submodule_synth_netlists),
                                  'bitfile': options.bitfile if options.bitfile else '',
-                                 'fpgamakedir': fpgamakedir
+                                 'fpgamakedir': fpgamakedir,
+                                 'cachedir': os.path.abspath(options.cachedir)
             })
     f.close()
 
