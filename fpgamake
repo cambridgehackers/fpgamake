@@ -192,18 +192,22 @@ TopDown_NETLISTS = %(module_synth_netlists)s
 
 Impl/TopDown/%(inst)s-post-place.dcp: $(FLOORPLAN) %(module_synth_netlists)s Synth/%(module)s/%(module)s-synth.dcp
 	mkdir -p Impl/TopDown/
-	test -f $(TopDown_MD5SUM)  && md5sum -c $(TopDown_MD5SUM) && rsync -av --delete $(TopDown_CACHEDIR)/* Impl/TopDown/ || \\
+	test -f $(TopDown_MD5SUM) && test -f $(TopDown_CACHEDIR)/mkTop.bit && md5sum -c $(TopDown_MD5SUM) && rsync -av --delete $(TopDown_CACHEDIR)/* Impl/TopDown/ || \\
 	MODULE=%(module)s \\
 	INST=%(inst)s \\
         SUBINST="%(subinst)s" \\
         MODULE_NETLISTS="$(TopDown_NETLISTS)" \\
         XDC="$(TopDown_XDC)" \\
         FLOORPLAN="$(FLOORPLAN)" \\
-	BITFILE=%(bitfile)s \\
+	BITFILE=Impl/TopDown/mkTop.bit \\
 	vivado -notrace -mode batch -source %(fpgamakedir)s/tcl/topdown.tcl
 	mkdir -p $(%(inst)s_CACHEDIR)
 	md5sum $(TopDown_NETLISTS) $(TopDown_XDC) $(FLOORPLAN) > Impl/TopDown/TopDown-source.md5sum
 	rsync -av --delete Impl/TopDown/* $(TopDown_CACHEDIR)/
+
+%(bitfile)s: Impl/TopDown/%(inst)s-post-place.dcp
+	cp -v Impl/TopDown/mkTop.bit %(bitbase)s.bit
+	cp -v Impl/TopDown/mkTop.bin %(bitbase)s.bin
 
 Impl/oocxdc.timestamp: Impl/TopDown/%(inst)s-post-place.dcp
 	MODULE=%(module)s \\
@@ -276,6 +280,7 @@ def write_makefile():
                                  'floorplan': os.path.abspath(options.floorplan) if options.floorplan else '',
                                  'module_synth_netlists': ' '.join(submodule_synth_netlists),
                                  'bitfile': options.bitfile if options.bitfile else '',
+                                 'bitbase': os.path.splitext(options.bitfile)[0] if (inst == 'top' and options.bitfile) else '',
                                  'fpgamakedir': fpgamakedir,
                                  'cachedir': os.path.abspath(options.cachedir)
             })
