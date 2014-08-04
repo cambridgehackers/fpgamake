@@ -198,7 +198,7 @@ Impl/TopDown/%(inst)s-post-place.dcp: $(FLOORPLAN) %(module_synth_netlists)s
         XDC="$(TopDown_XDC)" \\
         FLOORPLAN="$(FLOORPLAN)" \\
 	BITFILE=%(bitfile)s \\
-	strace -ff -o Impl/TopDown/strace-vivado -e open vivado -notrace -mode batch -source %(fpgamakedir)s/tcl/topdown.tcl
+	vivado -notrace -mode batch -source %(fpgamakedir)s/tcl/topdown.tcl
 	mkdir -p $(%(inst)s_CACHEDIR)
 	md5sum $(TopDown_NETLISTS) $(TopDown_XDC) $(FLOORPLAN) > Impl/TopDown/TopDown-source.md5sum
 	rsync -av --delete Impl/TopDown/* $(TopDown_CACHEDIR)/
