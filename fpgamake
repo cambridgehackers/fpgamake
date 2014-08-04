@@ -165,7 +165,8 @@ Synth/%(module)s/%(module)s-synth.dcp: %(module_path)s
         SUBINST="$(%(module)s_SUBINST)" \\
 	vivado -notrace -mode batch -source %(fpgamakedir)s/tcl/synth.tcl
 	mkdir -p $(%(module)s_CACHEDIR)
-	md5sum $(%(module)s_VFILES) > $(%(module)s_MD5SUM)
+	md5sum $(%(module)s_VFILES) > Synth/%(module)s/%(module)s-source.md5sum
+	cp -fv Synth/%(module)s/* $(%(module)s_CACHEDIR)
 '''
 
 impl_template='''
