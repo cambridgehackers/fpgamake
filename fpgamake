@@ -158,7 +158,7 @@ synth_template='''
 %(module)s_MD5SUM = $(%(module)s_CACHEDIR)/%(module)s-source.md5sum
 
 Synth/%(module)s/%(module)s-synth.dcp: %(module_path)s
-	test -f $(%(module)s_MD5SUM)  && md5sum -c $(%(module)s_MD5SUM) || \\
+	test -f $(%(module)s_MD5SUM)  && md5sum -c $(%(module)s_MD5SUM) && cp -v $(%(module)s_CACHEDIR) Synth/%(module)s/|| \\
 	MODULE=%(module)s \\
 	VFILES="$(%(module)s_VFILES) %(module_stubs)s" \\
 	IP="$(%(module)s_IP)" \\
