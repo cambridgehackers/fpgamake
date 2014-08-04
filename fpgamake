@@ -189,7 +189,7 @@ TopDown_MD5SUM = $(TopDown_CACHEDIR)/TopDown-source.md5sum
 TopDown_XDC = %(xdc_files)s
 TopDown_NETLISTS = %(module_synth_netlists)s
 
-Impl/TopDown/%(inst)s-post-place.dcp: $(FLOORPLAN) %(module_synth_netlists)s
+Impl/TopDown/%(inst)s-post-place.dcp: $(FLOORPLAN) %(module_synth_netlists)s Synth/%(module)s/%(module)s-synth.dcp
 	test -f $(TopDown_MD5SUM)  && md5sum -c $(TopDown_MD5SUM) && rsync -av --delete $(TopDown_CACHEDIR)/* Impl/TopDown/ || \\
 	MODULE=%(module)s \\
 	INST=%(inst)s \\
