@@ -221,7 +221,7 @@ def write_makefile():
     f = open(options.output, 'w')
     f.write('SYNTH_NETLISTS=%s\n' % ' \\\n\t'.join(['Synth/%s/%s-synth.dcp' % (module, module) for module in module_instances]))
     f.write(makefileHeaderTemplate % { 'floorplan': os.path.abspath(options.floorplan) if options.floorplan else '',
-                                       'bitfile': os.path.abspath(options.bitfile)
+                                       'bitfile': options.bitfile
                                        })
     for module in module_instances:
         subinst = []
