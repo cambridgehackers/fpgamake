@@ -281,7 +281,7 @@ def write_makefile():
                                  'floorplan': os.path.abspath(options.floorplan) if options.floorplan else '',
                                  'module_synth_netlists': ' '.join(submodule_synth_netlists),
                                  'bitfile': options.bitfile if options.bitfile else '',
-                                 'bitbase': os.path.splitext(options.bitfile)[0] if (inst == 'top' and options.bitfile) else '',
+                                 'bitbase': os.path.splitext(options.bitfile)[0],
                                  'fpgamakedir': fpgamakedir,
                                  'cachedir': os.path.abspath(options.cachedir)
             })
