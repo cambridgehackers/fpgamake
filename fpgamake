@@ -158,6 +158,7 @@ synth_template='''
 %(module)s_MD5SUM = $(%(module)s_CACHEDIR)/%(module)s-source.md5sum
 
 Synth/%(module)s/%(module)s-synth.dcp: %(module_path)s
+	mkdir -p Synth/%(module)s
 	test -f $(%(module)s_MD5SUM)  && md5sum -c $(%(module)s_MD5SUM) && rsync -av --delete $(%(module)s_CACHEDIR)/* Synth/%(module)s/ || \\
 	MODULE=%(module)s \\
 	VFILES="$(%(module)s_VFILES) %(module_stubs)s" \\
@@ -190,6 +191,7 @@ TopDown_XDC = %(xdc_files)s
 TopDown_NETLISTS = %(module_synth_netlists)s
 
 Impl/TopDown/%(inst)s-post-place.dcp: $(FLOORPLAN) %(module_synth_netlists)s Synth/%(module)s/%(module)s-synth.dcp
+	mkdir -p Impl/TopDown/
 	test -f $(TopDown_MD5SUM)  && md5sum -c $(TopDown_MD5SUM) && rsync -av --delete $(TopDown_CACHEDIR)/* Impl/TopDown/ || \\
 	MODULE=%(module)s \\
 	INST=%(inst)s \\
