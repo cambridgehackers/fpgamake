@@ -146,7 +146,7 @@ ifneq ("$(FLOORPLAN)","")
 POST_ROUTE_DCP=Impl/top/top-post-route.dcp
 endif
 
-all: $(SYNTH_NETLISTS) Impl/TopDown/top-post-place.dcp $(POST_ROUTE_DCP)
+all: $(SYNTH_NETLISTS) Impl/TopDown/top-post-place.dcp $(POST_ROUTE_DCP) %(bitfile)s
 
 '''
 
@@ -220,7 +220,8 @@ Impl/oocxdc.timestamp: Impl/TopDown/%(inst)s-post-place.dcp
 def write_makefile():
     f = open(options.output, 'w')
     f.write('SYNTH_NETLISTS=%s\n' % ' \\\n\t'.join(['Synth/%s/%s-synth.dcp' % (module, module) for module in module_instances]))
-    f.write(makefileHeaderTemplate % { 'floorplan': os.path.abspath(options.floorplan) if options.floorplan else ''
+    f.write(makefileHeaderTemplate % { 'floorplan': os.path.abspath(options.floorplan) if options.floorplan else '',
+                                       'bitfile': os.path.abspath(options.bitfile)
                                        })
     for module in module_instances:
         subinst = []
