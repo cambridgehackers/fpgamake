@@ -158,7 +158,7 @@ synth_template='''
 %(module)s_MD5SUM = $(%(module)s_CACHEDIR)/%(module)s-source.md5sum
 
 Synth/%(module)s/%(module)s-synth.dcp: %(module_path)s
-	test -f $(%(module)s_MD5SUM)  && md5sum -c $(%(module)s_MD5SUM) && cp -v $(%(module)s_CACHEDIR) Synth/%(module)s/|| \\
+	test -f $(%(module)s_MD5SUM)  && md5sum -c $(%(module)s_MD5SUM) && rsync -av --delete $(%(module)s_CACHEDIR)/* Synth/%(module)s/ || \\
 	MODULE=%(module)s \\
 	VFILES="$(%(module)s_VFILES) %(module_stubs)s" \\
 	IP="$(%(module)s_IP)" \\
@@ -166,7 +166,7 @@ Synth/%(module)s/%(module)s-synth.dcp: %(module_path)s
 	vivado -notrace -mode batch -source %(fpgamakedir)s/tcl/synth.tcl
 	mkdir -p $(%(module)s_CACHEDIR)
 	md5sum $(%(module)s_VFILES) > Synth/%(module)s/%(module)s-source.md5sum
-	cp -fv Synth/%(module)s/* $(%(module)s_CACHEDIR)
+	rsync -av --delete Synth/%(module)s/* $(%(module)s_CACHEDIR)
 '''
 
 impl_template='''
@@ -190,7 +190,7 @@ TopDown_XDC = %(xdc_files)s
 TopDown_NETLISTS = %(module_synth_netlists)s
 
 Impl/TopDown/%(inst)s-post-place.dcp: $(FLOORPLAN) %(module_synth_netlists)s
-	test -f $(TopDown_MD5SUM)  && md5sum -c $(TopDown_MD5SUM) && cp -f $(TopDown_CACHEDIR)/* Impl/TopDown || \\
+	test -f $(TopDown_MD5SUM)  && md5sum -c $(TopDown_MD5SUM) && rsync -av --delete $(TopDown_CACHEDIR)/* Impl/TopDown/ || \\
 	MODULE=%(module)s \\
 	INST=%(inst)s \\
         SUBINST="%(subinst)s" \\
@@ -198,9 +198,10 @@ Impl/TopDown/%(inst)s-post-place.dcp: $(FLOORPLAN) %(module_synth_netlists)s
         XDC="$(TopDown_XDC)" \\
         FLOORPLAN="$(FLOORPLAN)" \\
 	BITFILE=%(bitfile)s \\
-	strace -e open vivado -notrace -mode batch -source %(fpgamakedir)s/tcl/topdown.tcl
+	strace -ff -o Impl/TopDown/strace-vivado -e open vivado -notrace -mode batch -source %(fpgamakedir)s/tcl/topdown.tcl
 	mkdir -p $(%(inst)s_CACHEDIR)
-	md5sum $(TopDown_NETLISTS) $(TopDown_XDC) $(FLOORPLAN) > $(%(module)s_MD5SUM)
+	md5sum $(TopDown_NETLISTS) $(TopDown_XDC) $(FLOORPLAN) > Impl/TopDown/TopDown-source.md5sum
+	rsync -av --delete Impl/TopDown/* $(TopDown_CACHEDIR)/
 
 Impl/oocxdc.timestamp: Impl/TopDown/%(inst)s-post-place.dcp
 	MODULE=%(module)s \\
