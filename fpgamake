@@ -202,7 +202,7 @@ Impl/TopDown/%(inst)s-post-place.dcp: $(FLOORPLAN) %(module_synth_netlists)s Syn
 	BITFILE=Impl/TopDown/mkTop.bit \\
 	vivado -notrace -mode batch -source %(fpgamakedir)s/tcl/topdown.tcl
 	mkdir -p $(%(inst)s_CACHEDIR)
-	md5sum $(TopDown_NETLISTS) $(TopDown_XDC) $(FLOORPLAN) > Impl/TopDown/TopDown-source.md5sum
+	md5sum Synth/%(module)s/%(module)s-synth.dcp $(TopDown_NETLISTS) $(TopDown_XDC) $(FLOORPLAN) > Impl/TopDown/TopDown-source.md5sum
 	rsync -av --delete Impl/TopDown/* $(TopDown_CACHEDIR)/
 
 %(bitfile)s: Impl/TopDown/%(inst)s-post-place.dcp
