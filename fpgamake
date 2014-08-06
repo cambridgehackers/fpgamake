@@ -141,6 +141,13 @@ def make_stub(vpath, stubpath):
     f.close()
 
 makefileHeaderTemplate='''
+V=0
+ifeq ($(V),0)
+  Q=@
+else
+  Q=
+endif
+
 FLOORPLAN=%(floorplan)s
 ifneq ("$(FLOORPLAN)","")
 POST_ROUTE_DCP=Impl/top/top-post-route.dcp
@@ -158,16 +165,17 @@ synth_template='''
 %(module)s_MD5SUM = $(%(module)s_CACHEDIR)/%(module)s-source.md5sum
 
 Synth/%(module)s/%(module)s-synth.dcp: %(module_path)s
-	mkdir -p Synth/%(module)s
-	test -f $(%(module)s_MD5SUM)  && md5sum -c $(%(module)s_MD5SUM) && rsync -av --delete $(%(module)s_CACHEDIR)/* Synth/%(module)s/ || \\
+	@echo FPGAMAKE %(module)s synth check
+	$(Q)mkdir -p Synth/%(module)s
+	$(Q)test -f $(%(module)s_MD5SUM)  && md5sum --quiet -c $(%(module)s_MD5SUM) && rsync --quiet -av --delete $(%(module)s_CACHEDIR)/* Synth/%(module)s/ || \\
 	MODULE=%(module)s \\
 	VFILES="$(%(module)s_VFILES) %(module_stubs)s" \\
 	IP="$(%(module)s_IP)" \\
         SUBINST="$(%(module)s_SUBINST)" \\
 	vivado -notrace -mode batch -source %(fpgamakedir)s/tcl/synth.tcl
-	mkdir -p $(%(module)s_CACHEDIR)
-	md5sum $(%(module)s_VFILES) > Synth/%(module)s/%(module)s-source.md5sum
-	rsync -av --delete Synth/%(module)s/* $(%(module)s_CACHEDIR)
+	$(Q)mkdir -p $(%(module)s_CACHEDIR)
+	$(Q)md5sum $(%(module)s_VFILES) > Synth/%(module)s/%(module)s-source.md5sum
+	$(Q)rsync --quiet -av --delete Synth/%(module)s/* $(%(module)s_CACHEDIR)
 '''
 
 impl_template='''
@@ -177,7 +185,7 @@ impl_template='''
 %(inst)s_OOCXDC = %(oocxdc)s
 
 Impl/%(inst)s/%(inst)s-post-route.dcp: Synth/%(module)s/%(module)s-synth.dcp %(module_routed_netlists)s Impl/oocxdc.timestamp
-	MODULE=%(module)s \\
+	$(Q)MODULE=%(module)s \\
 	INST=%(inst)s \\
         XDC="$(%(inst)s_XDC) $(%(inst)s_OOCXDC)" \\
         MODULE_NETLISTS="%(module_routed_netlists)s" \\
@@ -191,8 +199,9 @@ TopDown_XDC = %(xdc_files)s
 TopDown_NETLISTS = %(module_synth_netlists)s
 
 Impl/TopDown/%(inst)s-post-place.dcp: $(FLOORPLAN) %(module_synth_netlists)s Synth/%(module)s/%(module)s-synth.dcp
-	mkdir -p Impl/TopDown/
-	test -f $(TopDown_MD5SUM) && test -f $(TopDown_CACHEDIR)/mkTop.bit && md5sum -c $(TopDown_MD5SUM) && rsync -av --delete $(TopDown_CACHEDIR)/* Impl/TopDown/ || \\
+	@echo FPGAMAKE %(inst)s post-place check
+	$(Q)mkdir -p Impl/TopDown/
+	$(Q)test -f $(TopDown_MD5SUM) && test -f $(TopDown_CACHEDIR)/mkTop.bit && md5sum --quiet -c $(TopDown_MD5SUM) && rsync --quiet -av --delete $(TopDown_CACHEDIR)/* Impl/TopDown/ || \\
 	MODULE=%(module)s \\
 	INST=%(inst)s \\
         SUBINST="%(subinst)s" \\
@@ -201,13 +210,13 @@ Impl/TopDown/%(inst)s-post-place.dcp: $(FLOORPLAN) %(module_synth_netlists)s Syn
         FLOORPLAN="$(FLOORPLAN)" \\
 	BITFILE=Impl/TopDown/mkTop.bit \\
 	vivado -notrace -mode batch -source %(fpgamakedir)s/tcl/topdown.tcl
-	mkdir -p $(%(inst)s_CACHEDIR)
-	md5sum Synth/%(module)s/%(module)s-synth.dcp $(TopDown_NETLISTS) $(TopDown_XDC) $(FLOORPLAN) > Impl/TopDown/TopDown-source.md5sum
-	rsync -av --delete Impl/TopDown/* $(TopDown_CACHEDIR)/
+	$(Q)mkdir -p $(%(inst)s_CACHEDIR)
+	$(Q)md5sum Synth/%(module)s/%(module)s-synth.dcp $(TopDown_NETLISTS) $(TopDown_XDC) $(FLOORPLAN) > Impl/TopDown/TopDown-source.md5sum
+	$(Q)rsync --quiet -av --delete Impl/TopDown/* $(TopDown_CACHEDIR)/
 
 %(bitfile)s: Impl/TopDown/%(inst)s-post-place.dcp
-	cp -v Impl/TopDown/mkTop.bit %(bitbase)s.bit
-	cp -v Impl/TopDown/mkTop.bin %(bitbase)s.bin
+	$(Q)cp -v Impl/TopDown/mkTop.bit %(bitbase)s.bit
+	$(Q)cp -v Impl/TopDown/mkTop.bin %(bitbase)s.bin
 
 Impl/oocxdc.timestamp: Impl/TopDown/%(inst)s-post-place.dcp
 	MODULE=%(module)s \\
@@ -243,9 +252,11 @@ def write_makefile():
             subinst_routed_netlists = []
             if module in modules_used:
                 for submodule in set(modules_used[module]):
-                    print 'inst', inst, 'submodule', submodule
+                    if options.verbose:
+                        print 'inst', inst, 'submodule', submodule
                     for subinst in module_instances[submodule]:
-                        print '\t', subinst
+                        if options.verbose:
+                            print '\t', subinst
                         subinst_routed_netlists.append('Impl/%s/%s-post-route.dcp' % (subinst, subinst))
 
 
