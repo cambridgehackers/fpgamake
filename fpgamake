@@ -55,6 +55,7 @@ argparser.add_argument('-v', '--verbose', help='Verbose operation', default=Fals
 
 module_instances={}
 modules_used={}
+modules_visited={}
 verilog_used={}
 xdc_files={}
 
@@ -69,12 +70,13 @@ def find_in_path(fname, path, suffix='.v'):
             return os.path.join(p, fname)
     return None
 
-def scan_module(module, parent_module=None):
+def scan_module(module, parent_partition=None, parent_module=None):
     if options.verbose:
         print 'scanning module %s ====================' % module
     vpath = find_in_path(module, options.vpath, '.v')
-    if not parent_module:
-        parent_module = module
+    modules_visited[module] = vpath
+    if not parent_partition:
+        parent_partition = module
     submodules=[]
     if not vpath or not os.path.exists(vpath):
         return
@@ -93,28 +95,32 @@ def scan_module(module, parent_module=None):
                     module_instances[submodule].append(inst)
                 else:
                     module_instances[submodule] = [inst]
-                if modules_used.has_key(parent_module):
-                    modules_used[parent_module].append(submodule)
+                if modules_used.has_key(parent_partition):
+                    modules_used[parent_partition].append(submodule)
                 else:
-                    modules_used[parent_module] = [submodule]
+                    modules_used[parent_partition] = [submodule]
             else:
                 submodulepath=find_in_path(submodule, options.vpath, '.v')
                 if submodulepath and os.path.exists(submodulepath):
-                    if verilog_used.has_key(parent_module):
-                        verilog_used[parent_module].append(submodule)
+                    if verilog_used.has_key(parent_partition):
+                        verilog_used[parent_partition].append(submodule)
                     else:
-                        verilog_used[parent_module] = [submodule]
+                        verilog_used[parent_partition] = [submodule]
         elif m2:
             submodule = m2.group(1)
             submodules.append(submodule)
             submodulepath=os.path.join('verilog', '%s.v' % submodule)
             if os.path.exists(submodulepath):
-                if verilog_used.has_key(parent_module):
-                    verilog_used[parent_module].append(submodule)
+                if verilog_used.has_key(parent_partition):
+                    verilog_used[parent_partition].append(submodule)
                 else:
-                    verilog_used[parent_module] = [submodule]
+                    verilog_used[parent_partition] = [submodule]
     for submodule in set(submodules):
-        scan_module(submodule, parent_module)
+        if submodule in modules_visited:
+            continue
+        if options.verbose:
+            print 'scanning submodule: ', set(submodules), ' parent ', parent_partition, parent_module
+        scan_module(submodule, parent_partition, module)
 
 def process_modules():
     for module in module_instances:
