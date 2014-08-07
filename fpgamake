@@ -207,7 +207,12 @@ Impl/TopDown/$1-post-place.dcp: $(FLOORPLAN) $3 Synth/$2/$2-synth.dcp
 	$(Q)rsync --quiet -av --delete Impl/TopDown/* $(TopDown_CACHEDIR)/
 endef
 
-all: $(SYNTH_NETLISTS) Impl/TopDown/top-post-place.dcp $(POST_ROUTE_DCP) %(bitfile)s
+all: everything
+
+'''
+
+makefileTrailerTemplate='''
+everything: $(SYNTH_NETLISTS) Impl/TopDown/top-post-place.dcp $(POST_ROUTE_DCP) %(bitfile)s
 
 '''
 
@@ -258,7 +263,6 @@ Impl/oocxdc.timestamp: Impl/TopDown/%(inst)s-post-place.dcp
 
 def write_makefile():
     f = open(options.output, 'w')
-    f.write('SYNTH_NETLISTS=%s\n' % ' \\\n\t'.join(['Synth/%s/%s-synth.dcp' % (module, module) for module in module_instances]))
     f.write(makefileHeaderTemplate % { 'floorplan': os.path.abspath(options.floorplan) if options.floorplan else '',
                                        'bitfile': options.bitfile,
                                        'fpgamakedir': fpgamakedir,
@@ -324,6 +328,9 @@ def write_makefile():
                                  'bitbase': os.path.splitext(options.bitfile)[0],
                                  'cachedir': os.path.abspath(options.cachedir)
             })
+    f.write('\nSYNTH_NETLISTS=%s\n' % ' \\\n\t'.join(['Synth/%s/%s-synth.dcp' % (module, module) for module in module_instances]))
+    f.write(makefileTrailerTemplate % { 'bitfile': options.bitfile,
+                                       })
     f.close()
 
 if __name__=='__main__':
