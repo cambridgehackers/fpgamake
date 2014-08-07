@@ -18,12 +18,12 @@ Synth/$1/$1-synth.dcp: $($1_PATH)
 	$(Q)mkdir -p Synth/$(MODULE)
 	$(Q)test -f $(CACHEDIR)/$(MODULE)/$(MODULE)-source.md5sum  \
                && md5sum --quiet -c $(CACHEDIR)/$(MODULE)/$(MODULE)-source.md5sum \
-               && rsync --quiet -av --delete $(CACHEDIR)/$(MODULE)/* Synth/$(MODULE)/ || \
-	MODULE=$(MODULE) \
-	VFILES="$($(MODULE)_VFILES) $(foreach item,$($(MODULE)_STUBS), Synth/stubs/$(item))" \
-	IP="$($(MODULE)_IP)" \
-	SUBINST="$($(MODULE)_SUBINST)" \
-	vivado -notrace -mode batch -source $(TCLDIR)/synth.tcl
+               && rsync --quiet -av --delete $(CACHEDIR)/$(MODULE)/* Synth/$(MODULE)/ \
+           || MODULE=$(MODULE) \
+	      VFILES="$($(MODULE)_VFILES) $(foreach item,$($(MODULE)_STUBS), Synth/stubs/$(item))" \
+	      IP="$($(MODULE)_IP)" \
+	      SUBINST="$($(MODULE)_SUBINST)" \
+	      vivado -notrace -mode batch -source $(TCLDIR)/synth.tcl
 	$(Q)mkdir -p $(CACHEDIR)/$(MODULE)
 	$(Q)md5sum $($(MODULE)_VFILES) > Synth/$(MODULE)/$(MODULE)-source.md5sum
 	$(Q)rsync --quiet -av --delete Synth/$(MODULE)/* $(CACHEDIR)/$(MODULE)
@@ -35,10 +35,10 @@ Impl/$1/$1-post-route.dcp: Synth/$2/$2-synth.dcp $($3_NETLISTS) Impl/oocxdc.time
 	$(Q)$(eval INST=$1)
 	@echo FPGAMAKE $(INST) post-place check
 	$(Q)MODULE=$(MODULE) INST=$(INST) \
-	XDC="$($(INST)_XDC) $(foreach item,$($(INST)_OOCXDC), Impl/$(INST)/$(item))" \
-	MODULE_NETLISTS="$($(INST)_NETLISTS)" \
-	BITFILE=$($(INST)_BITFILE) \
-	vivado -notrace -mode batch -source $(TCLDIR)/impl.tcl
+	    XDC="$($(INST)_XDC) $(foreach item,$($(INST)_OOCXDC), Impl/$(INST)/$(item))" \
+	    MODULE_NETLISTS="$($(INST)_NETLISTS)" \
+	    BITFILE=$($(INST)_BITFILE) \
+	    vivado -notrace -mode batch -source $(TCLDIR)/impl.tcl
 endef
 
 define TOP_RULE
@@ -48,14 +48,17 @@ Impl/TopDown/$1-post-place.dcp: $(FLOORPLAN) $(TopDown_NETLISTS) Synth/$2/$2-syn
 	$(Q)$(eval INST=$1)
 	@echo FPGAMAKE $(INST) topdown check
 	$(Q)mkdir -p Impl/TopDown/
-	$(Q)test -f $(CACHEDIR)/TopDown/TopDown-source.md5sum && test -f $(CACHEDIR)/TopDown/mkTop.bit && md5sum --quiet -c $(CACHEDIR)/TopDown/TopDown-source.md5sum && rsync --quiet -av --delete $(CACHEDIR)/TopDown/* Impl/TopDown/ || \
-	MODULE=$(MODULE) INST=$(INST) \
-	SUBINST="$(TopDown_SUBINST)" \
-	MODULE_NETLISTS="$(TopDown_NETLISTS)" \
-	XDC="$(TopDown_XDC)" \
-	FLOORPLAN="$(FLOORPLAN)" \
-	BITFILE=Impl/TopDown/mkTop.bit \
-	vivado -notrace -mode batch -source $(TCLDIR)/topdown.tcl
+	$(Q)test -f $(CACHEDIR)/TopDown/TopDown-source.md5sum \
+               && md5sum --quiet -c $(CACHEDIR)/TopDown/TopDown-source.md5sum \
+               && test -f $(CACHEDIR)/TopDown/mkTop.bit \
+               && rsync --quiet -av --delete $(CACHEDIR)/TopDown/* Impl/TopDown/ \
+           || MODULE=$(MODULE) INST=$(INST) \
+	      SUBINST="$(TopDown_SUBINST)" \
+	      MODULE_NETLISTS="$(TopDown_NETLISTS)" \
+	      XDC="$(TopDown_XDC)" \
+	      FLOORPLAN="$(FLOORPLAN)" \
+	      BITFILE=Impl/TopDown/mkTop.bit \
+	      vivado -notrace -mode batch -source $(TCLDIR)/topdown.tcl
 	$(Q)mkdir -p $(CACHEDIR)/TopDown
 	$(Q)md5sum Synth/$(MODULE)/$(MODULE)-synth.dcp $(TopDown_NETLISTS) $(TopDown_XDC) $(FLOORPLAN) > Impl/TopDown/TopDown-source.md5sum
 	$(Q)rsync --quiet -av --delete Impl/TopDown/* $(CACHEDIR)/TopDown/
