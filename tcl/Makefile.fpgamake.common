@@ -35,7 +35,7 @@ Impl/$1/$1-post-route.dcp: Synth/$2/$2-synth.dcp $($3_NETLISTS) Impl/oocxdc.time
 	$(Q)$(eval INST=$1)
 	@echo FPGAMAKE $(INST) post-place check
 	$(Q)MODULE=$(MODULE) INST=$(INST) \
-	XDC="$($(INST)_XDC) $($(INST)_OOCXDC)" \
+	XDC="$($(INST)_XDC) $(foreach item,$($(INST)_OOCXDC), Impl/$(INST)/$(item))" \
 	MODULE_NETLISTS="$($(INST)_NETLISTS)" \
 	BITFILE=$($(INST)_BITFILE) \
 	vivado -notrace -mode batch -source $(TCLDIR)/impl.tcl
