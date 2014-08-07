@@ -160,8 +160,6 @@ ifneq ("$(FLOORPLAN)","")
 POST_ROUTE_DCP=Impl/top/top-post-route.dcp
 endif
 
-all: $(SYNTH_NETLISTS) Impl/TopDown/top-post-place.dcp $(POST_ROUTE_DCP) %(bitfile)s
-
 define SYNTH_RULE
 Synth/$1/$1-synth.dcp: $2
 	$(Q)$(eval MODULE=$1)
@@ -189,6 +187,27 @@ Impl/$1/$1-post-route.dcp: Synth/$2/$2-synth.dcp $3 Impl/oocxdc.timestamp
 	BITFILE=$($(INST)_BITFILE) \\
 	vivado -notrace -mode batch -source $(TCLDIR)/impl.tcl
 endef
+
+define TOP_RULE
+Impl/TopDown/$1-post-place.dcp: $(FLOORPLAN) $3 Synth/$2/$2-synth.dcp
+	$(Q)$(eval MODULE=$2)
+	$(Q)$(eval INST=$1)
+	@echo FPGAMAKE $(INST) topdown check
+	$(Q)mkdir -p Impl/TopDown/
+	$(Q)test -f $(TopDown_MD5SUM) && test -f $(TopDown_CACHEDIR)/mkTop.bit && md5sum --quiet -c $(TopDown_MD5SUM) && rsync --quiet -av --delete $(TopDown_CACHEDIR)/* Impl/TopDown/ || \\
+	MODULE=$(MODULE) INST=$(INST) \\
+	SUBINST="$(TopDown_SUBINST)" \\
+	MODULE_NETLISTS="$(TopDown_NETLISTS)" \\
+	XDC="$(TopDown_XDC)" \\
+	FLOORPLAN="$(FLOORPLAN)" \\
+	BITFILE=Impl/TopDown/mkTop.bit \\
+	vivado -notrace -mode batch -source $(TCLDIR)/topdown.tcl
+	$(Q)mkdir -p $($(INST)_CACHEDIR)
+	$(Q)md5sum Synth/$(MODULE)/$(MODULE)-synth.dcp $(TopDown_NETLISTS) $(TopDown_XDC) $(FLOORPLAN) > Impl/TopDown/TopDown-source.md5sum
+	$(Q)rsync --quiet -av --delete Impl/TopDown/* $(TopDown_CACHEDIR)/
+endef
+
+all: $(SYNTH_NETLISTS) Impl/TopDown/top-post-place.dcp $(POST_ROUTE_DCP) %(bitfile)s
 
 '''
 
@@ -223,22 +242,7 @@ TopDown_XDC = %(xdc_files)s
 TopDown_NETLISTS = %(module_synth_netlists)s
 TopDown_SUBINST = %(subinst)s
 
-Impl/TopDown/%(inst)s-post-place.dcp: $(FLOORPLAN) %(module_synth_netlists)s Synth/%(module)s/%(module)s-synth.dcp
-	$(Q)$(eval MODULE=%(module)s)
-	$(Q)$(eval INST=%(inst)s)
-	@echo FPGAMAKE $(INST) topdown check
-	$(Q)mkdir -p Impl/TopDown/
-	$(Q)test -f $(TopDown_MD5SUM) && test -f $(TopDown_CACHEDIR)/mkTop.bit && md5sum --quiet -c $(TopDown_MD5SUM) && rsync --quiet -av --delete $(TopDown_CACHEDIR)/* Impl/TopDown/ || \\
-	MODULE=$(MODULE) INST=$(INST) \\
-	SUBINST="$(TopDown_SUBINST)" \\
-	MODULE_NETLISTS="$(TopDown_NETLISTS)" \\
-	XDC="$(TopDown_XDC)" \\
-	FLOORPLAN="$(FLOORPLAN)" \\
-	BITFILE=Impl/TopDown/mkTop.bit \\
-	vivado -notrace -mode batch -source $(TCLDIR)/topdown.tcl
-	$(Q)mkdir -p $($(INST)_CACHEDIR)
-	$(Q)md5sum Synth/$(MODULE)/$(MODULE)-synth.dcp $(TopDown_NETLISTS) $(TopDown_XDC) $(FLOORPLAN) > Impl/TopDown/TopDown-source.md5sum
-	$(Q)rsync --quiet -av --delete Impl/TopDown/* $(TopDown_CACHEDIR)/
+$(eval $(call TOP_RULE,%(inst)s,%(module)s,%(module_synth_netlists)s))
 
 %(bitfile)s: Impl/TopDown/%(inst)s-post-place.dcp
 	$(Q)cp -v Impl/TopDown/mkTop.bit %(bitbase)s.bit
