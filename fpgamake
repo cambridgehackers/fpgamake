@@ -158,13 +158,13 @@ TCLDIR=%(fpgamakedir)s/tcl
 CACHEDIR = %(cachedir)s
 
 FLOORPLAN=%(floorplan)s
-ifneq ("$(FLOORPLAN)","")
-POST_ROUTE_DCP=Impl/top/top-post-route.dcp
-endif
 SYNTH_NETLISTS=
+ifneq ("$(FLOORPLAN)","")
+SYNTH_NETLISTS +=Impl/top/top-post-route.dcp
+endif
 
 define SYNTH_RULE
-SYNTH_NETLISTS+= Synth/$1/$1-synth.dcp
+SYNTH_NETLISTS += Synth/$1/$1-synth.dcp
 Synth/$1/$1-synth.dcp: $2
 	$(Q)$(eval MODULE=$1)
 	@echo FPGAMAKE $(MODULE) synth check
@@ -181,7 +181,7 @@ Synth/$1/$1-synth.dcp: $2
 endef
 
 define IMPL_RULE
-Impl/$1/$1-post-route.dcp: Synth/$2/$2-synth.dcp $3 Impl/oocxdc.timestamp
+Impl/$1/$1-post-route.dcp: Synth/$2/$2-synth.dcp $($3_NETLISTS) Impl/oocxdc.timestamp
 	$(Q)$(eval MODULE=$2)
 	$(Q)$(eval INST=$1)
 	@echo FPGAMAKE $(INST) post-place check
@@ -193,7 +193,8 @@ Impl/$1/$1-post-route.dcp: Synth/$2/$2-synth.dcp $3 Impl/oocxdc.timestamp
 endef
 
 define TOP_RULE
-Impl/TopDown/$1-post-place.dcp: $(FLOORPLAN) $3 Synth/$2/$2-synth.dcp
+SYNTH_NETLISTS += Impl/TopDown/$1-post-place.dcp
+Impl/TopDown/$1-post-place.dcp: $(FLOORPLAN) $(TopDown_NETLISTS) Synth/$2/$2-synth.dcp
 	$(Q)$(eval MODULE=$2)
 	$(Q)$(eval INST=$1)
 	@echo FPGAMAKE $(INST) topdown check
@@ -216,7 +217,7 @@ all: everything
 '''
 
 makefileTrailerTemplate='''
-everything: $(SYNTH_NETLISTS) Impl/TopDown/top-post-place.dcp $(POST_ROUTE_DCP) %(bitfile)s
+everything: $(SYNTH_NETLISTS) %(bitfile)s
 
 '''
 
@@ -230,18 +231,16 @@ synth_template='''
 
 $(eval $(call SYNTH_RULE,%(module)s,%(module_path)s))
 '''
-#parameters = AWK BAT CAT DOG
-#$(foreach P,$(parameters),$(eval $(call COPY_TO_DEST,$P)))
 
 impl_template='''
 %(inst)s_CACHEDIR = $(CACHEDIR)/%(inst)s
 %(inst)s_MD5SUM = $(%(inst)s_CACHEDIR)/%(inst)s-source.md5sum
 %(inst)s_XDC = %(xdc_files)s
 %(inst)s_OOCXDC = %(oocxdc)s
-%(inst)s_NETLISTS = "%(module_routed_netlists)s"
+%(inst)s_NETLISTS = %(module_routed_netlists)s
 %(inst)s_BITFILE = %(bitfile)s
 
-$(eval $(call IMPL_RULE,%(inst)s,%(module)s,%(module_routed_netlists)s))
+$(eval $(call IMPL_RULE,%(inst)s,%(module)s))
 '''
 
 topdown_template='''
@@ -251,7 +250,7 @@ TopDown_XDC = %(xdc_files)s
 TopDown_NETLISTS = %(module_synth_netlists)s
 TopDown_SUBINST = %(subinst)s
 
-$(eval $(call TOP_RULE,%(inst)s,%(module)s,%(module_synth_netlists)s))
+$(eval $(call TOP_RULE,%(inst)s,%(module)s))
 
 %(bitfile)s: Impl/TopDown/%(inst)s-post-place.dcp
 	$(Q)cp -v Impl/TopDown/mkTop.bit %(bitbase)s.bit
@@ -260,7 +259,7 @@ $(eval $(call TOP_RULE,%(inst)s,%(module)s,%(module_synth_netlists)s))
 Impl/oocxdc.timestamp: Impl/TopDown/%(inst)s-post-place.dcp
 	MODULE=%(module)s \\
 	INST=%(inst)s \\
-	SUBINST="%(subinst)s" \\
+	SUBINST="$TopDown_SUBINST" \\
 	vivado -notrace -mode batch -source $(TCLDIR)/write-ooc-xdc.tcl
 	touch Impl/oocxdc.timestamp
 '''
@@ -329,7 +328,6 @@ def write_makefile():
                                  'bitfile': options.bitfile if options.bitfile else '',
                                  'bitbase': os.path.splitext(options.bitfile)[0],
             })
-    #f.write('\nSYNTH_NETLISTS=%s\n' % ' \\\n\t'.join(['Synth/%s/%s-synth.dcp' % (module, module) for module in module_instances]))
     f.write(makefileTrailerTemplate % { 'bitfile': options.bitfile, })
     f.close()
 
