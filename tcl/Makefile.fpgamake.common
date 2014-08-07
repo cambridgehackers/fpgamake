@@ -20,7 +20,7 @@ Synth/$1/$1-synth.dcp: $($1_PATH)
                && md5sum --quiet -c $(CACHEDIR)/$(MODULE)/$(MODULE)-source.md5sum \
                && rsync --quiet -av --delete $(CACHEDIR)/$(MODULE)/* Synth/$(MODULE)/ || \
 	MODULE=$(MODULE) \
-	VFILES="$($(MODULE)_VFILES) $($(MODULE)_STUBS)" \
+	VFILES="$($(MODULE)_VFILES) $(foreach item,$($(MODULE)_STUBS), Synth/stubs/$(item))" \
 	IP="$($(MODULE)_IP)" \
 	SUBINST="$($(MODULE)_SUBINST)" \
 	vivado -notrace -mode batch -source $(TCLDIR)/synth.tcl

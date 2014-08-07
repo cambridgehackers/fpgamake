@@ -201,7 +201,7 @@ def write_makefile():
         if options.top in modules_used:
             subinst = ([' '.join(module_instances[submodule]) for submodule in set(modules_used[options.top])])
         if module in modules_used:
-            module_stubs = ['Synth/stubs/%s-stub.v' % (m) for m in set(modules_used[module])]
+            module_stubs = ['%s-stub.v' % (m) for m in set(modules_used[module])]
         f.write(synth_template % { 'module': module,
                                    'module_path': find_in_path(module, options.vpath, '.v'),
                                    'vfiles': ' '.join([find_in_path(module, options.vpath, '.v')] + [find_in_path(vfile, options.vpath, '.v') for vfile in set(verilog_used[module])]) if module in verilog_used else '',
