@@ -51,7 +51,7 @@ argparser.add_argument('--floorplan', help='Floorplan XDC.', default=None)
 argparser.add_argument('-t', '--top', help='Top verilog file')
 argparser.add_argument('-b', '--bitfile', help='Bit file to generate', default=None)
 argparser.add_argument('--cachedir', help='Cache directory', default='Cache')
-argparser.add_argument('-v', '--verbose', help='Verbose operation', default=False)
+argparser.add_argument('-v', '--verbose', help='Verbose operation', action='store_true', default=False)
 
 module_instances={}
 modules_used={}
@@ -106,6 +106,8 @@ def scan_module(module, parent_partition=None, parent_module=None):
                         verilog_used[parent_partition].append(submodule)
                     else:
                         verilog_used[parent_partition] = [submodule]
+                elif options.verbose:
+                    print 'fpgamake: could not find module in path', submodule, options.vpath, submodulepath
         elif m2:
             submodule = m2.group(1)
             submodules.append(submodule)
