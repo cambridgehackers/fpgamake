@@ -162,18 +162,9 @@ endif
 
 all: $(SYNTH_NETLISTS) Impl/TopDown/top-post-place.dcp $(POST_ROUTE_DCP) %(bitfile)s
 
-'''
-
-synth_template='''
-%(module)s_VFILES = %(vfiles)s
-%(module)s_STUBS = %(module_stubs)s
-%(module)s_IP = %(xcifiles)s
-%(module)s_SUBINST = %(subinst)s
-%(module)s_CACHEDIR = %(cachedir)s/%(module)s
-%(module)s_MD5SUM = $(%(module)s_CACHEDIR)/%(module)s-source.md5sum
-
-Synth/%(module)s/%(module)s-synth.dcp: %(module_path)s
-	$(Q)$(eval MODULE=%(module)s)
+define SYNTH_RULE
+Synth/$1/$1-synth.dcp: $2
+	$(Q)$(eval MODULE=$1)
 	@echo FPGAMAKE $(MODULE) synth check
 	$(Q)mkdir -p Synth/$(MODULE)
 	$(Q)test -f $($(MODULE)_MD5SUM)  && md5sum --quiet -c $($(MODULE)_MD5SUM) && rsync --quiet -av --delete $($(MODULE)_CACHEDIR)/* Synth/$(MODULE)/ || \\
@@ -185,7 +176,34 @@ Synth/%(module)s/%(module)s-synth.dcp: %(module_path)s
 	$(Q)mkdir -p $($(MODULE)_CACHEDIR)
 	$(Q)md5sum $($(MODULE)_VFILES) > Synth/$(MODULE)/$(MODULE)-source.md5sum
 	$(Q)rsync --quiet -av --delete Synth/$(MODULE)/* $($(MODULE)_CACHEDIR)
+endef
+
+define IMPL_RULE
+Impl/$1/$1-post-route.dcp: Synth/$2/$2-synth.dcp $3 Impl/oocxdc.timestamp
+	$(Q)$(eval MODULE=$2)
+	$(Q)$(eval INST=$1)
+	@echo FPGAMAKE $(INST) post-place check
+	$(Q)MODULE=$(MODULE) INST=$(INST) \\
+	XDC="$($(INST)_XDC) $($(INST)_OOCXDC)" \\
+	MODULE_NETLISTS="$($(INST)_NETLISTS)" \\
+	BITFILE=$($(INST)_BITFILE) \\
+	vivado -notrace -mode batch -source $(TCLDIR)/impl.tcl
+endef
+
 '''
+
+synth_template='''
+%(module)s_VFILES = %(vfiles)s
+%(module)s_STUBS = %(module_stubs)s
+%(module)s_IP = %(xcifiles)s
+%(module)s_SUBINST = %(subinst)s
+%(module)s_CACHEDIR = %(cachedir)s/%(module)s
+%(module)s_MD5SUM = $(%(module)s_CACHEDIR)/%(module)s-source.md5sum
+
+$(eval $(call SYNTH_RULE,%(module)s,%(module_path)s))
+'''
+#parameters = AWK BAT CAT DOG
+#$(foreach P,$(parameters),$(eval $(call COPY_TO_DEST,$P)))
 
 impl_template='''
 %(inst)s_CACHEDIR = %(cachedir)s/%(inst)s
@@ -195,16 +213,9 @@ impl_template='''
 %(inst)s_NETLISTS = "%(module_routed_netlists)s"
 %(inst)s_BITFILE = %(bitfile)s
 
-Impl/%(inst)s/%(inst)s-post-route.dcp: Synth/%(module)s/%(module)s-synth.dcp %(module_routed_netlists)s Impl/oocxdc.timestamp
-	$(Q)$(eval MODULE=%(module)s)
-	$(Q)$(eval INST=%(inst)s)
-	@echo FPGAMAKE $(INST) post-place check
-	$(Q)MODULE=$(MODULE) INST=$(INST) \\
-	XDC="$($(INST)_XDC) $($(INST)_OOCXDC)" \\
-	MODULE_NETLISTS="$($(INST)_NETLISTS)" \\
-	BITFILE=$($(INST)_BITFILE) \\
-	vivado -notrace -mode batch -source $(TCLDIR)/impl.tcl
+$(eval $(call IMPL_RULE,%(inst)s,%(module)s,%(module_routed_netlists)s))
 '''
+
 topdown_template='''
 TopDown_CACHEDIR = %(cachedir)s/TopDown
 TopDown_MD5SUM = $(TopDown_CACHEDIR)/TopDown-source.md5sum
