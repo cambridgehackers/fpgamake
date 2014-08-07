@@ -159,8 +159,10 @@ FLOORPLAN=%(floorplan)s
 ifneq ("$(FLOORPLAN)","")
 POST_ROUTE_DCP=Impl/top/top-post-route.dcp
 endif
+SYNTH_NETLISTS=
 
 define SYNTH_RULE
+SYNTH_NETLISTS+= Synth/$1/$1-synth.dcp
 Synth/$1/$1-synth.dcp: $2
 	$(Q)$(eval MODULE=$1)
 	@echo FPGAMAKE $(MODULE) synth check
@@ -264,7 +266,6 @@ Impl/oocxdc.timestamp: Impl/TopDown/%(inst)s-post-place.dcp
 def write_makefile():
     f = open(options.output, 'w')
     f.write(makefileHeaderTemplate % { 'floorplan': os.path.abspath(options.floorplan) if options.floorplan else '',
-                                       'bitfile': options.bitfile,
                                        'fpgamakedir': fpgamakedir,
                                        })
     for module in module_instances:
@@ -328,9 +329,8 @@ def write_makefile():
                                  'bitbase': os.path.splitext(options.bitfile)[0],
                                  'cachedir': os.path.abspath(options.cachedir)
             })
-    f.write('\nSYNTH_NETLISTS=%s\n' % ' \\\n\t'.join(['Synth/%s/%s-synth.dcp' % (module, module) for module in module_instances]))
-    f.write(makefileTrailerTemplate % { 'bitfile': options.bitfile,
-                                       })
+    #f.write('\nSYNTH_NETLISTS=%s\n' % ' \\\n\t'.join(['Synth/%s/%s-synth.dcp' % (module, module) for module in module_instances]))
+    f.write(makefileTrailerTemplate % { 'bitfile': options.bitfile, })
     f.close()
 
 if __name__=='__main__':
