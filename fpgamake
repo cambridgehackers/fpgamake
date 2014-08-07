@@ -155,6 +155,8 @@ else
 endif
 
 TCLDIR=%(fpgamakedir)s/tcl
+CACHEDIR = %(cachedir)s
+
 FLOORPLAN=%(floorplan)s
 ifneq ("$(FLOORPLAN)","")
 POST_ROUTE_DCP=Impl/top/top-post-route.dcp
@@ -219,11 +221,11 @@ everything: $(SYNTH_NETLISTS) Impl/TopDown/top-post-place.dcp $(POST_ROUTE_DCP) 
 '''
 
 synth_template='''
+%(module)s_CACHEDIR = $(CACHEDIR)/%(module)s
 %(module)s_VFILES = %(vfiles)s
 %(module)s_STUBS = %(module_stubs)s
 %(module)s_IP = %(xcifiles)s
 %(module)s_SUBINST = %(subinst)s
-%(module)s_CACHEDIR = %(cachedir)s/%(module)s
 %(module)s_MD5SUM = $(%(module)s_CACHEDIR)/%(module)s-source.md5sum
 
 $(eval $(call SYNTH_RULE,%(module)s,%(module_path)s))
@@ -232,7 +234,7 @@ $(eval $(call SYNTH_RULE,%(module)s,%(module_path)s))
 #$(foreach P,$(parameters),$(eval $(call COPY_TO_DEST,$P)))
 
 impl_template='''
-%(inst)s_CACHEDIR = %(cachedir)s/%(inst)s
+%(inst)s_CACHEDIR = $(CACHEDIR)/%(inst)s
 %(inst)s_MD5SUM = $(%(inst)s_CACHEDIR)/%(inst)s-source.md5sum
 %(inst)s_XDC = %(xdc_files)s
 %(inst)s_OOCXDC = %(oocxdc)s
@@ -243,7 +245,7 @@ $(eval $(call IMPL_RULE,%(inst)s,%(module)s,%(module_routed_netlists)s))
 '''
 
 topdown_template='''
-TopDown_CACHEDIR = %(cachedir)s/TopDown
+TopDown_CACHEDIR = $(CACHEDIR)/TopDown
 TopDown_MD5SUM = $(TopDown_CACHEDIR)/TopDown-source.md5sum
 TopDown_XDC = %(xdc_files)s
 TopDown_NETLISTS = %(module_synth_netlists)s
@@ -267,6 +269,7 @@ def write_makefile():
     f = open(options.output, 'w')
     f.write(makefileHeaderTemplate % { 'floorplan': os.path.abspath(options.floorplan) if options.floorplan else '',
                                        'fpgamakedir': fpgamakedir,
+                                       'cachedir': os.path.abspath(options.cachedir)
                                        })
     for module in module_instances:
         subinst = []
@@ -281,7 +284,6 @@ def write_makefile():
                                    'subinst': ' '.join(subinst),
                                    'module_stubs': ' '.join(module_stubs),
                                    'xcifiles': ' '.join(options.xci),
-                                   'cachedir': os.path.abspath(options.cachedir)
                                    })
         for inst in set(module_instances[module]):
             subinst_routed_netlists = []
@@ -301,7 +303,6 @@ def write_makefile():
                                       'module_routed_netlists': ' '.join(subinst_routed_netlists),
                                       'oocxdc': 'Impl/%(inst)s/%(inst)s-ooc.xdc Impl/%(inst)s/%(inst)s-ooc-clocks.xdc Impl/%(inst)s/%(inst)s-ooc-budget.xdc' % {'inst': inst} if inst != 'top' else '',
                                       'bitfile': options.bitfile if (inst == 'top' and options.bitfile) else '',
-                                      'cachedir': os.path.abspath(options.cachedir)
                                       })
 
     submodule_synth_netlists = []
@@ -327,7 +328,6 @@ def write_makefile():
                                  'module_synth_netlists': ' '.join(submodule_synth_netlists),
                                  'bitfile': options.bitfile if options.bitfile else '',
                                  'bitbase': os.path.splitext(options.bitfile)[0],
-                                 'cachedir': os.path.abspath(options.cachedir)
             })
     #f.write('\nSYNTH_NETLISTS=%s\n' % ' \\\n\t'.join(['Synth/%s/%s-synth.dcp' % (module, module) for module in module_instances]))
     f.write(makefileTrailerTemplate % { 'bitfile': options.bitfile, })
