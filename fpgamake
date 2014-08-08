@@ -156,6 +156,7 @@ def make_stub(vpath, stubpath):
 makefileHeaderTemplate='''
 
 TCLDIR=%(fpgamakedir)s/tcl
+BUILDCACHE=%(buildcachedir)s
 CACHEDIR = %(cachedir)s
 FLOORPLAN=%(floorplan)s
 
@@ -200,6 +201,7 @@ def write_makefile():
     f = open(options.output, 'w')
     f.write(makefileHeaderTemplate % { 'floorplan': os.path.abspath(options.floorplan) if options.floorplan else '',
                                        'fpgamakedir': fpgamakedir,
+                                       'buildcachedir': os.path.abspath(os.path.join(fpgamakedir, '../buildcache/buildcache')),
                                        'cachedir': os.path.abspath(options.cachedir)
                                        })
     for module in module_instances:
