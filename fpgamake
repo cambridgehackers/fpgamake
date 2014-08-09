@@ -186,8 +186,6 @@ impl_template='''
 
 $(eval $(call IMPL_RULE,%(inst)s,%(module)s))
 '''
-#unused? %(inst)s_CACHEDIR = $(CACHEDIR)/%(inst)s
-#unused? %(inst)s_MD5SUM = $(%(inst)s_CACHEDIR)/%(inst)s-source.md5sum
 
 topdown_template='''
 TopDown_XDC = %(xdc_files)s
@@ -201,8 +199,8 @@ def write_makefile():
     f = open(options.output, 'w')
     f.write(makefileHeaderTemplate % { 'floorplan': os.path.abspath(options.floorplan) if options.floorplan else '',
                                        'fpgamakedir': fpgamakedir,
-                                       'buildcachedir': os.path.abspath(os.path.join(fpgamakedir, '../buildcache/buildcache')),
-                                       'cachedir': os.path.abspath(options.cachedir)
+                                       'buildcachedir': os.path.abspath(os.path.join(fpgamakedir, '../buildcache/buildcache')) if options.cachedir else '',
+                                       'cachedir': os.path.abspath(options.cachedir) if options.cachedir else ''
                                        })
     for module in module_instances:
         subinst = []
