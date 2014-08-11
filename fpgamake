@@ -43,6 +43,7 @@ level design.
 
 argparser = argparse.ArgumentParser(description=description)
 argparser.add_argument('vpath', help='Verilog path', nargs='+')
+argparser.add_argument('--header', help='Verilog defines', default=[], action='append')
 argparser.add_argument('-o', '--output', help='Output make file', default='synth.mk')
 argparser.add_argument('-s', '--synth', help='Module to synthesize separately', default=[], action='append')
 argparser.add_argument('--xci', help='XCI file to use', default=[], action='append')
@@ -180,6 +181,7 @@ everything: $(SYNTH_NETLISTS) %(bitfile)s
 '''
 
 synth_template='''
+%(module)s_HEADERFILES = %(headerfiles)s
 %(module)s_VFILES = %(vfiles)s
 %(module)s_STUBS = %(module_stubs)s
 %(module)s_IP = %(xcifiles)s
@@ -222,7 +224,10 @@ def write_makefile():
             module_stubs = ['%s-stub.v' % (m) for m in set(modules_used[module])]
         f.write(synth_template % { 'module': module,
                                    'module_path': find_in_path(module, options.vpath, '.v'),
-                                   'vfiles': ' '.join([find_in_path(module, options.vpath, '.v')] + [find_in_path(vfile, options.vpath, '.v') for vfile in set(verilog_used[module])]) if module in verilog_used else '',
+                                   'headerfiles': ' '.join([find_in_path(vfile, options.vpath, '.v') for vfile in set(options.header)]) if options.header else '',
+                                   'vfiles': ' '.join([find_in_path(module, options.vpath, '.v')]
+                                                      + [find_in_path(vfile, options.vpath, '.v') for vfile in set(verilog_used[module])]
+                                                      ) if module in verilog_used else '',
                                    'subinst': ' '.join(subinst),
                                    'module_stubs': ' '.join(module_stubs),
                                    'xcifiles': ' '.join(options.xci),
