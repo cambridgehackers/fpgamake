@@ -61,8 +61,8 @@ modules_visited={}
 verilog_used={}
 xdc_files={}
 
-parameterizedModuleRe = r'^\s+(\w+)\s*#'
-plainModuleRe = r'^\s+(\w+)\s+(\w+)\s*\(?'
+parameterizedModuleRe = r'^\s*(\w+)\s*#'
+plainModuleRe = r'^\s*(\w+)\s+(\w+)\s*\(?'
 
 verilog_keywords = ['assign', 'input', 'output', 'parameter', 'reg', 'wire', 'if', 'else']
 
