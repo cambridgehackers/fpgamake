@@ -46,6 +46,8 @@ argparser.add_argument('vpath', help='Verilog path', nargs='+')
 argparser.add_argument('--header', help='Verilog defines', default=[], action='append')
 argparser.add_argument('-o', '--output', help='Output make file', default='synth.mk')
 argparser.add_argument('-s', '--synth', help='Module to synthesize separately', default=[], action='append')
+argparser.add_argument('-B', '--board', help='Target board name', default='zedboard')
+argparser.add_argument('-p', '--part', help='Target part name', default='xc7z020clg484-1')
 argparser.add_argument('--xci', help='XCI file to use', default=[], action='append')
 argparser.add_argument('--xdc', help='XDC file to use', default=[], action='append')
 argparser.add_argument('--floorplan', help='Floorplan XDC.', default=None)
@@ -220,6 +222,8 @@ TCLDIR=%(fpgamakedir)s/tcl
 BUILDCACHE=%(buildcachedir)s
 CACHEDIR = %(cachedir)s
 FLOORPLAN=%(floorplan)s
+FPGAMAKE_PARTNAME=%(partname)s
+FPGAMAKE_BOARDNAME=%(boardname)s
 
 include $(TCLDIR)/Makefile.fpgamake.common
 '''
@@ -263,6 +267,8 @@ def write_makefile():
     f = open(options.output, 'w')
     f.write(makefileHeaderTemplate % { 'floorplan': os.path.abspath(options.floorplan) if options.floorplan else '',
                                        'fpgamakedir': fpgamakedir,
+                                       'partname': options.part,
+                                       'boardname': options.board,
                                        'buildcachedir': os.path.abspath(os.path.join(fpgamakedir, '../buildcache/buildcache')) if options.cachedir else '',
                                        'cachedir': os.path.abspath(options.cachedir) if options.cachedir else ''
                                        })

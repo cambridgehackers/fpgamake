@@ -26,6 +26,11 @@
 #
 if [file exists {board.tcl}] {
     source {board.tcl}
+} elseif [info exists env(FPGAMAKE_PARTNAME)] {
+    set partname $env(FPGAMAKE_PARTNAME)
+    if [info exists env(FPGAMAKE_BOARDNAME)] {
+	set boardname $env(FPGAMAKE_BOARDNAME)
+    }
 } else {
     set boardname vc707
     set partname {xc7vx485tffg1761-2}
