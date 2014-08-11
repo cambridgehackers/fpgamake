@@ -72,6 +72,10 @@ def find_in_path(fname, path, suffix='.v'):
     for p in path:
         if os.path.exists(os.path.join(p, fname)):
             return os.path.join(p, fname)
+        if os.path.exists(os.path.join(p, fname.upper())):
+            return os.path.join(p, fname.upper())
+        if os.path.exists(os.path.join(p, fname.lower())):
+            return os.path.join(p, fname.lower())
     return None
 
 def scan_module(module, parent_partition=None, parent_module=None):
