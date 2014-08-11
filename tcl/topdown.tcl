@@ -78,7 +78,7 @@ puts "If it reported negative slack, then the design did not meet the timing con
 puts "****************************************"
 report_utilization -file $outputDir/$instance-post-link-util.rpt
 foreach pblock [get_pblocks] {
-    report_utilization -pblocks $pblock -file $outputDir/$pblock-post-link-util.rpt
+    report_utilization -pblocks $pblock -file $outputDir/$pblock-post-link-util.rpt > $outputDir/temp.log
 }
 log_command place_design    $outputDir/place_design.log
 log_command "write_checkpoint -force $outputDir/$instance-post-place.dcp" $outputDir/temp.log
@@ -89,7 +89,7 @@ puts "If it reported negative slack, then the design did not meet the timing con
 puts "****************************************"
 report_utilization -file $outputDir/$instance-post-place-util.rpt
 report_timing_summary -file $outputDir/$instance-post-place-timing-summary.rpt
-report_io -file $outputDir/$instance-post-place-io.rpt > hw/temp.log
+report_io -file $outputDir/$instance-post-place-io.rpt > $outputDir/temp.log
 
 if {"$env(FLOORPLAN)" == ""} {
     # just do top down build
@@ -104,9 +104,9 @@ if {"$env(FLOORPLAN)" == ""} {
     puts "****************************************"
     report_utilization -file $outputDir/$instance-post-route-util.rpt
     report_timing_summary -file $outputDir/$instance-post-route-timing-summary.rpt
-    report_timing -sort_by group -max_paths 100 -path_type summary -file $outputDir/$instance-post-route-timing.rpt > hw/temp.log
-    report_io -file $outputDir/$instance-post-route-io.rpt > hw/temp.log
-    report_datasheet -file $outputDir/$instance-post-route_datasheet.rpt > hw/temp.log
+    report_timing -sort_by group -max_paths 100 -path_type summary -file $outputDir/$instance-post-route-timing.rpt > $outputDir/temp.log
+    report_io -file $outputDir/$instance-post-route-io.rpt > $outputDir/temp.log
+    report_datasheet -file $outputDir/$instance-post-route_datasheet.rpt > $outputDir/temp.log
     if {[info exists env(BITFILE)] && $env(BITFILE) != ""} {
 	log_command "write_bitstream -bin_file -force $env(BITFILE)" $outputDir/write_bitstream.log
     }
