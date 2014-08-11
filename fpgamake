@@ -53,7 +53,7 @@ argparser.add_argument('-t', '--top', help='Top verilog file')
 argparser.add_argument('-b', '--bitfile', help='Bit file to generate', default=None)
 argparser.add_argument('--cachedir', help='Cache directory', default='Cache')
 argparser.add_argument('-v', '--verbose', help='Verbose operation', action='store_true', default=False)
-argparser.add_argument('--debug', help='Debug operation', action='store_true', default=False)
+argparser.add_argument('--debug', help='Debug operation', action='store_true', default=True)
 
 module_instances={}
 modules_used={}
@@ -111,7 +111,7 @@ def scan_module(module, parent_partition=None, parent_module=None):
                 submodule=m.group(1)
                 if submodule in verilog_keywords:
                     continue
-                #print 'found block', m.group(1), m.group(2)
+                print 'found submodule', m.group(1), m.group(2)
                 submodules.append(submodule)
                 inst=m.group(2)
                 if submodule in options.synth:
@@ -139,6 +139,7 @@ def scan_module(module, parent_partition=None, parent_module=None):
                 submodule = m2.group(1)
                 if submodule in verilog_keywords:
                     continue
+                print 'found submodule', m2.group(1)
                 submodules.append(submodule)
                 submodulepath=find_in_path(submodule, options.vpath)
                 if submodulepath:
@@ -310,6 +311,8 @@ if __name__=='__main__':
     if options.verbose:
         print module_instances
         print modules_used
+        print 'verilog_used'
+        print verilog_used
 
     xdc_files['top'] = options.xdc
     process_modules()
