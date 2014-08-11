@@ -77,6 +77,9 @@ puts "If timing report says 'No timing paths found.' then the design met the tim
 puts "If it reported negative slack, then the design did not meet the timing constraints."
 puts "****************************************"
 report_utilization -file $outputDir/$instance-post-link-util.rpt
+foreach pblock [get_pblocks] {
+    report_utilization -pblocks $pblock -file $outputDir/$pblock-post-link-util.rpt
+}
 log_command place_design    $outputDir/place_design.log
 log_command "write_checkpoint -force $outputDir/$instance-post-place.dcp" $outputDir/temp.log
 report_timing -nworst 20 -sort_by slack -path_type summary -slack_lesser_than 0.2 -unique_pins
