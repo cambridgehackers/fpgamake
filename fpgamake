@@ -62,6 +62,8 @@ xdc_files={}
 parameterizedModuleRe = r'^\s+(\w+)\s*#'
 plainModuleRe = r'^\s+(\w+)\s+(\w+)\s*\('
 
+verilog_keywords = ['if', 'else']
+
 def find_in_path(fname, path, suffix='.v'):
     if not fname.endswith(suffix):
         fname = fname + suffix
@@ -93,8 +95,10 @@ def scan_module(module, parent_partition=None, parent_module=None):
             m = re.match(plainModuleRe, line)
             m2 = re.match(parameterizedModuleRe, line)
             if m:
-                #print 'found block', m.group(1), m.group(2)
                 submodule=m.group(1)
+                if submodule in verilog_keywords:
+                    continue
+                #print 'found block', m.group(1), m.group(2)
                 submodules.append(submodule)
                 inst=m.group(2)
                 if submodule in options.synth:
@@ -120,6 +124,8 @@ def scan_module(module, parent_partition=None, parent_module=None):
                         print 'fpgamake: could not find module in path', submodule, options.vpath, submodulepath
             elif m2:
                 submodule = m2.group(1)
+                if submodule in verilog_keywords:
+                    continue
                 submodules.append(submodule)
                 submodulepath=os.path.join('verilog', '%s.v' % submodule)
                 if os.path.exists(submodulepath):
