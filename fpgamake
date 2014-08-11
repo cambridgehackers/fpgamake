@@ -60,10 +60,12 @@ modules_used={}
 modules_visited={}
 verilog_used={}
 vhdl_used={}
+vhdl_libraries_used={}
 xdc_files={}
 
 parameterizedModuleRe = r'^\s*(\w+)\s*#'
 plainModuleRe = r'^\s*(\w+)\s+(\w+)\s*\(?'
+vhdlLibraryRe = r'^library (\w+);'
 
 verilog_keywords = ['assign', 'input', 'output', 'parameter', 'reg', 'wire', 'if', 'else']
 
@@ -96,6 +98,12 @@ def add_to_vhdl_used(parent_partition, submodule):
     else:
         vhdl_used[parent_partition] = [submodule]
 
+def add_to_vhdl_libraries_used(parent_partition, submodule):
+    if vhdl_libraries_used.has_key(parent_partition):
+        vhdl_libraries_used[parent_partition].append(submodule)
+    else:
+        vhdl_libraries_used[parent_partition] = [submodule]
+
 def scan_module(module, parent_partition=None, parent_module=None):
     if options.verbose:
         print 'scanning module %s ====================' % module
@@ -120,11 +128,21 @@ def scan_module(module, parent_partition=None, parent_module=None):
         for line in open(vpath):
             m = re.match(plainModuleRe, line)
             m2 = re.match(parameterizedModuleRe, line)
-            if m:
+            ml = re.match(vhdlLibraryRe, line)
+            if ml:
+                library = ml.group(1)
+                print 'vhdl library', ml.group(1)
+                for d in options.vpath:
+                    if os.path.basename(d) == library:
+                        add_to_vhdl_libraries_used(parent_partition, d)
+                        for f in glob.glob(os.path.join(d, "*.vhd*")):
+                            if f not in vseen:
+                                vlist.append(f)
+            elif m:
                 submodule=m.group(1)
                 if submodule in verilog_keywords:
                     continue
-                print 'found submodule', m.group(1), m.group(2)
+                print 'submodule', m.group(1), m.group(2)
                 submodules.append(submodule)
                 inst=m.group(2)
                 if submodule in options.synth:
@@ -147,12 +165,12 @@ def scan_module(module, parent_partition=None, parent_module=None):
                         else:
                             add_to_vhdl_used(parent_partition, submodule)
                     elif options.verbose:
-                        print 'fpgamake: could not find module in path', submodule, options.vpath, submodulepath
+                        print 'fpgamake: could not find module "%s" in path' % submodule
             elif m2:
                 submodule = m2.group(1)
                 if submodule in verilog_keywords:
                     continue
-                print 'found submodule', m2.group(1)
+                print 'submodule#', m2.group(1)
                 submodules.append(submodule)
                 submodulepath=find_in_path(submodule, options.vpath)
                 if submodulepath:
@@ -207,6 +225,7 @@ synth_template='''
 %(module)s_HEADERFILES = %(headerfiles)s
 %(module)s_VFILES = %(vfiles)s
 %(module)s_VHDFILES = %(vhdfiles)s
+%(module)s_VHDL_LIBRARIES = %(vhdlibraries)s
 %(module)s_STUBS = %(module_stubs)s
 %(module)s_IP = %(xcifiles)s
 %(module)s_SUBINST = %(subinst)s
@@ -253,6 +272,7 @@ def write_makefile():
                                                       + [find_in_path(vfile, options.vpath) for vfile in set(verilog_used[module])]
                                                       ) if module in verilog_used else '',
                                    'vhdfiles': ' '.join([find_in_path(vfile, options.vpath) for vfile in set(vhdl_used[module])]) if module in vhdl_used else '',
+                                   'vhdlibraries': ' '.join(set(vhdl_libraries_used[module])) if module in vhdl_libraries_used else '',
                                    'subinst': ' '.join(subinst),
                                    'module_stubs': ' '.join(module_stubs),
                                    'xcifiles': ' '.join(options.xci),
