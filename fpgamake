@@ -65,9 +65,10 @@ xdc_files={}
 
 parameterizedModuleRe = r'^\s*(\w+)\s*#'
 plainModuleRe = r'^\s*(\w+)\s+(\w+)\s*\(?'
-vhdlLibraryRe = r'^library (\w+);'
+vhdlLibraryRe = r'^\s*library\s+(\w+);'
+vhdlComponentRe = r'^\s*component\s+(\w+)'
 
-verilog_keywords = ['assign', 'input', 'output', 'parameter', 'reg', 'wire', 'if', 'else']
+verilog_keywords = ['assign', 'defparam', 'input', 'module', 'output', 'parameter', 'reg', 'wire', 'if', 'else']
 
 def find_in_path(fname, path):
     (basename,ext) = os.path.splitext(fname)
@@ -129,6 +130,9 @@ def scan_module(module, parent_partition=None, parent_module=None):
             m = re.match(plainModuleRe, line)
             m2 = re.match(parameterizedModuleRe, line)
             ml = re.match(vhdlLibraryRe, line)
+            mc = re.match(vhdlComponentRe, line)
+            if mc:
+                print 'component', mc.group(1)
             if ml:
                 library = ml.group(1)
                 print 'vhdl library', ml.group(1)
@@ -138,13 +142,17 @@ def scan_module(module, parent_partition=None, parent_module=None):
                         for f in glob.glob(os.path.join(d, "*.vhd*")):
                             if f not in vseen:
                                 vlist.append(f)
-            elif m:
-                submodule=m.group(1)
+            elif mc or m:
+                if mc:
+                    submodule=mc.group(1)
+                    inst = None
+                else:
+                    submodule=m.group(1)
+                    inst=m.group(2)
                 if submodule in verilog_keywords:
                     continue
-                print 'submodule', m.group(1), m.group(2)
+                print 'submodule', submodule, inst
                 submodules.append(submodule)
-                inst=m.group(2)
                 if submodule in options.synth:
                     if options.verbose:
                         print 'separate synth', submodule, inst
