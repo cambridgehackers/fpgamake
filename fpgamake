@@ -273,10 +273,22 @@ def write_makefile():
     f.write(makefileTrailerTemplate % { 'bitfile': options.bitfile if options.bitfile else '' })
     f.close()
 
+def expand_path():
+    visitlist=[] + options.vpath
+    while visitlist:
+        d = visitlist.pop()
+        print 'visiting', d
+        for f in glob.glob(os.path.join(d, '*')):
+            if os.path.isdir(f) and not f in options.vpath:
+                print 'subdir', f
+                options.vpath.append(f)
+                visitlist.append(f)
+
 if __name__=='__main__':
     exename = os.path.abspath(sys.argv[0])
     fpgamakedir = os.path.dirname(exename)
     options = argparser.parse_args()
+    expand_path()
     module_instances[options.top] = ['top']
     scan_module(options.top)
     for m in options.synth:
