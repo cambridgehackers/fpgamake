@@ -14,7 +14,7 @@ define SYNTH_RULE
 SYNTH_NETLISTS += Synth/$1/$1-synth.dcp
 Synth/$1/$1-synth.dcp: $($1_PATH)
 	$(Q)$(eval MODULE=$1)
-	@echo FPGAMAKE $(MODULE) synth check
+	@echo FPGAMAKE $(MODULE) synth
 	$(Q)mkdir -p Synth/$(MODULE)
 	$(Q)MODULE=$(MODULE) \
 	    HEADERFILES="$($(MODULE)_HEADERFILES)" \
@@ -31,7 +31,7 @@ define IMPL_RULE
 Impl/$1/$1-post-route.dcp: Synth/$2/$2-synth.dcp $($3_NETLISTS) Impl/oocxdc.timestamp
 	$(Q)$(eval MODULE=$2)
 	$(Q)$(eval INST=$1)
-	@echo FPGAMAKE $(INST) post-place check
+	@echo FPGAMAKE $(INST) post-place
 	$(Q)MODULE=$(MODULE) INST=$(INST) \
 	    XDC="$($(INST)_XDC) $(foreach item,$($(INST)_OOCXDC), Impl/$(INST)/$(item))" \
 	    MODULE_NETLISTS="$($(INST)_NETLISTS)" \
@@ -46,7 +46,7 @@ SYNTH_NETLISTS += Impl/TopDown/$1-post-place.dcp
 Impl/TopDown/$1-post-place.dcp: $(FLOORPLAN) $(TopDown_NETLISTS) Synth/$2/$2-synth.dcp
 	$(Q)$(eval MODULE=$2)
 	$(Q)$(eval INST=$1)
-	@echo FPGAMAKE $(INST) topdown check
+	@echo FPGAMAKE $(INST) topdown
 	$(Q)mkdir -p Impl/TopDown/
 	$(Q) MODULE=$(MODULE) INST=$(INST) \
 	     SUBINST="$(TopDown_SUBINST)" \
