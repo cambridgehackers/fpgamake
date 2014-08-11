@@ -74,7 +74,6 @@ verilog_keywords = ['assign', 'defparam', 'input', 'module', 'output', 'paramete
 
 def find_in_path(fname, path):
     (basename,ext) = os.path.splitext(fname)
-    print basename, ext
     extensions = ['.v', '.vhd', '.vhdl']
     if len(ext)>0:
         extensions = [ext]
@@ -134,10 +133,10 @@ def scan_module(module, parent_partition=None, parent_module=None):
             ml = re.match(vhdlLibraryRe, line)
             mc = re.match(vhdlComponentRe, line)
             if mc:
-                print 'component', mc.group(1)
+                #print 'component', mc.group(1)
             if ml:
                 library = ml.group(1)
-                print 'vhdl library', ml.group(1)
+                #print 'vhdl library', ml.group(1)
                 for d in options.vpath:
                     if os.path.basename(d) == library:
                         add_to_vhdl_libraries_used(parent_partition, d)
@@ -153,7 +152,7 @@ def scan_module(module, parent_partition=None, parent_module=None):
                     inst=m.group(2)
                 if submodule in verilog_keywords:
                     continue
-                print 'submodule', submodule, inst
+                #print 'submodule', submodule, inst
                 submodules.append(submodule)
                 if submodule in options.synth:
                     if options.verbose:
@@ -180,7 +179,7 @@ def scan_module(module, parent_partition=None, parent_module=None):
                 submodule = m2.group(1)
                 if submodule in verilog_keywords:
                     continue
-                print 'submodule#', m2.group(1)
+                #print 'submodule#', m2.group(1)
                 submodules.append(submodule)
                 submodulepath=find_in_path(submodule, options.vpath)
                 if submodulepath:
@@ -341,10 +340,8 @@ def expand_path():
     visitlist=[] + options.vpath
     while visitlist:
         d = visitlist.pop()
-        print 'visiting', d
         for f in glob.glob(os.path.join(d, '*')):
             if os.path.isdir(f) and not f in options.vpath:
-                print 'subdir', f
                 options.vpath.append(f)
                 visitlist.append(f)
 
@@ -357,10 +354,9 @@ if __name__=='__main__':
     scan_module(options.top)
     for m in options.synth:
         scan_module(m)
-    if options.verbose:
+    if options.debug:
         print module_instances
         print modules_used
-        print 'verilog_used'
         print verilog_used
 
     xdc_files['top'] = options.xdc
