@@ -60,7 +60,7 @@ verilog_used={}
 xdc_files={}
 
 parameterizedModuleRe = r'^\s+(\w+)\s*#'
-plainModuleRe = r'^\s+(\w+)\s*(\w+)\('
+plainModuleRe = r'^\s+(\w+)\s+(\w+)\s*\('
 
 def find_in_path(fname, path, suffix='.v'):
     if not fname.endswith(suffix):
