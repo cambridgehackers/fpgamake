@@ -62,9 +62,9 @@ verilog_used={}
 xdc_files={}
 
 parameterizedModuleRe = r'^\s+(\w+)\s*#'
-plainModuleRe = r'^\s+(\w+)\s+(\w+)\s*\('
+plainModuleRe = r'^\s+(\w+)\s+(\w+)\s*\(?'
 
-verilog_keywords = ['if', 'else']
+verilog_keywords = ['assign', 'input', 'output', 'parameter', 'reg', 'wire', 'if', 'else']
 
 def find_in_path(fname, path, suffix='.v'):
     if not fname.endswith(suffix):
