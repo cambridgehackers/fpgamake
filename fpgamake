@@ -257,9 +257,9 @@ def write_makefile():
                                  'floorplan': os.path.abspath(options.floorplan) if options.floorplan else '',
                                  'module_synth_netlists': ' '.join(submodule_synth_netlists),
                                  'bitfile': options.bitfile if options.bitfile else '',
-                                 'bitbase': os.path.splitext(options.bitfile)[0],
+                                 'bitbase': os.path.splitext(options.bitfile)[0] if options.bitfile else '',
             })
-    f.write(makefileTrailerTemplate % { 'bitfile': options.bitfile, })
+    f.write(makefileTrailerTemplate % { 'bitfile': options.bitfile if options.bitfile else '' })
     f.close()
 
 if __name__=='__main__':
