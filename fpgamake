@@ -135,8 +135,8 @@ def scan_module(module, parent_partition=None, parent_module=None):
                 if submodule in verilog_keywords:
                     continue
                 submodules.append(submodule)
-                submodulepath=os.path.join('verilog', '%s.v' % submodule)
-                if os.path.exists(submodulepath):
+                submodulepath=find_in_path(submodule, options.vpath, '.v')
+                if submodulepath:
                     vlist.append(submodulepath)
                     if verilog_used.has_key(parent_partition):
                         verilog_used[parent_partition].append(submodule)
