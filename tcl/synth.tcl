@@ -75,7 +75,7 @@ if {[string length $env(VFILES)] > 0} {
     log_command "add_files -scan_for_includes $env(VFILES)" $outputDir/verilog.log
 }
 foreach vhdlib $env(VHDL_LIBRARIES) {
-    set library [file dirname $vhdlib]
+    set library [file rootname $vhdlib]
     set library_files [glob "$vhdlib/*.vhdl"]
     log_command "add_files $library_files" $outputDir/$library.log
     foreach file "$library_files" {
