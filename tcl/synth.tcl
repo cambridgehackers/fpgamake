@@ -55,7 +55,6 @@ create_project $module -in_memory -part $partname
 #
 # STEP#1: setup design sources and constraints
 #
-log_command "read_verilog ./verilog/$module.v" $outputDir/temp.log
 foreach vfile $env(VFILES) {
     log_command "read_verilog $vfile" $outputDir/temp.log
 }
