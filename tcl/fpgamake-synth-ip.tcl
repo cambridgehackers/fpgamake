@@ -89,13 +89,12 @@ proc fpgamake_synth_ip {core_name core_version ip_name params} {
 
     puts "generate_ip $generate_ip"
     if $generate_ip {
+        puts "BEFORE generate_ip"
 	file delete -force $xbsvipdir/$boardname/$ip_name
 	file mkdir $xbsvipdir/$boardname
 	log_command "create_ip -name $core_name -version $core_version -vendor xilinx.com -library ip -module_name $ip_name -dir $xbsvipdir/$boardname" "$xbsvipdir/$boardname/temp.log"
 	set_property -dict $params [get_ips $ip_name]
-        puts "BEFORE PROP"
         report_property -file $xbsvipdir/$boardname/$ip_name.properties.log [get_ips $ip_name]
-        puts "AFTER PROP"
 	
 	generate_target all [get_files $xbsvipdir/$boardname/$ip_name/$ip_name.xci]
 
@@ -106,6 +105,7 @@ proc fpgamake_synth_ip {core_name core_version ip_name params} {
 	set corefd [open $xbsvipdir/$boardname/$ip_name/coreversion.txt w]
 	puts $corefd "$core_name $core_version $params"
 	close $corefd
+        puts "AFTER generate_ip"
     } else {
 	read_ip $xbsvipdir/$boardname/$ip_name/$ip_name.xci
     }
