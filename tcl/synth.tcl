@@ -52,14 +52,13 @@ set errorfilehandle [open "$errorlog.log" w]
 
 create_project $module -in_memory -part $partname
 
-set include_dirs "/scratch/jamey/Vivado_Tutorial_TD/Sources/hdl/or1200"
+set include_dirs ""
 #
 # STEP#1: setup design sources and constraints
 #
 foreach headerfile $env(HEADERFILES) {
 #    log_command "read_verilog $headerfile" $outputDir/temp.log
     set include_dirs "$include_dirs [file dirname $headerfile]"
-    puts "include_dirs=$include_dirs"
 }
 
 foreach vfile "$env(VFILES)" {
@@ -67,10 +66,21 @@ foreach vfile "$env(VFILES)" {
 }
 set_property include_dirs "$include_dirs" [current_fileset]
 
-#foreach vfile $env(VFILES) {
-    log_command "add_files -scan_for_includes $env(VFILES)" $outputDir/temp.log
-#}
-    log_command "add_files -scan_for_includes $env(VHDFILES)" $outputDir/temp.log
+if {[string length $env(VFILES)] > 0} {
+    log_command "add_files -scan_for_includes $env(VFILES)" $outputDir/verilog.log
+}
+foreach vhdlib $env(VHDL_LIBRARIES) {
+    set library [file dirname $vhdlib]
+    set library_files [glob "$vhdlib/*.vhdl"]
+    log_command "add_files $library_files" $outputDir/$library.log
+    foreach file "$library_files" {
+	set_property LIBRARY "$library" [get_files $file]
+    }
+}
+
+if {[string length $env(VHDFILES)] > 0} {
+    log_command "add_files $env(VHDFILES)" $outputDir/vhd.log
+}
 
 if {[info exists env(MODULE_NETLISTS)]} {
     foreach dcp $env(MODULE_NETLISTS) {
