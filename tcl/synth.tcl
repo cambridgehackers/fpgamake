@@ -34,7 +34,7 @@ if [file exists {board.tcl}] {
 set module $env(MODULE)
 set outputDir ./Synth/$module
 file mkdir $outputDir
-if {$module == {mkZynqTop} || $module == {mkPcieTop}} {
+if {$module == "top" || $module == {mkZynqTop} || $module == {mkPcieTop}} {
     set mode default
 } else {
     set mode out_of_context
@@ -52,12 +52,26 @@ set errorfilehandle [open "$errorlog.log" w]
 
 create_project $module -in_memory -part $partname
 
+set include_dirs "/scratch/jamey/Vivado_Tutorial_TD/Sources/hdl/or1200"
 #
 # STEP#1: setup design sources and constraints
 #
-foreach vfile $env(VFILES) {
-    log_command "read_verilog $vfile" $outputDir/temp.log
+foreach headerfile $env(HEADERFILES) {
+#    log_command "read_verilog $headerfile" $outputDir/temp.log
+    set include_dirs "$include_dirs [file dirname $headerfile]"
+    puts "include_dirs=$include_dirs"
 }
+
+foreach vfile "$env(VFILES)" {
+    set include_dirs "$include_dirs [file dirname $vfile]"
+}
+set_property include_dirs "$include_dirs" [current_fileset]
+
+#foreach vfile $env(VFILES) {
+    log_command "add_files -scan_for_includes $env(VFILES)" $outputDir/temp.log
+#}
+    log_command "add_files -scan_for_includes $env(VHDFILES)" $outputDir/temp.log
+
 if {[info exists env(MODULE_NETLISTS)]} {
     foreach dcp $env(MODULE_NETLISTS) {
 	log_command "read_checkpoint $dcp" "$outputDir/[file tail $dcp].log"
@@ -69,7 +83,7 @@ foreach ip $env(IP) {
 
 # STEP#2: run synthesis, report utilization and timing estimates, write checkpoint design
 #
-log_command "synth_design -name $module -top $module -part $partname -flatten rebuilt -mode $mode" "$outputDir/synth_design.log"
+log_command "synth_design -name $module -top $module -part $partname -flatten rebuilt -include_dirs \"$include_dirs\" -mode $mode" "$outputDir/synth_design.log"
 
 # Remove unused clocks that bluespec compiler exports
 foreach {pat} {CLK_GATE_hdmi_clock_if CLK_*deleteme_unused_clock* CLK_GATE_*deleteme_unused_clock* RST_N_*deleteme_unused_reset*} {

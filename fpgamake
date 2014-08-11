@@ -59,6 +59,7 @@ module_instances={}
 modules_used={}
 modules_visited={}
 verilog_used={}
+vhdl_used={}
 xdc_files={}
 
 parameterizedModuleRe = r'^\s*(\w+)\s*#'
@@ -82,6 +83,18 @@ def find_in_path(fname, path):
             if os.path.exists(os.path.join(p, fname.lower())):
                 return os.path.join(p, fname.lower())
     return None
+
+def add_to_verilog_used(parent_partition, submodule):
+    if verilog_used.has_key(parent_partition):
+        verilog_used[parent_partition].append(submodule)
+    else:
+        verilog_used[parent_partition] = [submodule]
+
+def add_to_vhdl_used(parent_partition, submodule):
+    if vhdl_used.has_key(parent_partition):
+        vhdl_used[parent_partition].append(submodule)
+    else:
+        vhdl_used[parent_partition] = [submodule]
 
 def scan_module(module, parent_partition=None, parent_module=None):
     if options.verbose:
@@ -129,10 +142,10 @@ def scan_module(module, parent_partition=None, parent_module=None):
                     submodulepath=find_in_path(submodule, options.vpath)
                     if submodulepath and os.path.exists(submodulepath):
                         vlist.append(submodulepath)
-                        if verilog_used.has_key(parent_partition):
-                            verilog_used[parent_partition].append(submodule)
+                        if submodulepath.lower().endswith('.v'):
+                            add_to_verilog_used(parent_partition, submodule)
                         else:
-                            verilog_used[parent_partition] = [submodule]
+                            add_to_vhdl_used(parent_partition, submodule)
                     elif options.verbose:
                         print 'fpgamake: could not find module in path', submodule, options.vpath, submodulepath
             elif m2:
@@ -144,10 +157,10 @@ def scan_module(module, parent_partition=None, parent_module=None):
                 submodulepath=find_in_path(submodule, options.vpath)
                 if submodulepath:
                     vlist.append(submodulepath)
-                    if verilog_used.has_key(parent_partition):
-                        verilog_used[parent_partition].append(submodule)
+                    if submodulepath.lower().endswith('.v'):
+                        add_to_verilog_used(parent_partition, submodule)
                     else:
-                        verilog_used[parent_partition] = [submodule]
+                        add_to_vhdl_used(parent_partition, submodule)
 
 def process_modules():
     for module in module_instances:
@@ -193,6 +206,7 @@ everything: $(SYNTH_NETLISTS) %(bitfile)s
 synth_template='''
 %(module)s_HEADERFILES = %(headerfiles)s
 %(module)s_VFILES = %(vfiles)s
+%(module)s_VHDFILES = %(vhdfiles)s
 %(module)s_STUBS = %(module_stubs)s
 %(module)s_IP = %(xcifiles)s
 %(module)s_SUBINST = %(subinst)s
@@ -238,6 +252,7 @@ def write_makefile():
                                    'vfiles': ' '.join([find_in_path(module, options.vpath)]
                                                       + [find_in_path(vfile, options.vpath) for vfile in set(verilog_used[module])]
                                                       ) if module in verilog_used else '',
+                                   'vhdfiles': ' '.join([find_in_path(vfile, options.vpath) for vfile in set(vhdl_used[module])]) if module in vhdl_used else '',
                                    'subinst': ' '.join(subinst),
                                    'module_stubs': ' '.join(module_stubs),
                                    'xcifiles': ' '.join(options.xci),

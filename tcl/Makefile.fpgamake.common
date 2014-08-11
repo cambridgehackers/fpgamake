@@ -19,6 +19,7 @@ Synth/$1/$1-synth.dcp: $($1_PATH)
 	$(Q)MODULE=$(MODULE) \
 	    HEADERFILES="$($(MODULE)_HEADERFILES)" \
 	    VFILES="$($(MODULE)_VFILES) $(foreach item,$($(MODULE)_STUBS), Synth/stubs/$(item))" \
+	    VHDFILES="$($(MODULE)_VHDFILES)" \
 	    IP="$($(MODULE)_IP)" \
 	    SUBINST="$($(MODULE)_SUBINST)" \
 	    BUILDCACHE_CACHEDIR="$(CACHEDIR)/Synth/$(MODULE)" \
