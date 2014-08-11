@@ -52,6 +52,7 @@ argparser.add_argument('-t', '--top', help='Top verilog file')
 argparser.add_argument('-b', '--bitfile', help='Bit file to generate', default=None)
 argparser.add_argument('--cachedir', help='Cache directory', default='Cache')
 argparser.add_argument('-v', '--verbose', help='Verbose operation', action='store_true', default=False)
+argparser.add_argument('--debug', help='Debug operation', action='store_true', default=False)
 
 module_instances={}
 modules_used={}
@@ -91,6 +92,8 @@ def scan_module(module, parent_partition=None, parent_module=None):
         if vpath in vseen:
             continue
         vseen.append(vpath)
+        if options.debug:
+            print 'scanning', vpath
         for line in open(vpath):
             m = re.match(plainModuleRe, line)
             m2 = re.match(parameterizedModuleRe, line)
@@ -139,6 +142,8 @@ def process_modules():
     for module in module_instances:
         vfile = '%s.v' % module
         vpath = find_in_path(module, options.vpath, '.v')
+        if options.debug:
+            print module, vpath
         synthdir = os.path.join('Synth', module)
         if not os.path.isdir(synthdir):
             os.makedirs(synthdir)
