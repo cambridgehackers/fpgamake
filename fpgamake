@@ -66,22 +66,27 @@ plainModuleRe = r'^\s+(\w+)\s+(\w+)\s*\(?'
 
 verilog_keywords = ['assign', 'input', 'output', 'parameter', 'reg', 'wire', 'if', 'else']
 
-def find_in_path(fname, path, suffix='.v'):
-    if not fname.endswith(suffix):
-        fname = fname + suffix
-    for p in path:
-        if os.path.exists(os.path.join(p, fname)):
-            return os.path.join(p, fname)
-        if os.path.exists(os.path.join(p, fname.upper())):
-            return os.path.join(p, fname.upper())
-        if os.path.exists(os.path.join(p, fname.lower())):
-            return os.path.join(p, fname.lower())
+def find_in_path(fname, path):
+    (basename,ext) = os.path.splitext(fname)
+    print basename, ext
+    extensions = ['.v', '.vhd', '.vhdl']
+    if len(ext)>0:
+        extensions = [ext]
+    for ext in extensions:
+        fname = basename + ext
+        for p in path:
+            if os.path.exists(os.path.join(p, fname)):
+                return os.path.join(p, fname)
+            if os.path.exists(os.path.join(p, fname.upper())):
+                return os.path.join(p, fname.upper())
+            if os.path.exists(os.path.join(p, fname.lower())):
+                return os.path.join(p, fname.lower())
     return None
 
 def scan_module(module, parent_partition=None, parent_module=None):
     if options.verbose:
         print 'scanning module %s ====================' % module
-    vpath = find_in_path(module, options.vpath, '.v')
+    vpath = find_in_path(module, options.vpath)
     modules_visited[module] = vpath
     if not parent_partition:
         parent_partition = module
@@ -121,7 +126,7 @@ def scan_module(module, parent_partition=None, parent_module=None):
                     else:
                         modules_used[parent_partition] = [submodule]
                 else:
-                    submodulepath=find_in_path(submodule, options.vpath, '.v')
+                    submodulepath=find_in_path(submodule, options.vpath)
                     if submodulepath and os.path.exists(submodulepath):
                         vlist.append(submodulepath)
                         if verilog_used.has_key(parent_partition):
@@ -135,7 +140,7 @@ def scan_module(module, parent_partition=None, parent_module=None):
                 if submodule in verilog_keywords:
                     continue
                 submodules.append(submodule)
-                submodulepath=find_in_path(submodule, options.vpath, '.v')
+                submodulepath=find_in_path(submodule, options.vpath)
                 if submodulepath:
                     vlist.append(submodulepath)
                     if verilog_used.has_key(parent_partition):
@@ -146,7 +151,7 @@ def scan_module(module, parent_partition=None, parent_module=None):
 def process_modules():
     for module in module_instances:
         vfile = '%s.v' % module
-        vpath = find_in_path(module, options.vpath, '.v')
+        vpath = find_in_path(module, options.vpath)
         if options.debug:
             print module, vpath
         synthdir = os.path.join('Synth', module)
@@ -227,10 +232,10 @@ def write_makefile():
         if module in modules_used:
             module_stubs = ['%s-stub.v' % (m) for m in set(modules_used[module])]
         f.write(synth_template % { 'module': module,
-                                   'module_path': find_in_path(module, options.vpath, '.v'),
-                                   'headerfiles': ' '.join([find_in_path(vfile, options.vpath, '.v') for vfile in set(options.header)]) if options.header else '',
-                                   'vfiles': ' '.join([find_in_path(module, options.vpath, '.v')]
-                                                      + [find_in_path(vfile, options.vpath, '.v') for vfile in set(verilog_used[module])]
+                                   'module_path': find_in_path(module, options.vpath),
+                                   'headerfiles': ' '.join([find_in_path(vfile, options.vpath) for vfile in set(options.header)]) if options.header else '',
+                                   'vfiles': ' '.join([find_in_path(module, options.vpath)]
+                                                      + [find_in_path(vfile, options.vpath) for vfile in set(verilog_used[module])]
                                                       ) if module in verilog_used else '',
                                    'subinst': ' '.join(subinst),
                                    'module_stubs': ' '.join(module_stubs),
