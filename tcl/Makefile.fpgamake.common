@@ -23,6 +23,8 @@ Synth/$1/$1-synth.dcp: $($1_PATH)
 	    VHDL_LIBRARIES="$($(MODULE)_VHDL_LIBRARIES)" \
 	    IP="$($(MODULE)_IP)" \
 	    SUBINST="$($(MODULE)_SUBINST)" \
+            FPGAMAKE_PARTNAME=$(FPGAMAKE_PARTNAME) \
+            FPGAMAKE_BOARDNAME=$(FPGAMAKE_BOARDNAME) \
 	    BUILDCACHE_CACHEDIR="$(CACHEDIR)/Synth/$(MODULE)" \
 	    BUILDCACHE_OUTPUTDIR="Synth/$(MODULE)" \
 	    $(BUILDCACHE) vivado -notrace -mode batch -source $(TCLDIR)/synth.tcl
@@ -65,7 +67,7 @@ $3: Impl/TopDown/$1-post-place.dcp
 
 Impl/oocxdc.timestamp: Impl/TopDown/$1-post-place.dcp
 	INST=$1 MODULE=$2 \
-	SUBINST="$TopDown_SUBINST" \
+	SUBINST="$(TopDown_SUBINST)" \
 	$(BUILDCACHE) vivado -notrace -mode batch -source $(TCLDIR)/write-ooc-xdc.tcl
 	touch Impl/oocxdc.timestamp
 endef
