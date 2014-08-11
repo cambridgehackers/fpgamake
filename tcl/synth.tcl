@@ -57,19 +57,19 @@ set errorfilehandle [open "$errorlog.log" w]
 
 create_project $module -in_memory -part $partname
 
-set include_dirs ""
+set include_dirs [dict create]
 #
 # STEP#1: setup design sources and constraints
 #
 foreach headerfile $env(HEADERFILES) {
 #    log_command "read_verilog $headerfile" $outputDir/temp.log
-    set include_dirs "$include_dirs [file dirname $headerfile]"
+    dict set include_dirs [file dirname $headerfile] "True"
 }
 
 foreach vfile "$env(VFILES)" {
-    set include_dirs "$include_dirs [file dirname $vfile]"
+    dict set include_dirs [file dirname $vfile] "True"
 }
-set_property include_dirs "$include_dirs" [current_fileset]
+set_property include_dirs [dict keys $include_dirs] [current_fileset]
 
 if {[string length $env(VFILES)] > 0} {
     log_command "add_files -scan_for_includes $env(VFILES)" $outputDir/verilog.log
@@ -98,7 +98,7 @@ foreach ip $env(IP) {
 
 # STEP#2: run synthesis, report utilization and timing estimates, write checkpoint design
 #
-log_command "synth_design -name $module -top $module -part $partname -flatten rebuilt -include_dirs \"$include_dirs\" -mode $mode" "$outputDir/synth_design.log"
+log_command "synth_design -name $module -top $module -part $partname -flatten rebuilt -include_dirs \"[dict keys $include_dirs]\" -mode $mode" "$outputDir/synth_design.log"
 
 # Remove unused clocks that bluespec compiler exports
 foreach {pat} {CLK_GATE_hdmi_clock_if CLK_*deleteme_unused_clock* CLK_GATE_*deleteme_unused_clock* RST_N_*deleteme_unused_reset*} {
