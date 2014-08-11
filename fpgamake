@@ -132,8 +132,6 @@ def scan_module(module, parent_partition=None, parent_module=None):
             m2 = re.match(parameterizedModuleRe, line)
             ml = re.match(vhdlLibraryRe, line)
             mc = re.match(vhdlComponentRe, line)
-            if mc:
-                #print 'component', mc.group(1)
             if ml:
                 library = ml.group(1)
                 #print 'vhdl library', ml.group(1)
