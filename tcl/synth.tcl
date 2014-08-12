@@ -111,7 +111,7 @@ foreach {pat} {CLK_GATE_hdmi_clock_if CLK_*deleteme_unused_clock* CLK_GATE_*dele
 }
 if {[info exists env(USER_TCL_SCRIPT)]} {
     foreach item $env(USER_TCL_SCRIPT) {
-	log_command "source $item" "$outputDir/[file tail $item].log"
+	source $item
     }
 }
 
