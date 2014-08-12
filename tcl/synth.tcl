@@ -74,6 +74,7 @@ set_property include_dirs [dict keys $include_dirs] [current_fileset]
 if {[string length $env(VFILES)] > 0} {
     log_command "add_files -scan_for_includes $env(VFILES)" $outputDir/verilog.log
 }
+if { [info exists ::env(VHDL_LIBRARIES) ] } {
 foreach vhdlib $env(VHDL_LIBRARIES) {
     set library [file tail $vhdlib]
     set library_files [glob "$vhdlib/*.vhdl"]
@@ -81,6 +82,7 @@ foreach vhdlib $env(VHDL_LIBRARIES) {
     foreach file "$library_files" {
 	set_property LIBRARY "$library" [get_files $file]
     }
+}
 }
 
 if {[string length $env(VHDFILES)] > 0} {
