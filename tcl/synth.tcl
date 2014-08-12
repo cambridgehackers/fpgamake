@@ -109,6 +109,11 @@ foreach {pat} {CLK_GATE_hdmi_clock_if CLK_*deleteme_unused_clock* CLK_GATE_*dele
 	disconnect_net -net $net -objects [get_pins -quiet -of_objects $net]
     }
 }
+if {[info exists env(USER_TCL_SCRIPT)]} {
+    foreach item $env(USER_TCL_SCRIPT) {
+	log_command "$item" "$outputDir/[file tail $item].log"
+    }
+}
 
 set dcp_name "$outputDir/$module-synth.dcp"
 log_command "write_checkpoint -force $dcp_name" $outputDir/temp.log

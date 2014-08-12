@@ -50,6 +50,7 @@ argparser.add_argument('-B', '--board', help='Target board name', default='zedbo
 argparser.add_argument('-p', '--part', help='Target part name', default='xc7z020clg484-1')
 argparser.add_argument('--xci', help='XCI file to use', default=[], action='append')
 argparser.add_argument('--xdc', help='XDC file to use', default=[], action='append')
+argparser.add_argument('--tcl', help='User tcl script to use', default=[], action='append')
 argparser.add_argument('--floorplan', help='Floorplan XDC.', default=None)
 argparser.add_argument('-t', '--top', help='Top verilog file')
 argparser.add_argument('-b', '--bitfile', help='Bit file to generate', default=None)
@@ -239,6 +240,7 @@ synth_template='''
 %(module)s_IP = %(xcifiles)s
 %(module)s_SUBINST = %(subinst)s
 %(module)s_PATH = %(module_path)s
+%(module)s_USER_TCL_SCRIPT = %(user_tcl)s
 
 $(eval $(call SYNTH_RULE,%(module)s))
 '''
@@ -286,6 +288,7 @@ def write_makefile():
                                    'vhdlibraries': ' '.join(set(vhdl_libraries_used[module])) if module in vhdl_libraries_used else '',
                                    'subinst': ' '.join(subinst),
                                    'module_stubs': ' '.join(module_stubs),
+                                   'user_tcl': ' '.join(options.tcl) if options.tcl else '',
                                    'xcifiles': ' '.join(options.xci),
                                    })
         for inst in set(module_instances[module]):
