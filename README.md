@@ -28,3 +28,13 @@ fpgamake
 			      Bit file to generate
 	-v VERBOSE, --verbose VERBOSE
 			      Verbose operation
+
+Vivado Tutorial TD
+------------------
+
+To build the Vivado Tutorial TD with fpgamake. Download and unpack the tutorial, and the run the following command:
+
+    SOURCEDIR=/path/to/Vivado_Tutorial_TD/Sources
+    XDCDIR=$SOURCEDIR/Sources/xdc
+    ./fpgamake --board='noboard' --part='xc7k70tfbg676-2' -b top.bit -o fpgamake.mk -t top -s usbf_top -s or1200_top --floorplan=$XDCDIR/top_flpn.xdc --xdc=$XDCDIR/top.xdc --header=or1200_defines.v --header=usbf_defines.v $SOURCEDIR/hdl
+    make -f fpgamake.mk
