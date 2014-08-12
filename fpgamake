@@ -56,7 +56,7 @@ argparser.add_argument('-t', '--top', help='Top verilog file')
 argparser.add_argument('-b', '--bitfile', help='Bit file to generate', default=None)
 argparser.add_argument('--cachedir', help='Cache directory', default='Cache')
 argparser.add_argument('-v', '--verbose', help='Verbose operation', action='store_true', default=False)
-argparser.add_argument('--debug', help='Debug operation', action='store_true', default=True)
+argparser.add_argument('--debug', help='Debug operation', action='store_true', default=False)
 
 module_instances={}
 modules_used={}
