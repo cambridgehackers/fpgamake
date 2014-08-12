@@ -22,6 +22,7 @@
 set scriptsdir [file dirname [info script] ]
 source $scriptsdir/log.tcl
 
+source "board.tcl"
 file mkdir $xbsvipdir/$boardname
 ### logs
 set commandlog "$xbsvipdir/$boardname/command"
@@ -33,7 +34,7 @@ set errorfilehandle [open "$errorlog.log" w]
 proc xbsv_set_board_part {} {
     global boardname
     if [catch {current_project}] {
-	create_project -name synth_ip -in_memory
+	create_project -name local_synthesized_ip -in_memory
     }
     if {[lsearch [list_property [current_project]] board_part] >= 0} {
 	set_property board_part "xilinx.com:$boardname:part0:1.0" [current_project]
@@ -44,7 +45,7 @@ proc xbsv_set_board_part {} {
     }
 }
 
-proc fpgamake_synth_ip {core_name core_version ip_name params} {
+proc fpgamake_ipcore {core_name core_version ip_name params} {
     global xbsvipdir boardname
 
     ## make sure we have a project configured for the correct board
@@ -111,15 +112,9 @@ proc fpgamake_synth_ip {core_name core_version ip_name params} {
     }
     if [file exists $xbsvipdir/$boardname/$ip_name/$ip_name.dcp] {
     } else {
-	#catch {
-	    puts "RUNNING: synth_ip"
-	    set genlog [open $xbsvipdir/$boardname/$ip_name/synth_ip.log w]
-	    #puts $genlog [synth_ip [get_ips $ip_name]]
-	    synth_ip [get_ips $ip_name]
-	    close $genlog
-            #log_command "synth_design -top $ip_name -mode out_of_context" "$xbsvipdir/$boardname/temp.log"
-            #log_command "synth_design -top $ip_name -part xc7k325tffg900-2 -mode out_of_context" "$xbsvipdir/$boardname/temp.log"
-	    puts "AFTER: synth_ip"
-	#}
+	puts "RUNNING: synth_ip"
+	synth_ip [get_ips $ip_name]
+        #log_command "synth_design -top $ip_name -mode out_of_context" "$xbsvipdir/$boardname/temp.log"
+	puts "AFTER: synth_ip"
     }
 }
