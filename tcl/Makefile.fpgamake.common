@@ -32,7 +32,7 @@ Synth/$1/$1-synth.dcp: $($1_PATH)
 endef
 
 define IMPL_RULE
-Impl/$1/$1-post-route.dcp: Synth/$2/$2-synth.dcp $($2_NETLISTS) Impl/oocxdc.timestamp
+Impl/$1/$1-post-route.dcp: Synth/$2/$2-synth.dcp $($2_NETLISTS) Impl/oocxdc.timestamp $(foreach item,$($(INST)_OOCXDC), Impl/$(INST)/$(item))
 	$(Q)$(eval MODULE=$2)
 	$(Q)$(eval INST=$1)
 	@echo FPGAMAKE $(INST) post-place
@@ -71,6 +71,9 @@ Impl/oocxdc.timestamp: Impl/TopDown/$1-post-place.dcp
 	SUBINST="$(TopDown_SUBINST)" \
 	$(BUILDCACHE) vivado -notrace -mode batch -source $(TCLDIR)/write-ooc-xdc.tcl
 	touch Impl/oocxdc.timestamp
+
+$(foreach inst, $(TopDown_SUBINST), Impl/$(inst)/$(inst)-ooc.xdc Impl/$(inst)/$(inst)-ooc-budget.xdc Impl/$(inst)/$(inst)-ooc-clocks.xdc): Impl/oocxdc.timestamp
+
 endef
 
 all: everything
