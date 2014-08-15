@@ -61,6 +61,12 @@ foreach xdc $env(FLOORPLAN) {
 }
 
 log_command "link_design -top $module" $outputDir/link_design.log
+if {"$env(FLOORPLAN)" != ""} {
+    foreach pblock [get_pblocks] {
+	set_property HD.PARTITION 1 [get_cells -of $pblock]
+    }
+}
+
 log_command "write_checkpoint -force $outputDir/$instance-post-link.dcp" $outputDir/temp.log
 report_timing_summary -file $outputDir/$instance-post-link-timing-summary.rpt > $outputDir/temp.log
 report_timing -sort_by group -max_paths 100 -path_type summary -file $outputDir/$instance-post-link-timing.rpt > $outputDir/temp.log
