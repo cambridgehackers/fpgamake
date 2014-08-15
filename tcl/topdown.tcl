@@ -62,6 +62,8 @@ foreach xdc $env(FLOORPLAN) {
 
 log_command "link_design -top $module" $outputDir/link_design.log
 log_command "write_checkpoint -force $outputDir/$instance-post-link.dcp" $outputDir/temp.log
+report_timing_summary -file $outputDir/$instance-post-link-timing-summary.rpt > $outputDir/temp.log
+report_timing -sort_by group -max_paths 100 -path_type summary -file $outputDir/$instance-post-link-timing.rpt > $outputDir/temp.log
 report_timing -nworst 20 -sort_by slack -path_type summary -slack_lesser_than 0.2 -unique_pins
 puts "****************************************"
 puts "If timing report says 'No timing paths found.' then the design met the timing constraints."
@@ -76,6 +78,7 @@ puts "****************************************"
 puts "If timing report says 'No timing paths found.' then the design met the timing constraints."
 puts "If it reported negative slack, then the design did not meet the timing constraints."
 puts "****************************************"
+report_timing_summary -file $outputDir/$instance-post-opt-timing-summary.rpt > $outputDir/temp.log
 report_utilization -file $outputDir/$instance-post-link-util.rpt
 foreach pblock [get_pblocks] {
     report_utilization -pblocks $pblock -file $outputDir/$pblock-post-link-util.rpt > $outputDir/temp.log
