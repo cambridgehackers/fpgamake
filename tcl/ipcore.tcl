@@ -36,13 +36,13 @@ proc xbsv_set_board_part {} {
     if [catch {current_project}] {
 	create_project -name local_synthesized_ip -in_memory
     }
-    # if {[lsearch [list_property [current_project]] board_part] >= 0} {
-    # 	set_property board_part "xilinx.com:$boardname:part0:1.0" [current_project]
-    # } else {
-    # 	## vivado 2013.2 uses the BOARD property instead
-    # 	set board_candidates [get_boards *$boardname*]
-    # 	set_property BOARD [lindex $board_candidates [expr [llength $board_candidates] - 1]] [current_project]
-    # }
+    if {[lsearch [list_property [current_project]] board_part] >= 0} {
+	set_property board_part "xilinx.com:$boardname:part0:1.0" [current_project]
+    } else {
+	## vivado 2013.2 uses the BOARD property instead
+	set board_candidates [get_boards *$boardname*]
+	set_property BOARD [lindex $board_candidates [expr [llength $board_candidates] - 1]] [current_project]
+    }
 }
 
 proc fpgamake_ipcore {core_name core_version ip_name params} {
