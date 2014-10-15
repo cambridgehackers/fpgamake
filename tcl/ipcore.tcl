@@ -36,7 +36,11 @@ proc xbsv_set_board_part {} {
     if [catch {current_project}] {
 	create_project -name local_synthesized_ip -in_memory
     }
-    if {[lsearch [list_property [current_project]] board_part] >= 0} {
+    if {[lsearch [list_property [current_project]] BOARD_PART] >= 0} {
+	## Vivado 2014.3
+	set_property BOARD_PART "xilinx.com:$boardname:part0:1.0" [current_project]
+    } elseif {[lsearch [list_property [current_project]] board_part] >= 0} {
+	## Vivado 2014.1
 	set_property board_part "xilinx.com:$boardname:part0:1.0" [current_project]
     } else {
 	## vivado 2013.2 uses the BOARD property instead
