@@ -8,6 +8,7 @@ INSTALL_DIRS = $(shell ls | grep -v debian)
 install:
 	find $(INSTALL_DIRS) -type d -exec install -d -m755 $(DESTDIR)/usr/share/fpgamake/{} \; -print
 	find $(INSTALL_DIRS) -type f -exec install -m644 {} $(DESTDIR)/usr/share/fpgamake/{} \; -print
+	install -m755 fpgamake $(DESTDIR)/usr/share/fpgamake/fpgamake
 
 VERSION=14.10.1
 
