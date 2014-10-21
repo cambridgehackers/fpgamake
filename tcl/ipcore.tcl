@@ -38,13 +38,12 @@ proc xbsv_set_board_part {} {
     }
     if {[lsearch [list_property [current_project]] BOARD_PART] >= 0} {
 	## Vivado 2014.3
-	set_property BOARD_PART "xilinx.com:$boardname:part0:1.0" [current_project]
-    } elseif {[lsearch [list_property [current_project]] board_part] >= 0} {
 	## Vivado 2014.1
-	set_property board_part "xilinx.com:$boardname:part0:1.0" [current_project]
+	set_property BOARD_PART "xilinx.com:$boardname:part0:1.0" [current_project]
     } else {
-	## vivado 2013.2 uses the BOARD property instead
+	## vivado 2013.2 had version number 2.0 for vc707 for some reason. later it is back to 1.0
 	set board_candidates [get_boards *$boardname*]
+	## vivado 2013.2 uses the BOARD property instead
 	set_property BOARD [lindex $board_candidates [expr [llength $board_candidates] - 1]] [current_project]
     }
 }
