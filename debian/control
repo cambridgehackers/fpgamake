@@ -1,0 +1,18 @@
+Source: fpgamake
+Section: devel
+Priority: extra
+Maintainer: Jamey Hicks <jamey.hicks@gmail.com>
+Build-Depends: debhelper (>= 8.0.0)
+Standards-Version: 3.9.2
+Homepage: https://github.com/cambridgehackers/fpgamake
+Vcs-Git: git://github.com/cambridgehackers/fpgamake.git
+
+Package: fpgamake
+Architecture: all
+Depends: python (>= 2.7)
+Description: Generates Makefiles for Verilog to run Xilinx Vivado.
+    Generates Makefiles to synthesize, place, and route verilog. Each module
+    specified will be synthesized into a separate design checkpoint. If a
+    floorplan is provided, each instance of the synthesized modules will be
+    separately placed and routed and then combined into the top level design.
+    .

@@ -1,0 +1,11 @@
+fpgamake (14.10.1-2precise1) precise; urgency=low
+
+  * Set executable mode on /usr/share/fpgamake/fpgamake
+
+ -- Jamey Hicks <jamey.hicks@gmail.com>  Tue, 21 Oct 2014 13:45:59 -0400
+
+fpgamake (14.10.1-1precise1) precise; urgency=low
+
+  * Initial release
+
+ -- Jamey Hicks <jamey.hicks@gmail.com>  Tue, 21 Oct 2014 13:02:58 -0400
