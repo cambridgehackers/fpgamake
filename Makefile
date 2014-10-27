@@ -11,5 +11,8 @@ install:
 
 VERSION=14.10.1
 
-dpkg:
-	git buildpackage --git-upstream-branch=master --git-debian-branch=ubuntu/precise -S -tc
+spkg:
+	sed s/trusty/precise/g debian/changelog
+	git buildpackage --git-debian-tag="v%s" --git-upstream-branch=master --git-debian-branch=ubuntu/precise -S -tc
+	sed s/precise/trusty/g debian/changelog
+	git buildpackage --git-debian-tag="v%s" --git-upstream-branch=master --git-debian-branch=ubuntu/precise -S -tc
