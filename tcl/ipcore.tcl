@@ -23,6 +23,7 @@ set scriptsdir [file dirname [info script] ]
 source $scriptsdir/log.tcl
 
 source "board.tcl"
+
 file mkdir $ipdir/$boardname
 ### logs
 set commandlog "$ipdir/$boardname/command"
@@ -32,24 +33,11 @@ set commandfilehandle [open "$commandlog.log" w]
 set errorfilehandle [open "$errorlog.log" w]
 
 proc xbsv_set_board_part {} {
-    global boardname
+    global boardname partname
     if [catch {current_project}] {
 	create_project -name local_synthesized_ip -in_memory
     }
-    if {[lsearch [list_property [current_project]] BOARD_PART] >= 0} {
-	## Vivado 2014.3
-	## Vivado 2014.1
-	if {$boardname == "zedboard"} {
-	    set_property BOARD_PART "em.avnet.com:zed:part0:1.0" [current_project]
-	} else {
-	    set_property BOARD_PART "xilinx.com:$boardname:part0:1.0" [current_project]
-	}
-    } else {
-	## vivado 2013.2 had version number 2.0 for vc707 for some reason. later it is back to 1.0
-	set board_candidates [get_boards *$boardname*]
-	## vivado 2013.2 uses the BOARD property instead
-	set_property BOARD [lindex $board_candidates [expr [llength $board_candidates] - 1]] [current_project]
-    }
+    set_property PART $partname [current_project]
 }
 
 proc fpgamake_ipcore {core_name core_version ip_name params} {

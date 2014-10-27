@@ -1,3 +1,9 @@
+fpgamake (14.10.4-1precise1) precise; urgency=high
+
+  * Just set PART property of current_project in ipcore.tcl
+
+ -- Jamey Hicks <jamey.hicks@gmail.com>  Mon, 27 Oct 2014 12:32:12 -0400
+
 fpgamake (14.10.3-2precise1) precise; urgency=high
 
   * Fixed install script
