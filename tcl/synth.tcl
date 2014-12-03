@@ -104,9 +104,10 @@ log_command "synth_design -name $module -top $module -part $partname -flatten re
 
 # Remove unused clocks that bluespec compiler exports
 foreach {pat} {CLK_GATE_hdmi_clock_if CLK_*deleteme_unused_clock* CLK_GATE_*deleteme_unused_clock* RST_N_*deleteme_unused_reset*} {
-    foreach {net} [get_nets -quiet $pat] {
-        puts "disconnecting net $net"
-	disconnect_net -net $net -objects [get_pins -quiet -of_objects $net]
+    foreach {port} [get_ports $pat] {
+	set net [get_nets -of_objects $port]
+	puts "disconnecting net $net from port $port"
+	disconnect_net -net [get_nets -of_objects $port] -objects $port
     }
 }
 if {[info exists env(USER_TCL_SCRIPT)]} {
