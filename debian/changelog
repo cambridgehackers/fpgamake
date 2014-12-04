@@ -1,40 +1,40 @@
-fpgamake (14.12.1-1precise1) precise; urgency=medium
+fpgamake (14.12.1-1trusty1) trusty; urgency=medium
 
   * Updated to 14.12.2, improved unused clock deletion.
 
  -- Jamey Hicks <jamey.hicks@gmail.com>  Thu, 04 Dec 2014 11:41:18 -0500
 
-fpgamake (14.11.1-1precise1) precise; urgency=low
+fpgamake (14.11.1-1trusty1) trusty; urgency=low
 
   * Updated to version 14.11.1, added tcl/program_bpi_flash.tcl
 
  -- Jamey Hicks <jamey.hicks@gmail.com>  Mon, 17 Nov 2014 16:25:53 -0500
 
-fpgamake (14.10.4-1precise1) precise; urgency=high
+fpgamake (14.10.4-1trusty1) trusty; urgency=high
 
   * Just set PART property of current_project in ipcore.tcl
 
  -- Jamey Hicks <jamey.hicks@gmail.com>  Mon, 27 Oct 2014 12:32:12 -0400
 
-fpgamake (14.10.3-2precise1) precise; urgency=high
+fpgamake (14.10.3-2trusty1) trusty; urgency=high
 
   * Fixed install script
 
  -- Jamey Hicks <jamey.hicks@gmail.com>  Mon, 27 Oct 2014 11:27:12 -0400
 
-fpgamake (14.10.3-1precise1) precise; urgency=low
+fpgamake (14.10.3-1trusty1) trusty; urgency=low
 
   * Update ipcore.tcl script to handle zedboard BOARD_PART
 
  -- Jamey Hicks <jamey.hicks@gmail.com>  Mon, 27 Oct 2014 11:02:17 -0400
 
-fpgamake (14.10.2-1precise1) precise; urgency=low
+fpgamake (14.10.2-1trusty1) trusty; urgency=low
 
   * Set executable mode on /usr/share/fpgamake/fpgamake
 
  -- Jamey Hicks <jamey.hicks@gmail.com>  Mon, 27 Oct 2014 11:01:41 -0400
 
-fpgamake (14.10.1-1precise1) precise; urgency=low
+fpgamake (14.10.1-1trusty1) trusty; urgency=low
 
   * Initial release
 
