@@ -60,5 +60,5 @@ if {![string equal [get_property PROGRAM.HW_CFGMEM_TYPE [lindex [get_hw_devices]
     program_hw_devices [lindex [get_hw_devices] 0];
 };
 
-program_hw_cfgmem -hw_cfgmem [get_property PROGRAM.HW_CFGMEM [lindex [get_hw_devices] 0 ]]
+program_hw_cfgmem -quiet -hw_cfgmem [get_property PROGRAM.HW_CFGMEM [lindex [get_hw_devices] 0 ]]
 
