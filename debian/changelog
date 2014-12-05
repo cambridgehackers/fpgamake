@@ -1,3 +1,9 @@
+fpgamake (14.12.2-1trusty1) trusty; urgency=medium
+
+  * Make n-worst paths report optional
+
+ -- Jamey Hicks <jamey.hicks@gmail.com>  Fri, 05 Dec 2014 16:28:26 -0500
+
 fpgamake (14.12.1-1trusty1) trusty; urgency=medium
 
   * Updated to 14.12.2, improved unused clock deletion.
