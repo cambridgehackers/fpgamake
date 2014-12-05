@@ -60,6 +60,7 @@ Impl/TopDown/$1-post-place.dcp: $(FLOORPLAN) $(TopDown_NETLISTS) Synth/$2/$2-syn
 	     BITFILE=Impl/TopDown/mkTop.bit \
 	     BUILDCACHE_CACHEDIR="$(CACHEDIR)/Impl/TopDown" \
 	     BUILDCACHE_OUTPUTDIR="Impl/TopDown" \
+	     REPORT_NWORST_TIMING_PATHS="$(REPORT_NWORST_TIMING_PATHS)" \
 	     $(BUILDCACHE) vivado -notrace -mode batch -source $(TCLDIR)/topdown.tcl
 
 $3: Impl/TopDown/$1-post-place.dcp

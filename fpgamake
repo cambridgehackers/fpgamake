@@ -52,6 +52,7 @@ argparser.add_argument('--xci', help='XCI file to use', default=[], action='appe
 argparser.add_argument('--xdc', help='XDC file to use', default=[], action='append')
 argparser.add_argument('--tcl', help='User tcl script to use', default=[], action='append')
 argparser.add_argument('--floorplan', help='Floorplan XDC.', default=None)
+argparser.add_argument('--report-nworst-timing-paths', help='Number of unique failing timing paths to report.', default='')
 argparser.add_argument('-t', '--top', help='Top verilog file')
 argparser.add_argument('-b', '--bitfile', help='Bit file to generate', default=None)
 argparser.add_argument('--cachedir', help='Cache directory', default='Cache')
@@ -222,7 +223,7 @@ CACHEDIR = %(cachedir)s
 FLOORPLAN=%(floorplan)s
 FPGAMAKE_PARTNAME=%(partname)s
 FPGAMAKE_BOARDNAME=%(boardname)s
-
+REPORT_NWORST_TIMING_PATHS?=%(report_nworst_timing_paths)s
 include $(TCLDIR)/Makefile.fpgamake.common
 '''
 
@@ -269,7 +270,8 @@ def write_makefile():
                                        'partname': options.part,
                                        'boardname': options.board,
                                        'buildcache': os.path.abspath(os.path.join(fpgamakedir, '../buildcache/buildcache')) if options.cachedir else '',
-                                       'cachedir': os.path.abspath(options.cachedir) if options.cachedir else ''
+                                       'cachedir': os.path.abspath(options.cachedir) if options.cachedir else '',
+                                       'report_nworst_timing_paths': options.report_nworst_timing_paths
                                        })
     for module in module_instances:
         subinst = []
