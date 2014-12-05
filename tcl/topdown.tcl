@@ -72,22 +72,23 @@ report_timing_summary -file $outputDir/$instance-post-link-timing-summary.rpt > 
 report_timing -sort_by group -max_paths 100 -path_type summary -file $outputDir/$instance-post-link-timing.rpt > $outputDir/temp.log
 if {"$env(REPORT_NWORST_TIMING_PATHS)" != ""} {
     report_timing -nworst $env(REPORT_NWORST_TIMING_PATHS) -sort_by slack -path_type summary -slack_lesser_than 0.2 -unique_pins
+    puts "****************************************"
+    puts "If timing report says 'No timing paths found.' then the design met the timing constraints."
+    puts "If it reported negative slack, then the design did not meet the timing constraints."
+    puts "****************************************"
 }
-puts "****************************************"
-puts "If timing report says 'No timing paths found.' then the design met the timing constraints."
-puts "If it reported negative slack, then the design did not meet the timing constraints."
-puts "****************************************"
+
 report_utilization -file $outputDir/$instance-post-link-util.rpt
 
 log_command opt_design $outputDir/opt_design.log
 log_command "write_checkpoint -force $outputDir/$instance-post-opt.dcp" $outputDir/temp.log
 if {"$env(REPORT_NWORST_TIMING_PATHS)" != ""} {
     report_timing -nworst $env(REPORT_NWORST_TIMING_PATHS) -sort_by slack -path_type summary -slack_lesser_than 0.2 -unique_pins
+    puts "****************************************"
+    puts "If timing report says 'No timing paths found.' then the design met the timing constraints."
+    puts "If it reported negative slack, then the design did not meet the timing constraints."
+    puts "****************************************"
 }
-puts "****************************************"
-puts "If timing report says 'No timing paths found.' then the design met the timing constraints."
-puts "If it reported negative slack, then the design did not meet the timing constraints."
-puts "****************************************"
 report_timing_summary -file $outputDir/$instance-post-opt-timing-summary.rpt > $outputDir/temp.log
 report_utilization -file $outputDir/$instance-post-link-util.rpt
 foreach pblock [get_pblocks] {
@@ -98,11 +99,11 @@ log_command place_design    $outputDir/place_design.log
 log_command "write_checkpoint -force $outputDir/$instance-post-place.dcp" $outputDir/temp.log
 if {"$env(REPORT_NWORST_TIMING_PATHS)" != ""} {
     report_timing -nworst $env(REPORT_NWORST_TIMING_PATHS) -sort_by slack -path_type summary -slack_lesser_than 0.2 -unique_pins
+    puts "****************************************"
+    puts "If timing report says 'No timing paths found.' then the design met the timing constraints."
+    puts "If it reported negative slack, then the design did not meet the timing constraints."
+    puts "****************************************"
 }
-puts "****************************************"
-puts "If timing report says 'No timing paths found.' then the design met the timing constraints."
-puts "If it reported negative slack, then the design did not meet the timing constraints."
-puts "****************************************"
 report_utilization -file $outputDir/$instance-post-place-util.rpt
 report_timing_summary -file $outputDir/$instance-post-place-timing-summary.rpt
 report_io -file $outputDir/$instance-post-place-io.rpt > $outputDir/temp.log
@@ -115,11 +116,11 @@ if {"$env(FLOORPLAN)" == ""} {
     log_command "write_checkpoint -force $outputDir/$instance-post-route.dcp" $outputDir/temp.log
     if {"$env(REPORT_NWORST_TIMING_PATHS)" != ""} {
 	report_timing -nworst $env(REPORT_NWORST_TIMING_PATHS) -sort_by slack -path_type summary -slack_lesser_than 0.2 -unique_pins
+	puts "****************************************"
+	puts "If timing report says 'No timing paths found.' then the design met the timing constraints."
+	puts "If it reported negative slack, then the design did not meet the timing constraints."
+	puts "****************************************"
     }
-    puts "****************************************"
-    puts "If timing report says 'No timing paths found.' then the design met the timing constraints."
-    puts "If it reported negative slack, then the design did not meet the timing constraints."
-    puts "****************************************"
     report_utilization -file $outputDir/$instance-post-route-util.rpt
     report_timing_summary -file $outputDir/$instance-post-route-timing-summary.rpt
     report_timing -sort_by group -max_paths 100 -path_type summary -file $outputDir/$instance-post-route-timing.rpt > $outputDir/temp.log
