@@ -223,7 +223,7 @@ CACHEDIR = %(cachedir)s
 FLOORPLAN=%(floorplan)s
 FPGAMAKE_PARTNAME=%(partname)s
 FPGAMAKE_BOARDNAME=%(boardname)s
-REPORT_NWORST_TIMING_PATHS=?%(report_nworst_timing_paths)s
+REPORT_NWORST_TIMING_PATHS?=%(report_nworst_timing_paths)s
 include $(TCLDIR)/Makefile.fpgamake.common
 '''
 
