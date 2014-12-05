@@ -13,7 +13,7 @@ install:
 VERSION=14.10.1
 
 spkg:
-	sed -i s/trusty/precise/g debian/changelog
 	git buildpackage --git-debian-tag="v%s" --git-upstream-branch=master --git-debian-branch=ubuntu -S -tc
-	sed -i s/precise/trusty/g debian/changelog
+	sed -i s/trusty/precise/g debian/changelog
 	git buildpackage --git-debian-tag="v%s" --git-upstream-branch=master --git-debian-branch=ubuntu --git-ignore-new -S -tc
+	git checkout debian
