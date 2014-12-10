@@ -1,3 +1,9 @@
+fpgamake (14.12.3-1trusty1) trusty; urgency=medium
+
+  * Use correct synthesis mode for top module
+
+ -- Jamey Hicks <jamey.hicks@gmail.com>  Wed, 10 Dec 2014 10:51:19 -0500
+
 fpgamake (14.12.2-1trusty1) trusty; urgency=medium
 
   * Make n-worst paths report optional
