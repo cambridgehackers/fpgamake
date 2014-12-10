@@ -39,7 +39,7 @@ if [file exists {board.tcl}] {
 set module $env(MODULE)
 set outputDir ./Synth/$module
 file mkdir $outputDir
-if {$module == "top" || $module == {mkZynqTop} || $module == {mkPcieTop}} {
+if {$module == "top" || $module == {mkZynqTop} || $module == {mkPcieTop} || $module == $env(FPGAMAKE_TOPMODULE)} {
     set mode default
 } else {
     set mode out_of_context

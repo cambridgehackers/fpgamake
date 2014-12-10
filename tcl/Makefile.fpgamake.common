@@ -26,6 +26,7 @@ Synth/$1/$1-synth.dcp: $($1_PATH)
 	    USER_TCL_SCRIPT="$($(MODULE)_USER_TCL_SCRIPT)" \
             FPGAMAKE_PARTNAME=$(FPGAMAKE_PARTNAME) \
             FPGAMAKE_BOARDNAME=$(FPGAMAKE_BOARDNAME) \
+            FPGAMAKE_TOPMODULE=$(FPGAMAKE_TOPMODULE) \
 	    BUILDCACHE_CACHEDIR="$(CACHEDIR)/Synth/$(MODULE)" \
 	    BUILDCACHE_OUTPUTDIR="Synth/$(MODULE)" \
 	    $(BUILDCACHE) vivado -notrace -mode batch -source $(TCLDIR)/synth.tcl

@@ -223,6 +223,7 @@ CACHEDIR = %(cachedir)s
 FLOORPLAN=%(floorplan)s
 FPGAMAKE_PARTNAME=%(partname)s
 FPGAMAKE_BOARDNAME=%(boardname)s
+FPGAMAKE_TOPMODULE=%(topmodule)s
 REPORT_NWORST_TIMING_PATHS?=%(report_nworst_timing_paths)s
 include $(TCLDIR)/Makefile.fpgamake.common
 '''
@@ -267,6 +268,7 @@ def write_makefile():
     f = open(options.output, 'w')
     f.write(makefileHeaderTemplate % { 'floorplan': os.path.abspath(options.floorplan) if options.floorplan else '',
                                        'fpgamakedir': fpgamakedir,
+                                       'topmodule': options.top,
                                        'partname': options.part,
                                        'boardname': options.board,
                                        'buildcache': os.path.abspath(os.path.join(fpgamakedir, '../buildcache/buildcache')) if options.cachedir else '',
