@@ -8,7 +8,7 @@ PSEARCH ?= :+
 
 all: synth
 
-BLD    = $(realpath ./kc705)
+BLD    = $(realpath .)/kc705
 v_dir ?= ${BLD}/source
 bo_dir?= ${BLD}/bo
 i_dir ?= ${BLD}/info
