@@ -98,9 +98,16 @@ foreach ip $env(IP) {
     log_command "read_ip $ip" $outputDir/temp.log
 }
 
+set verilog_defines ""
+if {[info exists env(VERILOG_DEFINES)]} {
+    foreach d $env(VERILOG_DEFINES) {
+	set verilog_defines "$verilog_defines -verilog_define $d"
+    }
+}
+
 # STEP#2: run synthesis, report utilization and timing estimates, write checkpoint design
 #
-log_command "synth_design -name $module -top $module -part $partname -flatten rebuilt -include_dirs \"[dict keys $include_dirs]\" -mode $mode" "$outputDir/synth_design.log"
+log_command "synth_design $verilog_defines -name $module -top $module -part $partname -flatten rebuilt -include_dirs \"[dict keys $include_dirs]\" -mode $mode" "$outputDir/synth_design.log"
 
 # Remove unused clocks that bluespec compiler exports
 foreach {pat} {CLK_GATE_hdmi_clock_if CLK_*deleteme_unused_clock* CLK_GATE_*deleteme_unused_clock* RST_N_*deleteme_unused_reset*} {

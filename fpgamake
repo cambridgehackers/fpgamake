@@ -43,7 +43,8 @@ level design.
 
 argparser = argparse.ArgumentParser(description=description)
 argparser.add_argument('vpath', help='Verilog path', nargs='+')
-argparser.add_argument('--header', help='Verilog defines', default=[], action='append')
+argparser.add_argument('-D', '--define', help='Verilog defines', default=[], action='append')
+argparser.add_argument('--header', help='Verilog headers', default=[], action='append')
 argparser.add_argument('-o', '--output', help='Output make file', default='synth.mk')
 argparser.add_argument('-s', '--synth', help='Module to synthesize separately', default=[], action='append')
 argparser.add_argument('-B', '--board', help='Target board name', default='zedboard')
@@ -224,6 +225,7 @@ FLOORPLAN=%(floorplan)s
 FPGAMAKE_PARTNAME=%(partname)s
 FPGAMAKE_BOARDNAME=%(boardname)s
 FPGAMAKE_TOPMODULE=%(topmodule)s
+VERILOG_DEFINES="%(verilog_defines)s"
 REPORT_NWORST_TIMING_PATHS?=%(report_nworst_timing_paths)s
 include $(TCLDIR)/Makefile.fpgamake.common
 '''
@@ -269,6 +271,7 @@ def write_makefile():
     f.write(makefileHeaderTemplate % { 'floorplan': os.path.abspath(options.floorplan) if options.floorplan else '',
                                        'fpgamakedir': fpgamakedir,
                                        'topmodule': options.top,
+                                       'verilog_defines': ' '.join(options.define),
                                        'partname': options.part,
                                        'boardname': options.board,
                                        'buildcache': os.path.abspath(os.path.join(fpgamakedir, '../buildcache/buildcache')) if options.cachedir else '',
