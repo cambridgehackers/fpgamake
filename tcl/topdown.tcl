@@ -129,7 +129,7 @@ if {"$env(FLOORPLAN)" == ""} {
     if {[info exists env(BITFILE)] && $env(BITFILE) != ""} {
 	set bitfileroot [file rootname $env(BITFILE)]
 	set llfile "$bitfileroot.ll"
-	log_command "write_bitstream -bin_file -logic_location $llfile -force $env(BITFILE)" $outputDir/write_bitstream.log
+	log_command "write_bitstream -bin_file -logic_location_file $llfile -force $env(BITFILE)" $outputDir/write_bitstream.log
     }
 }
 set impl_end_time [clock seconds]
