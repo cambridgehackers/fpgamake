@@ -8,10 +8,10 @@ PSEARCH ?= :+
 
 all: synth
 
-BLD    = $(realpath .)/kc705
-v_dir ?= ${BLD}/source
-bo_dir?= ${BLD}/bo
-i_dir ?= ${BLD}/info
+BLD     = $(realpath .)/de5
+v_dir  ?= ${BLD}/source
+bo_dir ?= ${BLD}/bo
+i_dir  ?= ${BLD}/info
 
 # Transformation Rules
 mk%V: %.bsv
@@ -24,32 +24,33 @@ mk%V: %.bsv
 # Bluespec compile
 synth: ${v_rules}
 
-# Hierarchical design flow 
+# Hierarchical design flow
 .PHONY: fpgamake
 fpgamake: ${BLD}/fpgamake.mk
 ${BLD}/fpgamake.mk: synth
 	cd ${BLD} && $(FPGAMAKEDIR)/fpgamake \
-	--board=kc705 --part='xc7k325tffg900-2' -b mkDutTop.bit \
+	--board=de5 --part='5SGXEA7N2F45C2' -b mkDutTop.sof \
 	-o ${BLD}/fpgamake.mk -t mkDutTop \
-        -D BSV_POSITIVE_RESET=1 \
-	--floorplan= --constraint=${PWD}/uart_led.xdc ${v_dir} ${BLUESPECDIR}/Verilog
+    -D BSV_POSITIVE_RESET=1 \
+	--floorplan= --constraint=${PWD}/uart_led.sdc --qsf=${PWD}/uart_led.qsf \
+	${v_dir} ${BLUESPECDIR}/Verilog
 
-build: ${BLD}/fpgamake.mk 
+build: ${BLD}/fpgamake.mk
 	cd ${BLD} && make -f fpgamake.mk
 
-run: ${BLD}/Impl/TopDown/mkTop.bin
-	fpgajtag $<
-
 # Gui based flow
-vivado:
-	mkdir -p ${BLD}/vivado
-	cd ${BLD}/vivado && vivado &
+quartus:
+	mkdir -p ${BLD}/quartus
+	cd ${BLD}/quartus && quartus &
 
-clean_vivado:
-	rm -rf ${BLD}/vivado
+clean_quartus:
+	rm -rf ${BLD}/quartus
 
 dump:
 	@echo ${v_rules}
 
 clean:
 	rm -rf ${BLD}
+
+altera_build:
+	quartus_sh -t build.tcl
