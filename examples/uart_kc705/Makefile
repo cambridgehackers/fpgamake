@@ -32,7 +32,7 @@ ${BLD}/fpgamake.mk: synth
 	--board=kc705 --part='xc7k325tffg900-2' -b mkDutTop.bit \
 	-o ${BLD}/fpgamake.mk -t mkDutTop \
         -D BSV_POSITIVE_RESET=1 \
-	--floorplan= --xdc=${PWD}/uart_led.xdc ${v_dir} ${BLUESPECDIR}/Verilog
+	--floorplan= --constraint=${PWD}/uart_led.xdc ${v_dir} ${BLUESPECDIR}/Verilog
 
 build: ${BLD}/fpgamake.mk 
 	cd ${BLD} && make -f fpgamake.mk

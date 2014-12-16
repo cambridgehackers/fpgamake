@@ -32,7 +32,7 @@ ${BLD}/fpgamake.mk: synth
 	--board=de5 --part='5SGXEA7N2F45C2' -b mkDutTop.sof \
 	-o ${BLD}/fpgamake.mk -t mkDutTop \
     -D BSV_POSITIVE_RESET=1 \
-	--floorplan= --sdc=${PWD}/uart_led.sdc --qsf=${PWD}/uart_led.qsf \
+	--floorplan= --constraint=${PWD}/uart_led.sdc --qsf=${PWD}/uart_led.qsf \
 	${v_dir} ${BLUESPECDIR}/Verilog
 
 build: ${BLD}/fpgamake.mk

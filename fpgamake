@@ -50,8 +50,7 @@ argparser.add_argument('-s', '--synth', help='Module to synthesize separately', 
 argparser.add_argument('-B', '--board', help='Target board name', default='zedboard')
 argparser.add_argument('-p', '--part', help='Target part name', default='xc7z020clg484-1')
 argparser.add_argument('--xci', help='XCI file to use', default=[], action='append')
-argparser.add_argument('--xdc', help='XDC file to use', default=[], action='append')
-argparser.add_argument('--sdc', help='SDC file to use', default=[], action='append')
+argparser.add_argument('--constraints', help='Constraints file to use', default=[], action='append')
 argparser.add_argument('--qsf', help='QSF file to use', default=[], action='append')
 argparser.add_argument('--tcl', help='User tcl script to use', default=[], action='append')
 argparser.add_argument('--floorplan', help='Floorplan XDC.', default=None)
@@ -68,10 +67,9 @@ modules_visited={}
 verilog_used={}
 vhdl_used={}
 vhdl_libraries_used={}
-xdc_files={}
+constraint_files={}
 
 ## altera specific
-sdc_files={}
 qsf_files={}
 
 parameterizedModuleRe = r'^\s*(\w+)\s*#'
@@ -270,7 +268,7 @@ $(eval $(call SYNTH_RULE,%(module)s))
 '''
 
 impl_template='''
-%(inst)s_XDC = %(xdc_files)s
+%(inst)s_XDC = %(constraint_files)s
 %(inst)s_OOCXDC = %(oocxdc)s
 %(inst)s_NETLISTS = %(module_routed_netlists)s
 %(inst)s_BITFILE = %(bitfile)s
@@ -279,7 +277,7 @@ $(eval $(call IMPL_RULE,%(inst)s,%(module)s))
 '''
 
 topdown_template='''
-TopDown_XDC = %(xdc_files)s
+TopDown_XDC = %(constraint_files)s
 TopDown_NETLISTS = %(module_synth_netlists)s
 TopDown_SUBINST = %(subinst)s
 
@@ -302,7 +300,7 @@ $(eval $(call MAP_RULE,%(module)s))
 '''
 
 fit_template='''
-%(inst)s_SDC = %(sdc_files)s
+%(inst)s_SDC = %(constraint_files)s
 %(inst)s_QSF = %(qsf_files)s
 %(inst)s_NETLISTS = %(module_routed_netlists)s
 %(inst)s_BITFILE = %(bitfile)s
@@ -357,7 +355,7 @@ def write_xilinx_makefile():
 
             f.write(impl_template % { 'module': module,
                                       'inst': inst,
-                                      'xdc_files': ' '.join([os.path.abspath(xdc) for xdc in xdc_files[inst]]) if inst in xdc_files else '',
+                                      'constraint_files': ' '.join([os.path.abspath(xdc) for xdc in constraint_files[inst]]) if inst in constraint_files else '',
                                       'module_routed_netlists': ' '.join(subinst_routed_netlists),
                                       'oocxdc': '%(inst)s-ooc.xdc %(inst)s-ooc-clocks.xdc %(inst)s-ooc-budget.xdc' % {'inst': inst} if inst != 'top' else '',
                                       'bitfile': options.bitfile if (inst == 'top' and options.bitfile) else '',
@@ -369,7 +367,7 @@ def write_xilinx_makefile():
             submodule_synth_netlists.append('Synth/%s/%s-synth.dcp' % (submodule, submodule))
 
     inst = 'top'
-    topdown_xdc_files = (' '.join([os.path.abspath(xdc) for xdc in xdc_files[inst]]) if (inst in xdc_files) else '')
+    topdown_xdc_files = (' '.join([os.path.abspath(xdc) for xdc in constraint_files[inst]]) if (inst in constraint_files) else '')
 
     submodules = []
     if options.top in modules_used:
@@ -381,7 +379,7 @@ def write_xilinx_makefile():
                                                                % {'inst': inst}
                                                                for inst in module_instances[submodule]])
                                                      for submodule in submodules]),
-                                 'xdc_files': topdown_xdc_files,
+                                 'constraint_files': topdown_xdc_files,
                                  'floorplan': os.path.abspath(options.floorplan) if options.floorplan else '',
                                  'module_synth_netlists': ' '.join(submodule_synth_netlists),
                                  'bitfile': options.bitfile if options.bitfile else '',
@@ -437,7 +435,7 @@ def write_altera_makefile():
 
             f.write(fit_template % { 'module': module,
                                      'inst': inst,
-                                     'sdc_files': ' '.join([os.path.abspath(sdc) for sdc in sdc_files[inst]]) if inst in sdc_files else '',
+                                     'constraint_files': ' '.join([os.path.abspath(sdc) for sdc in constraint_files[inst]]) if inst in constraint_files else '',
                                      'qsf_files': ' '.join([os.path.abspath(qsf) for qsf in qsf_files[inst]]) if inst in qsf_files else '',
                                      'module_routed_netlists': ' '.join(subinst_routed_netlists),
                                      'bitfile': options.bitfile if options.bitfile else '',
@@ -469,10 +467,7 @@ if __name__=='__main__':
         print modules_used
         print verilog_used
 
-    if options.xdc:
-        xdc_files['top'] = options.xdc
-    if options.sdc:
-        sdc_files['top'] = options.sdc
+    constraint_files['top'] = options.constraints
 
     if options.qsf:
         qsf_files['top'] = options.qsf
