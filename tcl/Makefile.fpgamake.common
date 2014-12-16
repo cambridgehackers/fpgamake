@@ -79,4 +79,56 @@ $(foreach inst, $(TopDown_SUBINST), Impl/$(inst)/$(inst)-ooc.xdc Impl/$(inst)/$(
 
 endef
 
+##
+## Altera Makefile
+##
+define MAP_RULE
+SYNTH_NETLISTS += Synth/$1/$1-map.dcp
+Synth/$1/$1-map.dcp: $($1_PATH)
+	$(Q)$(eval MODULE=$1)
+	@echo fpgamake.mk $@
+	$(Q)mkdir -p Synth/$(MODULE)
+	$(Q)MODULE=$(MODULE) \
+	    HEADERFILES="$($(MODULE)_HEADERFILES)" \
+	    VFILES="$($(MODULE)_VFILES) $(foreach item,$($(MODULE)_STUBS), Synth/stubs/$(item))" \
+	    VHDFILES="$($(MODULE)_VHDFILES)" \
+	    VHDL_LIBRARIES="$($(MODULE)_VHDL_LIBRARIES)" \
+	    IP="$($(MODULE)_IP)" \
+	    SUBINST="$($(MODULE)_SUBINST)" \
+	    USER_TCL_SCRIPT="$($(MODULE)_USER_TCL_SCRIPT)" \
+            FPGAMAKE_PARTNAME=$(FPGAMAKE_PARTNAME) \
+            FPGAMAKE_BOARDNAME=$(FPGAMAKE_BOARDNAME) \
+            FPGAMAKE_TOPMODULE=$(FPGAMAKE_TOPMODULE) \
+            FPGAMAKE_FAMILY=$(FPGAMAKE_FAMILY) \
+	    VERILOG_DEFINES=$(VERILOG_DEFINES) \
+	    BUILDCACHE_CACHEDIR="$(CACHEDIR)/Synth/$(MODULE)" \
+	    BUILDCACHE_OUTPUTDIR="Synth/$(MODULE)" \
+	    $(BUILDCACHE) quartus_sh -t $(TCLDIR)/alt_map.tcl
+endef
+
+# altera fit
+define FIT_RULE
+SYNTH_NETLISTS += Impl/Fit/$1-fit.dcp
+Impl/Fit/$1-fit.dcp: $(FLOORPLAN) $(Fit_NETLISTS) Synth/$2/$2-map.dcp
+	$(Q)$(eval MODULE=$2)
+	$(Q)$(eval INST=$1)
+	@echo fpgamake.mk $@
+	$(Q)mkdir -p Impl/Fit/
+	$(Q) MODULE=$(MODULE) INST=$(INST) \
+	     SUBINST="$(Fit_SUBINST)" \
+	     MODULE_NETLISTS="$(Fit_NETLISTS)" \
+	     SDC="$(top_SDC)" \
+	     QSF="$(top_QSF)" \
+	     FLOORPLAN="$(FLOORPLAN)" \
+	     BITFILE=Impl/Fit/mkTop.sof \
+	     BUILDCACHE_CACHEDIR="$(CACHEDIR)/Impl/Fit" \
+	     BUILDCACHE_OUTPUTDIR="Impl/Fit" \
+	     REPORT_NWORST_TIMING_PATHS="$(REPORT_NWORST_TIMING_PATHS)" \
+	     $(BUILDCACHE) quartus_sh -t $(TCLDIR)/alt_fit.tcl
+
+$3: Impl/Fit/$1-fit.dcp
+	$(Q)echo "copy bitfile if needed"
+
+endef
+
 all: everything

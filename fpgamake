@@ -51,6 +51,8 @@ argparser.add_argument('-B', '--board', help='Target board name', default='zedbo
 argparser.add_argument('-p', '--part', help='Target part name', default='xc7z020clg484-1')
 argparser.add_argument('--xci', help='XCI file to use', default=[], action='append')
 argparser.add_argument('--xdc', help='XDC file to use', default=[], action='append')
+argparser.add_argument('--sdc', help='SDC file to use', default=[], action='append')
+argparser.add_argument('--qsf', help='QSF file to use', default=[], action='append')
 argparser.add_argument('--tcl', help='User tcl script to use', default=[], action='append')
 argparser.add_argument('--floorplan', help='Floorplan XDC.', default=None)
 argparser.add_argument('--report-nworst-timing-paths', help='Number of unique failing timing paths to report.', default='')
@@ -67,6 +69,10 @@ verilog_used={}
 vhdl_used={}
 vhdl_libraries_used={}
 xdc_files={}
+
+## altera specific
+sdc_files={}
+qsf_files={}
 
 parameterizedModuleRe = r'^\s*(\w+)\s*#'
 plainModuleRe = r'^\s*(\w+)\s+(\w+)\s*\(?'
@@ -90,6 +96,18 @@ def find_in_path(fname, path):
             if os.path.exists(os.path.join(p, fname.lower())):
                 return os.path.join(p, fname.lower())
     return None
+
+def map_partname_to_family(partname):
+    family=''
+    mapping={'5sg': '\"Stratix V\"',  \
+             'ep4': '\"Stratix IV\"', \
+             'xc7':  '\"Virtex 7\"',   \
+             }
+    try:
+        family = mapping[partname[0:3].lower()]
+    except:
+        print "Unknown partname s" % partname
+    return family
 
 def add_to_verilog_used(parent_partition, submodule):
     if verilog_used.has_key(parent_partition):
@@ -225,6 +243,7 @@ FLOORPLAN=%(floorplan)s
 FPGAMAKE_PARTNAME=%(partname)s
 FPGAMAKE_BOARDNAME=%(boardname)s
 FPGAMAKE_TOPMODULE=%(topmodule)s
+FPGAMAKE_FAMILY=%(family)s
 VERILOG_DEFINES="%(verilog_defines)s"
 REPORT_NWORST_TIMING_PATHS?=%(report_nworst_timing_paths)s
 include $(TCLDIR)/Makefile.fpgamake.common
@@ -235,6 +254,7 @@ everything: $(SYNTH_NETLISTS) %(bitfile)s
 
 '''
 
+## Xilinx flow
 synth_template='''
 %(module)s_HEADERFILES = %(headerfiles)s
 %(module)s_VFILES = %(vfiles)s
@@ -266,7 +286,32 @@ TopDown_SUBINST = %(subinst)s
 $(eval $(call TOP_RULE,%(inst)s,%(module)s,%(bitfile)s,%(bitbase)s))
 '''
 
-def write_makefile():
+## Altera Flow
+map_template='''
+%(module)s_HEADERFILES = %(headerfiles)s
+%(module)s_VFILES = %(vfiles)s
+%(module)s_VHDFILES = %(vhdfiles)s
+%(module)s_VHDL_LIBRARIES = %(vhdlibraries)s
+%(module)s_STUBS = %(module_stubs)s
+%(module)s_IP = %(xcifiles)s
+%(module)s_SUBINST = %(subinst)s
+%(module)s_PATH = %(module_path)s
+%(module)s_USER_TCL_SCRIPT = %(user_tcl)s
+
+$(eval $(call MAP_RULE,%(module)s))
+'''
+
+fit_template='''
+%(inst)s_SDC = %(sdc_files)s
+%(inst)s_QSF = %(qsf_files)s
+%(inst)s_NETLISTS = %(module_routed_netlists)s
+%(inst)s_BITFILE = %(bitfile)s
+
+$(eval $(call FIT_RULE,%(inst)s,%(module)s,%(bitfile)s, %(bitbase)s))
+'''
+
+
+def write_xilinx_makefile():
     f = open(options.output, 'w')
     f.write(makefileHeaderTemplate % { 'floorplan': os.path.abspath(options.floorplan) if options.floorplan else '',
                                        'fpgamakedir': fpgamakedir,
@@ -274,6 +319,7 @@ def write_makefile():
                                        'verilog_defines': ' '.join(options.define),
                                        'partname': options.part,
                                        'boardname': options.board,
+                                       'family': map_partname_to_family(options.part),
                                        'buildcache': os.path.abspath(os.path.join(fpgamakedir, '../buildcache/buildcache')) if options.cachedir else '',
                                        'cachedir': os.path.abspath(options.cachedir) if options.cachedir else '',
                                        'report_nworst_timing_paths': options.report_nworst_timing_paths
@@ -344,6 +390,62 @@ def write_makefile():
     f.write(makefileTrailerTemplate % { 'bitfile': options.bitfile if options.bitfile else '' })
     f.close()
 
+## altera flow
+def write_altera_makefile():
+    f = open(options.output, 'w')
+    f.write(makefileHeaderTemplate % { 'floorplan': os.path.abspath(options.floorplan) if options.floorplan else '',
+                                       'fpgamakedir': fpgamakedir,
+                                       'topmodule': options.top,
+                                       'verilog_defines': ' '.join(options.define),
+                                       'partname': options.part,
+                                       'boardname': options.board,
+                                       'family': map_partname_to_family(options.part),
+                                       'buildcache': os.path.abspath(os.path.join(fpgamakedir, '../buildcache/buildcache')) if options.cachedir else '',
+                                       'cachedir': os.path.abspath(options.cachedir) if options.cachedir else '',
+                                       'report_nworst_timing_paths': options.report_nworst_timing_paths,
+                                       })
+    for module in module_instances:
+        subinst = []
+        module_stubs = []
+        if options.top in modules_used:
+            subinst = ([' '.join(module_instances[submodule]) for submodule in set(modules_used[options.top])])
+        if module in modules_used:
+            module_stubs = ['%s-stub.v' % (m) for m in set(modules_used[module])]
+        f.write(map_template % { 'module': module,
+                                 'module_path': find_in_path(module, options.vpath),
+                                 'headerfiles': ' '.join([find_in_path(vfile, options.vpath) for vfile in set(options.header)]) if options.header else '',
+                                 'vfiles': ' '.join([find_in_path(module, options.vpath)]
+                                                    + [find_in_path(vfile, options.vpath) for vfile in set(verilog_used[module])]
+                                                    ) if module in verilog_used else '',
+                                 'vhdfiles': ' '.join([find_in_path(vfile, options.vpath) for vfile in set(vhdl_used[module])]) if module in vhdl_used else '',
+                                 'vhdlibraries': ' '.join(set(vhdl_libraries_used[module])) if module in vhdl_libraries_used else '',
+                                 'subinst': ' '.join(subinst),
+                                 'module_stubs': ' '.join(module_stubs),
+                                 'user_tcl': ' '.join(options.tcl) if options.tcl else '',
+                                 'xcifiles': ' '.join(options.xci),
+                                 })
+        for inst in set(module_instances[module]):
+            subinst_routed_netlists = []
+            if module in modules_used:
+                for submodule in set(modules_used[module]):
+                    if options.verbose:
+                        print 'inst', inst, 'submodule', submodule
+                    for subinst in module_instances[submodule]:
+                        if options.verbose:
+                            print '\t', subinst
+                        subinst_routed_netlists.append('Impl/%s/%s-post-route.dcp' % (subinst, subinst))
+
+            f.write(fit_template % { 'module': module,
+                                     'inst': inst,
+                                     'sdc_files': ' '.join([os.path.abspath(sdc) for sdc in sdc_files[inst]]) if inst in sdc_files else '',
+                                     'qsf_files': ' '.join([os.path.abspath(qsf) for qsf in qsf_files[inst]]) if inst in qsf_files else '',
+                                     'module_routed_netlists': ' '.join(subinst_routed_netlists),
+                                     'bitfile': options.bitfile if options.bitfile else '',
+                                     'bitbase': os.path.splitext(options.bitfile)[0] if options.bitfile else '',
+                                     })
+    f.write(makefileTrailerTemplate % { 'bitfile': options.bitfile if options.bitfile else '' })
+    f.close()
+
 def expand_path():
     visitlist=[] + options.vpath
     while visitlist:
@@ -367,6 +469,17 @@ if __name__=='__main__':
         print modules_used
         print verilog_used
 
-    xdc_files['top'] = options.xdc
+    if options.xdc:
+        xdc_files['top'] = options.xdc
+    if options.sdc:
+        sdc_files['top'] = options.sdc
+
+    if options.qsf:
+        qsf_files['top'] = options.qsf
+
     process_modules()
-    write_makefile()
+
+    if options.part.upper().startswith('XC'):
+        write_xilinx_makefile()
+    else:
+        write_altera_makefile()
