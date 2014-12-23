@@ -1,3 +1,9 @@
+fpgamake (14.12.4-1trusty1) trusty; urgency=medium
+
+  * Updated to 14.12.4.
+
+ -- Jamey Hicks <jamey.hicks@gmail.com>  Tue, 23 Dec 2014 09:38:14 -0500
+
 fpgamake (14.12.3-1trusty1) trusty; urgency=medium
 
   * Use correct synthesis mode for top module
