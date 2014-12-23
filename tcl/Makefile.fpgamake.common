@@ -14,7 +14,7 @@ define SYNTH_RULE
 SYNTH_NETLISTS += Synth/$1/$1-synth.dcp
 Synth/$1/$1-synth.dcp: $($1_PATH)
 	$(Q)$(eval MODULE=$1)
-	@echo fpgamake.mk $@
+	@echo fpgamake.mk Synth/$1/$1-synth.dcp
 	$(Q)mkdir -p Synth/$(MODULE)
 	$(Q)MODULE=$(MODULE) \
 	    HEADERFILES="$($(MODULE)_HEADERFILES)" \
@@ -37,7 +37,7 @@ define IMPL_RULE
 Impl/$1/$1-post-route.dcp: Synth/$2/$2-synth.dcp $($2_NETLISTS) Impl/oocxdc.timestamp $(foreach item,$($(INST)_OOCXDC), Impl/$(INST)/$(item))
 	$(Q)$(eval MODULE=$2)
 	$(Q)$(eval INST=$1)
-	@echo fpgamake.mk $@
+	@echo fpgamake.mk Impl/$1/$1-post-route.dcp
 	$(Q)MODULE=$(MODULE) INST=$(INST) \
 	    XDC="$($(INST)_XDC) $(foreach item,$($(INST)_OOCXDC), Impl/$(INST)/$(item))" \
 	    MODULE_NETLISTS="$($(INST)_NETLISTS)" \
@@ -52,7 +52,7 @@ SYNTH_NETLISTS += Impl/TopDown/$1-post-place.dcp
 Impl/TopDown/$1-post-place.dcp: $(FLOORPLAN) $(TopDown_NETLISTS) Synth/$2/$2-synth.dcp
 	$(Q)$(eval MODULE=$2)
 	$(Q)$(eval INST=$1)
-	@echo fpgamake.mk $@
+	@echo fpgamake.mk Impl/TopDown/$1-post-place.dcp
 	$(Q)mkdir -p Impl/TopDown/
 	$(Q) MODULE=$(MODULE) INST=$(INST) \
 	     SUBINST="$(TopDown_SUBINST)" \
@@ -70,6 +70,7 @@ $3: Impl/TopDown/$1-post-place.dcp
 	$(Q)cp -v Impl/TopDown/mkTop.bin $4.bin
 
 Impl/oocxdc.timestamp: Impl/TopDown/$1-post-place.dcp
+	@echo fpgamake.mk Impl/oocxdc.timestamp
 	INST=$1 MODULE=$2 \
 	SUBINST="$(TopDown_SUBINST)" \
 	$(BUILDCACHE) vivado -notrace -mode batch -source $(TCLDIR)/write-ooc-xdc.tcl
@@ -86,7 +87,7 @@ define MAP_RULE
 SYNTH_NETLISTS += Synth/$1/$1-map.dcp
 Synth/$1/$1-map.dcp: $($1_PATH)
 	$(Q)$(eval MODULE=$1)
-	@echo fpgamake.mk $@
+	@echo fpgamake.mk Synth/$1/$1-map.dcp
 	$(Q)mkdir -p Synth/$(MODULE)
 	$(Q)MODULE=$(MODULE) \
 	    HEADERFILES="$($(MODULE)_HEADERFILES)" \
@@ -112,7 +113,7 @@ SYNTH_NETLISTS += Impl/Fit/$1-fit.dcp
 Impl/Fit/$1-fit.dcp: $(FLOORPLAN) $(Fit_NETLISTS) Synth/$2/$2-map.dcp
 	$(Q)$(eval MODULE=$2)
 	$(Q)$(eval INST=$1)
-	@echo fpgamake.mk $@
+	@echo fpgamake.mk Impl/Fit/$1-fit.dcp
 	$(Q)mkdir -p Impl/Fit/
 	$(Q) MODULE=$(MODULE) INST=$(INST) \
 	     SUBINST="$(Fit_SUBINST)" \
