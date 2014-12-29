@@ -54,6 +54,7 @@ argparser.add_argument('--constraints', help='Constraints file to use', default=
 argparser.add_argument('--qsf', help='QSF file to use', default=[], action='append')
 argparser.add_argument('--tcl', help='User tcl script to use', default=[], action='append')
 argparser.add_argument('--floorplan', help='Floorplan XDC.', default=None)
+argparser.add_argument('--preserve-clock-gates', help='Do not delete clock gate pins if set to 1', default=0)
 argparser.add_argument('--report-nworst-timing-paths', help='Number of unique failing timing paths to report.', default='')
 argparser.add_argument('-t', '--top', help='Top verilog file')
 argparser.add_argument('-b', '--bitfile', help='Bit file to generate', default=None)
@@ -243,6 +244,7 @@ FPGAMAKE_BOARDNAME=%(boardname)s
 FPGAMAKE_TOPMODULE=%(topmodule)s
 FPGAMAKE_FAMILY=%(family)s
 VERILOG_DEFINES="%(verilog_defines)s"
+PRESERVE_CLOCK_GATES?=%(preserve_clock_gates)s
 REPORT_NWORST_TIMING_PATHS?=%(report_nworst_timing_paths)s
 include $(TCLDIR)/Makefile.fpgamake.common
 '''
@@ -320,6 +322,7 @@ def write_xilinx_makefile():
                                        'family': map_partname_to_family(options.part),
                                        'buildcache': os.path.abspath(os.path.join(fpgamakedir, '../buildcache/buildcache')) if options.cachedir else '',
                                        'cachedir': os.path.abspath(options.cachedir) if options.cachedir else '',
+                                       'preserve_clock_gates': options.preserve_clock_gates,
                                        'report_nworst_timing_paths': options.report_nworst_timing_paths
                                        })
     for module in module_instances:
