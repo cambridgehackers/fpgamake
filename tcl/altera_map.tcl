@@ -76,6 +76,10 @@ foreach vfile $env(VFILES) {
     set_global_assignment -name VERILOG_FILE $vfile
 }
 
+foreach qip $env(IP) {
+    set_global_assignment -name QIP_FILE $qip
+}
+
 set_global_assignment -name FAMILY $env(FPGAMAKE_FAMILY)
 set_global_assignment -name DEVICE $partname
 set_global_assignment -name TOP_LEVEL_ENTITY $module
