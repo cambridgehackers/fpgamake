@@ -51,7 +51,10 @@ if [project_exists $module] {
 }
 
 set fit_start_time [clock seconds]
-source $env(QSF)
+
+foreach qsf $env(QSF) {
+    source $qsf
+}
 
 export_assignments
 

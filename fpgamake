@@ -78,7 +78,7 @@ plainModuleRe = r'^\s*(\w+)\s+(\w+)\s*\(?'
 vhdlLibraryRe = r'^\s*library\s+(\w+);'
 vhdlComponentRe = r'^\s*component\s+(\w+)'
 
-verilog_keywords = ['assign', 'defparam', 'input', 'module', 'output', 'parameter', 'reg', 'wire', 'if', 'else']
+verilog_keywords = ['assign', 'defparam', 'input', 'module', 'output', 'parameter', 'reg', 'wire', 'if', 'else', 'or', 'integer', 'negedge', 'localparam', 'initial', 'genvar', 'time', 'function', 'generate']
 
 def find_in_path(fname, path):
     (basename,ext) = os.path.splitext(fname)
@@ -169,6 +169,8 @@ def scan_module(module, parent_partition=None, parent_module=None):
                     submodule=m.group(1)
                     inst=m.group(2)
                 if submodule in verilog_keywords:
+                    continue
+                if inst in verilog_keywords:
                     continue
                 #print 'submodule', submodule, inst
                 submodules.append(submodule)
@@ -403,6 +405,7 @@ def write_altera_makefile():
                                        'family': map_partname_to_family(options.part),
                                        'buildcache': os.path.abspath(os.path.join(fpgamakedir, '../buildcache/buildcache')) if options.cachedir else '',
                                        'cachedir': os.path.abspath(options.cachedir) if options.cachedir else '',
+                                       'preserve_clock_gates': options.preserve_clock_gates,
                                        'report_nworst_timing_paths': options.report_nworst_timing_paths,
                                        })
     for module in module_instances:
