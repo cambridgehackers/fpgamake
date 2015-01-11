@@ -50,6 +50,7 @@ argparser.add_argument('-s', '--synth', help='Module to synthesize separately', 
 argparser.add_argument('-B', '--board', help='Target board name', default='zedboard')
 argparser.add_argument('-p', '--part', help='Target part name', default='xc7z020clg484-1')
 argparser.add_argument('--xci', help='XCI file to use', default=[], action='append')
+argparser.add_argument('--chipscope', help='chipscope file to use', default=[], action='append')
 argparser.add_argument('--constraints', help='Constraints file to use', default=[], action='append')
 argparser.add_argument('--qsf', help='QSF file to use', default=[], action='append')
 argparser.add_argument('--tcl', help='User tcl script to use', default=[], action='append')
@@ -296,6 +297,7 @@ map_template='''
 %(module)s_VHDL_LIBRARIES = %(vhdlibraries)s
 %(module)s_STUBS = %(module_stubs)s
 %(module)s_IP = %(xcifiles)s
+%(module)s_STP = %(stpfiles)s
 %(module)s_SUBINST = %(subinst)s
 %(module)s_PATH = %(module_path)s
 %(module)s_USER_TCL_SCRIPT = %(user_tcl)s
@@ -427,6 +429,7 @@ def write_altera_makefile():
                                  'module_stubs': ' '.join(module_stubs),
                                  'user_tcl': ' '.join(options.tcl) if options.tcl else '',
                                  'xcifiles': ' '.join(options.xci),
+                                 'stpfiles': ' '.join(options.chipscope),
                                  })
         for inst in set(module_instances[module]):
             subinst_routed_netlists = []
