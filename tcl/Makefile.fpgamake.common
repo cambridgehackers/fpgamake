@@ -96,6 +96,7 @@ Synth/$1/$1-map.dcp: $($1_PATH)
 	    VHDFILES="$($(MODULE)_VHDFILES)" \
 	    VHDL_LIBRARIES="$($(MODULE)_VHDL_LIBRARIES)" \
 	    IP="$($(MODULE)_IP)" \
+	    STP="$($(MODULE)_STP)" \
 	    SUBINST="$($(MODULE)_SUBINST)" \
 	    USER_TCL_SCRIPT="$($(MODULE)_USER_TCL_SCRIPT)" \
             FPGAMAKE_PARTNAME=$(FPGAMAKE_PARTNAME) \
