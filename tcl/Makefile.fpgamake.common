@@ -121,9 +121,8 @@ Impl/Fit/$1-fit.dcp: $(FLOORPLAN) $(Fit_NETLISTS) Synth/$2/$2-map.dcp
 	     SUBINST="$(Fit_SUBINST)" \
 	     MODULE_NETLISTS="$(Fit_NETLISTS)" \
 	     SDC="$(top_SDC)" \
-	     QSF="$(top_QSF)" \
 	     FLOORPLAN="$(FLOORPLAN)" \
-	     BITFILE=Impl/Fit/mkTop.sof \
+	     BITFILE=Impl/Fit/$(MODULE).sof \
 	     BUILDCACHE_CACHEDIR="$(CACHEDIR)/Impl/Fit" \
 	     BUILDCACHE_OUTPUTDIR="Impl/Fit" \
 	     REPORT_NWORST_TIMING_PATHS="$(REPORT_NWORST_TIMING_PATHS)" \

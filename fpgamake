@@ -52,7 +52,6 @@ argparser.add_argument('-p', '--part', help='Target part name', default='xc7z020
 argparser.add_argument('--xci', help='XCI file to use', default=[], action='append')
 argparser.add_argument('--chipscope', help='chipscope file to use', default=[], action='append')
 argparser.add_argument('--constraints', help='Constraints file to use', default=[], action='append')
-argparser.add_argument('--qsf', help='QSF file to use', default=[], action='append')
 argparser.add_argument('--tcl', help='User tcl script to use', default=[], action='append')
 argparser.add_argument('--floorplan', help='Floorplan XDC.', default=None)
 argparser.add_argument('--preserve-clock-gates', help='Do not delete clock gate pins if set to 1', default=0)
@@ -70,9 +69,6 @@ verilog_used={}
 vhdl_used={}
 vhdl_libraries_used={}
 constraint_files={}
-
-## altera specific
-qsf_files={}
 
 parameterizedModuleRe = r'^\s*(\w+)\s*#'
 plainModuleRe = r'^\s*(\w+)\s+(\w+)\s*\(?'
@@ -99,7 +95,7 @@ def find_in_path(fname, path):
 
 def map_partname_to_family(partname):
     family=''
-    mapping={'5sg': '\"Stratix V\"',  \
+    mapping={'5sg': '\"StratixV\"',  \
              'ep4': '\"Stratix IV\"', \
              'xc7':  '\"Virtex 7\"',   \
              }
@@ -307,7 +303,6 @@ $(eval $(call MAP_RULE,%(module)s))
 
 fit_template='''
 %(inst)s_SDC = %(constraint_files)s
-%(inst)s_QSF = %(qsf_files)s
 %(inst)s_NETLISTS = %(module_routed_netlists)s
 %(inst)s_BITFILE = %(bitfile)s
 
@@ -445,7 +440,6 @@ def write_altera_makefile():
             f.write(fit_template % { 'module': module,
                                      'inst': inst,
                                      'constraint_files': ' '.join([os.path.abspath(sdc) for sdc in constraint_files[inst]]) if inst in constraint_files else '',
-                                     'qsf_files': ' '.join([os.path.abspath(qsf) for qsf in qsf_files[inst]]) if inst in qsf_files else '',
                                      'module_routed_netlists': ' '.join(subinst_routed_netlists),
                                      'bitfile': options.bitfile if options.bitfile else '',
                                      'bitbase': os.path.splitext(options.bitfile)[0] if options.bitfile else '',
@@ -477,9 +471,6 @@ if __name__=='__main__':
         print verilog_used
 
     constraint_files['top'] = options.constraints
-
-    if options.qsf:
-        qsf_files['top'] = options.qsf
 
     process_modules()
 
