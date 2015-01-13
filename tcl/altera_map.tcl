@@ -55,9 +55,9 @@ set errorfilehandle [open "$errorlog.log" w]
 
 # Create the base project
 if [project_exists $module] {
-    project_open -revision top $module
+    project_open -revision $module $module
 } else {
-    project_new -revision top $module
+    project_new -revision $module $module
 }
 
 set include_dirs [dict create]
@@ -84,6 +84,12 @@ foreach stp $env(STP) {
     execute_module -tool stp -args "--stp_file $stp --enable"
 }
 
+if {[info exists env(USER_TCL_SCRIPT)]} {
+    foreach item $env(USER_TCL_SCRIPT) {
+	source $item
+    }
+}
+
 set_global_assignment -name FAMILY $env(FPGAMAKE_FAMILY)
 set_global_assignment -name DEVICE $partname
 set_global_assignment -name TOP_LEVEL_ENTITY $module
@@ -93,10 +99,18 @@ set_global_assignment -name DEVICE_FILTER_PACKAGE FBGA
 export_assignments
 
 # STEP#2:
-#
 set quartus_map_args [dict create]
-dict set quartus_map_args "--rev=top" "True"
+dict set quartus_map_args rev      $module
+dict set quartus_map_args parallel 8
+dict set quartus_map_args family   "$env(FPGAMAKE_FAMILY)"
+dict set quartus_map_args part     "$partname"
 
-execute_module -tool map -args \"[dict keys $quartus_map_args]\"
+set component_parameters {}
+foreach item [dict keys $quartus_map_args] {
+    set val [dict get $quartus_map_args $item]
+    lappend component_parameters --$item=$val
+}
+
+execute_module -tool map -args "$component_parameters"
 
 project_close

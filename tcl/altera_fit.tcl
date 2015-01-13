@@ -45,18 +45,12 @@ set commandfilehandle [open "$commandlog.log" w]
 set errorfilehandle [open "$errorlog.log" w]
 
 if [project_exists $module] {
-    project_open -revision top $module
+    project_open -revision $module $module
 } else {
-    project_new -revision top $module
+    project_new -revision $module $module
 }
 
 set fit_start_time [clock seconds]
-
-foreach qsf $env(QSF) {
-    source $qsf
-}
-
-export_assignments
 
 execute_module -tool fit
 
