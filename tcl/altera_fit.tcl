@@ -52,13 +52,41 @@ if [project_exists $module] {
 
 set fit_start_time [clock seconds]
 
-execute_module -tool fit
+if {[catch {execute_module -tool fit} result]} {
+    puts "\nResult: $result\n"
+    puts "ERROR: Fitting failed. See the report file.\n"
+} else {
+    puts "\nINFO: Fitting was successful.\n"
+}
 
 set quartus_sta_args [dict create]
-dict set quartus_sta_args "--sdc=$env(SDC)" "True"
-execute_module -tool sta -args \"[dict keys $quartus_sta_args]\"
+dict set quartus_sta_args sdc $env(SDC)
 
-execute_module -tool asm
+set component_parameters {}
+foreach item [dict keys $quartus_sta_args] {
+    set val [dict get $quartus_sta_args $item]
+    lappend component_parameters --$item=$val
+}
+
+puts $component_parameters
+if {[catch {execute_module -tool sta -args "$component_parameters"} result]} {
+    puts "\nResult: $result\n"
+    puts "ERROR: Timing Analysis failed. See the report file.\n"
+    project_close
+    exit 1
+} else {
+    puts "\nINFO: Timing Analysis was successful.\n"
+}
+
+if {[catch {execute_module -tool asm} result]} {
+    puts "\nResult: $result\n"
+    puts "ERROR: Timing Analysis failed. See the report file.\n"
+    project_close
+    exit 1
+} else {
+    puts "\nINFO: Assembler was successful.\n"
+}
+
 set fit_end_time [clock seconds]
 
 project_close
