@@ -38,7 +38,6 @@ if [file exists {board.tcl}] {
     set partname {5SGXEA7N2F45C2}
 }
 
-
 set module $env(MODULE)
 set outputDir ./Synth/$module
 file mkdir $outputDir
@@ -111,6 +110,13 @@ foreach item [dict keys $quartus_map_args] {
     lappend component_parameters --$item=$val
 }
 
-execute_module -tool map -args "$component_parameters"
+if {[catch {execute_module -tool map -args "$component_parameters"} result]} {
+    puts "\nResult: $result\n"
+    puts "ERROR: Analysis & Synthesis failed. See the report file.\n"
+    project_close
+    exit 1
+} else {
+    puts "\nINFO: Analysis & Synthesis was successful.\n"
+}
 
 project_close
