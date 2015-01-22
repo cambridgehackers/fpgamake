@@ -114,13 +114,13 @@ proc fpgamake_ipcore {core_name core_version ip_name params} {
     }
 }
 
-proc fpgamake_altera_ipcore {core_name core_version ip_name params} {
+proc fpgamake_altera_ipcore {core_name core_version ip_name file_set params} {
     global ipdir boardname partname
 
     exec -ignorestderr -- ip-generate \
             --project-directory=$ipdir/$boardname                            \
             --output-directory=$ipdir/$boardname/synthesis                   \
-            --file-set=QUARTUS_SYNTH                                         \
+            --file-set=$file_set                                             \
             --report-file=html:$ipdir/$boardname/$ip_name.html               \
             --report-file=sopcinfo:$ipdir/$boardname/$ip_name.sopcinfo       \
             --report-file=cmp:$ipdir/$boardname/$ip_name.cmp                 \
