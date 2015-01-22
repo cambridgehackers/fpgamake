@@ -85,7 +85,11 @@ foreach stp $env(STP) {
 
 if {[info exists env(USER_TCL_SCRIPT)]} {
     foreach item $env(USER_TCL_SCRIPT) {
-	source $item
+        if [string match "*.sdc" $item] {
+            set_global_assignment -name SDC_FILE $item
+        } else {
+            source $item
+        }
     }
 }
 
