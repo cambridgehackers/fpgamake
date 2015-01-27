@@ -128,7 +128,8 @@ if {"$env(FLOORPLAN)" == ""} {
     report_datasheet -file $outputDir/$instance-post-route_datasheet.rpt > $outputDir/temp.log
     if {[info exists env(BITFILE)] && $env(BITFILE) != ""} {
 	set bitfileroot [file rootname $env(BITFILE)]
-	log_command "write_bitstream -bin_file -logic_location_file -force $env(BITFILE)" $outputDir/write_bitstream.log
+	## commented out -logic_location_file for now because the files are huge -Jamey
+	log_command "write_bitstream -bin_file -force $env(BITFILE)" $outputDir/write_bitstream.log
     }
 }
 set impl_end_time [clock seconds]
