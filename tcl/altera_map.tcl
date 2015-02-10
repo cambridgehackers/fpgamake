@@ -38,7 +38,6 @@ if [file exists {board.tcl}] {
     set partname {5SGXEA7N2F45C2}
 }
 
-
 set module $env(MODULE)
 set outputDir ./Synth/$module
 file mkdir $outputDir
@@ -55,9 +54,9 @@ set errorfilehandle [open "$errorlog.log" w]
 
 # Create the base project
 if [project_exists $module] {
-    project_open -revision top $module
+    project_open -revision $module $module
 } else {
-    project_new -revision top $module
+    project_new -revision $module $module
 }
 
 set include_dirs [dict create]
@@ -76,6 +75,24 @@ foreach vfile $env(VFILES) {
     set_global_assignment -name VERILOG_FILE $vfile
 }
 
+foreach qip $env(IP) {
+    set_global_assignment -name QIP_FILE $qip
+}
+
+foreach stp $env(STP) {
+    execute_module -tool stp -args "--stp_file $stp --enable"
+}
+
+if {[info exists env(USER_TCL_SCRIPT)]} {
+    foreach item $env(USER_TCL_SCRIPT) {
+        if [string match "*.sdc" $item] {
+            set_global_assignment -name SDC_FILE $item
+        } else {
+            source $item
+        }
+    }
+}
+
 set_global_assignment -name FAMILY $env(FPGAMAKE_FAMILY)
 set_global_assignment -name DEVICE $partname
 set_global_assignment -name TOP_LEVEL_ENTITY $module
@@ -85,10 +102,25 @@ set_global_assignment -name DEVICE_FILTER_PACKAGE FBGA
 export_assignments
 
 # STEP#2:
-#
 set quartus_map_args [dict create]
-dict set quartus_map_args "--rev=top" "True"
+dict set quartus_map_args rev      $module
+dict set quartus_map_args parallel 8
+dict set quartus_map_args family   "$env(FPGAMAKE_FAMILY)"
+dict set quartus_map_args part     "$partname"
 
-execute_module -tool map -args \"[dict keys $quartus_map_args]\"
+set component_parameters {}
+foreach item [dict keys $quartus_map_args] {
+    set val [dict get $quartus_map_args $item]
+    lappend component_parameters --$item=$val
+}
+
+if {[catch {execute_module -tool map -args "$component_parameters"} result]} {
+    puts "\nResult: $result\n"
+    puts "ERROR: Analysis & Synthesis failed. See the report file.\n"
+    project_close
+    exit 1
+} else {
+    puts "\nINFO: Analysis & Synthesis was successful.\n"
+}
 
 project_close

@@ -50,10 +50,11 @@ argparser.add_argument('-s', '--synth', help='Module to synthesize separately', 
 argparser.add_argument('-B', '--board', help='Target board name', default='zedboard')
 argparser.add_argument('-p', '--part', help='Target part name', default='xc7z020clg484-1')
 argparser.add_argument('--xci', help='XCI file to use', default=[], action='append')
+argparser.add_argument('--chipscope', help='chipscope file to use', default=[], action='append')
 argparser.add_argument('--constraints', help='Constraints file to use', default=[], action='append')
-argparser.add_argument('--qsf', help='QSF file to use', default=[], action='append')
 argparser.add_argument('--tcl', help='User tcl script to use', default=[], action='append')
 argparser.add_argument('--floorplan', help='Floorplan XDC.', default=None)
+argparser.add_argument('--preserve-clock-gates', help='Do not delete clock gate pins if set to 1', default=0)
 argparser.add_argument('--report-nworst-timing-paths', help='Number of unique failing timing paths to report.', default='')
 argparser.add_argument('-t', '--top', help='Top verilog file')
 argparser.add_argument('-b', '--bitfile', help='Bit file to generate', default=None)
@@ -69,15 +70,12 @@ vhdl_used={}
 vhdl_libraries_used={}
 constraint_files={}
 
-## altera specific
-qsf_files={}
-
 parameterizedModuleRe = r'^\s*(\w+)\s*#'
 plainModuleRe = r'^\s*(\w+)\s+(\w+)\s*\(?'
 vhdlLibraryRe = r'^\s*library\s+(\w+);'
 vhdlComponentRe = r'^\s*component\s+(\w+)'
 
-verilog_keywords = ['assign', 'defparam', 'input', 'module', 'output', 'parameter', 'reg', 'wire', 'if', 'else']
+verilog_keywords = ['assign', 'defparam', 'input', 'module', 'output', 'parameter', 'reg', 'wire', 'if', 'else', 'or', 'integer', 'negedge', 'localparam', 'initial', 'genvar', 'time', 'function', 'generate']
 
 def find_in_path(fname, path):
     (basename,ext) = os.path.splitext(fname)
@@ -97,7 +95,7 @@ def find_in_path(fname, path):
 
 def map_partname_to_family(partname):
     family=''
-    mapping={'5sg': '\"Stratix V\"',  \
+    mapping={'5sg': '\"StratixV\"',  \
              'ep4': '\"Stratix IV\"', \
              'xc7':  '\"Virtex 7\"',   \
              }
@@ -168,6 +166,8 @@ def scan_module(module, parent_partition=None, parent_module=None):
                     submodule=m.group(1)
                     inst=m.group(2)
                 if submodule in verilog_keywords:
+                    continue
+                if inst in verilog_keywords:
                     continue
                 #print 'submodule', submodule, inst
                 submodules.append(submodule)
@@ -243,6 +243,7 @@ FPGAMAKE_BOARDNAME=%(boardname)s
 FPGAMAKE_TOPMODULE=%(topmodule)s
 FPGAMAKE_FAMILY=%(family)s
 VERILOG_DEFINES="%(verilog_defines)s"
+PRESERVE_CLOCK_GATES?=%(preserve_clock_gates)s
 REPORT_NWORST_TIMING_PATHS?=%(report_nworst_timing_paths)s
 include $(TCLDIR)/Makefile.fpgamake.common
 '''
@@ -292,6 +293,7 @@ map_template='''
 %(module)s_VHDL_LIBRARIES = %(vhdlibraries)s
 %(module)s_STUBS = %(module_stubs)s
 %(module)s_IP = %(xcifiles)s
+%(module)s_STP = %(stpfiles)s
 %(module)s_SUBINST = %(subinst)s
 %(module)s_PATH = %(module_path)s
 %(module)s_USER_TCL_SCRIPT = %(user_tcl)s
@@ -301,7 +303,6 @@ $(eval $(call MAP_RULE,%(module)s))
 
 fit_template='''
 %(inst)s_SDC = %(constraint_files)s
-%(inst)s_QSF = %(qsf_files)s
 %(inst)s_NETLISTS = %(module_routed_netlists)s
 %(inst)s_BITFILE = %(bitfile)s
 
@@ -320,6 +321,7 @@ def write_xilinx_makefile():
                                        'family': map_partname_to_family(options.part),
                                        'buildcache': os.path.abspath(os.path.join(fpgamakedir, '../buildcache/buildcache')) if options.cachedir else '',
                                        'cachedir': os.path.abspath(options.cachedir) if options.cachedir else '',
+                                       'preserve_clock_gates': options.preserve_clock_gates,
                                        'report_nworst_timing_paths': options.report_nworst_timing_paths
                                        })
     for module in module_instances:
@@ -400,6 +402,7 @@ def write_altera_makefile():
                                        'family': map_partname_to_family(options.part),
                                        'buildcache': os.path.abspath(os.path.join(fpgamakedir, '../buildcache/buildcache')) if options.cachedir else '',
                                        'cachedir': os.path.abspath(options.cachedir) if options.cachedir else '',
+                                       'preserve_clock_gates': options.preserve_clock_gates,
                                        'report_nworst_timing_paths': options.report_nworst_timing_paths,
                                        })
     for module in module_instances:
@@ -421,6 +424,7 @@ def write_altera_makefile():
                                  'module_stubs': ' '.join(module_stubs),
                                  'user_tcl': ' '.join(options.tcl) if options.tcl else '',
                                  'xcifiles': ' '.join(options.xci),
+                                 'stpfiles': ' '.join(options.chipscope),
                                  })
         for inst in set(module_instances[module]):
             subinst_routed_netlists = []
@@ -436,7 +440,6 @@ def write_altera_makefile():
             f.write(fit_template % { 'module': module,
                                      'inst': inst,
                                      'constraint_files': ' '.join([os.path.abspath(sdc) for sdc in constraint_files[inst]]) if inst in constraint_files else '',
-                                     'qsf_files': ' '.join([os.path.abspath(qsf) for qsf in qsf_files[inst]]) if inst in qsf_files else '',
                                      'module_routed_netlists': ' '.join(subinst_routed_netlists),
                                      'bitfile': options.bitfile if options.bitfile else '',
                                      'bitbase': os.path.splitext(options.bitfile)[0] if options.bitfile else '',
@@ -468,9 +471,6 @@ if __name__=='__main__':
         print verilog_used
 
     constraint_files['top'] = options.constraints
-
-    if options.qsf:
-        qsf_files['top'] = options.qsf
 
     process_modules()
 

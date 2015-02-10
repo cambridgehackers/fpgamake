@@ -110,7 +110,15 @@ if {[info exists env(VERILOG_DEFINES)]} {
 log_command "synth_design $verilog_defines -name $module -top $module -part $partname -flatten rebuilt -include_dirs \"[dict keys $include_dirs]\" -mode $mode" "$outputDir/synth_design.log"
 
 # Remove unused clocks that bluespec compiler exports
-foreach {pat} {CLK_GATE_hdmi_clock_if CLK_*deleteme_unused_clock* CLK_GATE_*deleteme_unused_clock* RST_N_*deleteme_unused_reset*} {
+set clock_patterns {CLK_GATE_hdmi_clock_if CLK_*deleteme_unused_clock* CLK_GATE_*deleteme_unused_clock* RST_N_*deleteme_unused_reset*}
+set clock_gate_pattern {CLK_GATE_*}
+if [info exists env(PRESERVE_CLOCK_GATES)] {
+    if {$env(PRESERVE_CLOCK_GATES) == 1} {
+	set clock_gate_pattern {}
+    }
+}
+
+foreach {pat} "$clock_patterns $clock_gate_pattern" {
     foreach {port} [get_ports $pat] {
 	set net [get_nets -of_objects $port]
 	puts "disconnecting net $net from port $port"
