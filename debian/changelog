@@ -1,3 +1,9 @@
+fpgamake (15.02.1-1trusty1) trusty; urgency=medium
+
+  * Updated to 15.02.1
+
+ -- Jamey Hicks <jamey.hicks@gmail.com>  Tue, 10 Feb 2015 11:12:59 -0500
+
 fpgamake (14.12.4-1trusty1) trusty; urgency=medium
 
   * Updated to 14.12.4.
