@@ -29,6 +29,7 @@ Synth/$1/$1-synth.dcp: $($1_PATH)
             FPGAMAKE_TOPMODULE=$(FPGAMAKE_TOPMODULE) \
 	    PRESERVE_CLOCK_GATES=$(PRESERVE_CLOCK_GATES) \
 	    VERILOG_DEFINES=$(VERILOG_DEFINES) \
+	    XDC="$($(MODULE)_XDC)" \
 	    BUILDCACHE_CACHEDIR="$(CACHEDIR)/Synth/$(MODULE)" \
 	    BUILDCACHE_OUTPUTDIR="Synth/$(MODULE)" \
 	    $(BUILDCACHE) vivado -notrace -mode batch -source $(TCLDIR)/synth.tcl

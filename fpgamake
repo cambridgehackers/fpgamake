@@ -264,6 +264,7 @@ synth_template='''
 %(module)s_SUBINST = %(subinst)s
 %(module)s_PATH = %(module_path)s
 %(module)s_USER_TCL_SCRIPT = %(user_tcl)s
+%(module)s_XDC = %(constraint_files)s
 
 $(eval $(call SYNTH_RULE,%(module)s))
 '''
@@ -331,6 +332,7 @@ def write_xilinx_makefile():
             subinst = ([' '.join(module_instances[submodule]) for submodule in set(modules_used[options.top])])
         if module in modules_used:
             module_stubs = ['%s-stub.v' % (m) for m in set(modules_used[module])]
+        print constraint_files
         f.write(synth_template % { 'module': module,
                                    'module_path': find_in_path(module, options.vpath),
                                    'headerfiles': ' '.join([find_in_path(vfile, options.vpath) for vfile in set(options.header)]) if options.header else '',
@@ -343,6 +345,7 @@ def write_xilinx_makefile():
                                    'module_stubs': ' '.join(module_stubs),
                                    'user_tcl': ' '.join(options.tcl) if options.tcl else '',
                                    'xcifiles': ' '.join(options.xci),
+                                   'constraint_files': ' '.join([os.path.abspath(xdc) for xdc in constraint_files['top']]) if 'top' in constraint_files else '',
                                    })
         for inst in set(module_instances[module]):
             subinst_routed_netlists = []
