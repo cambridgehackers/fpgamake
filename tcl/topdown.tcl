@@ -67,6 +67,13 @@ if {"$env(FLOORPLAN)" != ""} {
     }
 }
 
+if [info exists CFGBVS] {
+    set_property CFGBVS $CFGBVS [current_design]
+}
+if [info exists CONFIG_VOLTAGE] {
+    set_property CONFIG_VOLTAGE $CONFIG_VOLTAGE [current_design]
+}
+
 log_command "write_checkpoint -force $outputDir/$instance-post-link.dcp" $outputDir/temp.log
 report_timing_summary -file $outputDir/$instance-post-link-timing-summary.rpt > $outputDir/temp.log
 report_timing -sort_by group -max_paths 100 -path_type summary -file $outputDir/$instance-post-link-timing.rpt > $outputDir/temp.log
