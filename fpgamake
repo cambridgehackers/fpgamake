@@ -96,8 +96,8 @@ def find_in_path(fname, path):
 def map_partname_to_family(partname):
     family=''
     mapping={'5sg': '\"StratixV\"',  \
-             'ep4': '\"Stratix IV\"', \
-             'xc7':  '\"Virtex 7\"',   \
+             'ep4': '\"StratixIV\"', \
+             'xc7':  '\"Virtex7\"',   \
              }
     try:
         family = mapping[partname[0:3].lower()]
