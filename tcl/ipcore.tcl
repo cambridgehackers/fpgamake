@@ -136,3 +136,23 @@ proc fpgamake_altera_ipcore {core_name core_version ip_name file_set params} {
             --component-name=$core_name                                      \
             --output-name=$ip_name
 }
+
+proc fpgamake_altera_qmegawiz {ip_path ip_name} {
+	global ipdir boardname
+	set generate_ip 0
+	if [file exists $ipdir/$boardname/$ip_name/$ip_name.qip] {
+	} else {
+		puts "no qip file $ip_name.qip"
+		set generate_ip 1
+	}
+
+	if $generate_ip {
+		file delete -force $ipdir/$boardname/$ip_name
+		file mkdir $ipdir/$boardname/$ip_name
+		puts "generate_ip $generate_ip"
+		file copy $ip_path/$ip_name.v $ipdir/$boardname/$ip_name/$ip_name.v
+		exec -ignorestderr -- qmegawiz \
+			-silent \
+			$ipdir/$boardname/$ip_name/$ip_name.v
+	}
+}
