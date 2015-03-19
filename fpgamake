@@ -28,7 +28,6 @@ import re
 import glob
 import shutil
 import argparse
-import subprocess
 
 description='''
 Generates Makefiles to synthesize, place, and route verilog.
