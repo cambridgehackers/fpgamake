@@ -61,6 +61,7 @@ argparser.add_argument('--cachedir', help='Cache directory', default='Cache')
 argparser.add_argument('-v', '--verbose', help='Verbose operation', action='store_true', default=False)
 argparser.add_argument('--debug', help='Debug operation', action='store_true', default=False)
 
+verilog_files=[]
 module_instances={}
 modules_used={}
 modules_visited={}
@@ -90,6 +91,14 @@ def find_in_path(fname, path):
                 return os.path.join(p, fname.upper())
             if os.path.exists(os.path.join(p, fname.lower())):
                 return os.path.join(p, fname.lower())
+    return None
+
+def is_a_file(fname, path):
+    if os.path.isfile(fname):
+        return fname
+    for p in path:
+        if os.path.isfile(os.path.join(p, fname)):
+            return os.path.join(p, fname)
     return None
 
 def map_partname_to_family(partname):
@@ -142,7 +151,7 @@ def scan_module(module, parent_partition=None, parent_module=None):
             continue
         vseen.append(vpath)
         if options.debug:
-            print 'scanning', vpath
+            print 'scan_module, scanning', vpath
         for line in open(vpath):
             m = re.match(plainModuleRe, line)
             m2 = re.match(parameterizedModuleRe, line)
@@ -210,6 +219,7 @@ def process_modules():
         vfile = '%s.v' % module
         vpath = find_in_path(module, options.vpath)
         if options.debug:
+            print "process_modules, module and vpath"
             print module, vpath
         synthdir = os.path.join('Synth', module)
         if not os.path.isdir(synthdir):
@@ -336,6 +346,7 @@ def write_xilinx_makefile():
                                    'module_path': find_in_path(module, options.vpath),
                                    'headerfiles': ' '.join([find_in_path(vfile, options.vpath) for vfile in set(options.header)]) if options.header else '',
                                    'vfiles': ' '.join([find_in_path(module, options.vpath)]
+                                                      + verilog_files
                                                       + [find_in_path(vfile, options.vpath) for vfile in set(verilog_used[module])]
                                                       ) if module in verilog_used else '',
                                    'vhdfiles': ' '.join([find_in_path(vfile, options.vpath) for vfile in set(vhdl_used[module])]) if module in vhdl_used else '',
@@ -463,13 +474,23 @@ if __name__=='__main__':
     fpgamakedir = os.path.dirname(exename)
     options = argparser.parse_args()
     expand_path()
+
+    for v in options.vpath:
+        if is_a_file(v, options.vpath):
+            verilog_files.append(is_a_file(v, options.vpath))
+
     module_instances[options.top] = ['top']
     scan_module(options.top)
     for m in options.synth:
         scan_module(m)
     if options.debug:
+        print "verilog_files"
+        print verilog_files
+        print "module_instances"
         print module_instances
+        print "module_used"
         print modules_used
+        print "verilog_used"
         print verilog_used
 
     constraint_files['top'] = options.constraints
