@@ -9,7 +9,7 @@ Vcs-Git: git://github.com/cambridgehackers/fpgamake.git
 
 Package: fpgamake
 Architecture: all
-Depends: python (>= 2.7)
+Depends: python (>= 2.7), buildcache
 Description: Generates Makefiles for Verilog to run Xilinx Vivado.
     Generates Makefiles to synthesize, place, and route verilog. Each module
     specified will be synthesized into a separate design checkpoint. If a
