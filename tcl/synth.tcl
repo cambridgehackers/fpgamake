@@ -105,6 +105,10 @@ if {[info exists env(VERILOG_DEFINES)]} {
     }
 }
 
+foreach xdc $env(XDC) {
+    log_command "read_xdc $xdc" "$outputDir/[file tail $xdc].log"
+}
+
 # STEP#2: run synthesis, report utilization and timing estimates, write checkpoint design
 #
 log_command "synth_design $verilog_defines -name $module -top $module -part $partname -flatten rebuilt -include_dirs \"[dict keys $include_dirs]\" -mode $mode" "$outputDir/synth_design.log"
