@@ -29,6 +29,46 @@ fpgamake
 	-v VERBOSE, --verbose VERBOSE
 			      Verbose operation
 
+Installation
+------------
+
+From Ubuntu packages:
+
+    sudo apt-add-repository -y ppa:jamey-hicks/connectal
+    sudo apt-get update
+    sudo apt-get -y install fpgamake
+
+From RPM packages, install the appropriate repo file:
+
+* http://download.opensuse.org/repositories/home:/jameyhicks:/connectal/CentOS_7/home:jameyhicks:connectal.repo
+* http://download.opensuse.org/repositories/home:/jameyhicks:/connectal/RHEL_7/home:jameyhicks:connectal.repo
+* http://download.opensuse.org/repositories/home:/jameyhicks:/connectal/Fedora_20/home:jameyhicks:connectal.repo
+    
+    yum install fpgamake
+
+From Github:
+
+    git clone https://github.com/cambridgehackers/fpgamake
+    git clone https://github.com/cambridgehackers/buildcache
+
+Xilinx KC705 Example
+--------------------
+
+Check out or download the fpgamake sources, as above.
+
+    cd examples/uart_kc705; make all
+
+This example requires the BSV compiler.
+
+Altera Terasic DE5 Example
+--------------------------
+
+Check out or download the fpgamake sources, as above.
+
+    cd examples/uart_de5; make all
+
+This example requires the BSV compiler.
+
 Vivado Tutorial TD
 ------------------
 
