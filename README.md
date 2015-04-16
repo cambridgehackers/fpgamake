@@ -1,33 +1,50 @@
 fpgamake
 ========
 
-    usage: fpgamake [-h] [-o OUTPUT] [-s SYNTH] [--xci XCI] [--xdc XDC]
-		    [--floorplan FLOORPLAN] [-t TOP] [-b BITFILE] [-v VERBOSE]
+    usage: fpgamake [-h] [-D DEFINE] [--header HEADER] [-o OUTPUT] [-s SYNTH] [-B BOARD] [-p PART] [--xci XCI] [--chipscope CHIPSCOPE] [--constraints CONSTRAINTS] [--tcl TCL]
+		    [--floorplan FLOORPLAN] [--preserve-clock-gates PRESERVE_CLOCK_GATES] [--report-nworst-timing-paths REPORT_NWORST_TIMING_PATHS] [-t TOP] [-b BITFILE]
+		    [--cachedir CACHEDIR] [-v] [--debug]
 		    vpath [vpath ...]
 
-    Generates Makefiles to synthesize, place, and route verilog. Each module
-    specified will be synthesized into a separate design checkpoint. If a
-    floorplan is provided, each instance of the synthesized modules will be
-    separately placed and routed and then combined into the top level design.
+    Generates Makefiles to synthesize, place, and route verilog. Each
+    module specified will be synthesized into a separate design
+    checkpoint. If a floorplan is provided, each instance of the
+    synthesized modules will be separately placed and routed and then
+    combined into the top level design.
 
     positional arguments:
-	vpath                 Verilog path
+      vpath                 Verilog path
 
     optional arguments:
-	-h, --help            show this help message and exit
-	-o OUTPUT, --output OUTPUT
-			      Output make file
-	-s SYNTH, --synth SYNTH
-			      Module to synthesize separately
-	--xci XCI             XCI file to use
-	--xdc XDC             XDC file to use
-	--floorplan FLOORPLAN
-			      Floorplan XDC.
-	-t TOP, --top TOP     Top verilog file
-	-b BITFILE, --bitfile BITFILE
-			      Bit file to generate
-	-v VERBOSE, --verbose VERBOSE
-			      Verbose operation
+      -h, --help            show this help message and exit
+      -D DEFINE, --define DEFINE
+			    Verilog defines
+      --header HEADER       Verilog headers
+      -o OUTPUT, --output OUTPUT
+			    Output make file
+      -s SYNTH, --synth SYNTH
+			    Module to synthesize separately
+      -B BOARD, --board BOARD
+			    Target board name
+      -p PART, --part PART  Target part name
+      --xci XCI             XCI file to use
+      --chipscope CHIPSCOPE
+			    chipscope file to use
+      --constraints CONSTRAINTS
+			    Constraints file to use (.xdc for Xilinx, .sdc for Altera)
+      --tcl TCL             User tcl script to use
+      --floorplan FLOORPLAN
+			    Floorplan XDC.
+      --preserve-clock-gates PRESERVE_CLOCK_GATES
+			    Do not delete clock gate pins if set to 1
+      --report-nworst-timing-paths REPORT_NWORST_TIMING_PATHS
+			    Number of unique failing timing paths to report.
+      -t TOP, --top TOP     Top verilog file
+      -b BITFILE, --bitfile BITFILE
+			    Bit file to generate
+      --cachedir CACHEDIR   Cache directory
+      -v, --verbose         Verbose operation
+      --debug               Debug operation
 
 Installation
 ------------
