@@ -41,7 +41,7 @@ level design.
 '''
 
 argparser = argparse.ArgumentParser(description=description)
-argparser.add_argument('vpath', help='Verilog path', nargs='+')
+argparser.add_argument('vpath', help='Verilog path', nargs='*')
 argparser.add_argument('-D', '--define', help='Verilog defines', default=[], action='append')
 argparser.add_argument('--header', help='Verilog headers', default=[], action='append')
 argparser.add_argument('-o', '--output', help='Output make file', default='synth.mk')
@@ -55,6 +55,7 @@ argparser.add_argument('--tcl', help='User tcl script to use', default=[], actio
 argparser.add_argument('--floorplan', help='Floorplan XDC.', default=None)
 argparser.add_argument('--preserve-clock-gates', help='Do not delete clock gate pins if set to 1', default=0)
 argparser.add_argument('--report-nworst-timing-paths', help='Number of unique failing timing paths to report.', default='')
+argparser.add_argument('-F', '--command', help='Command file', default=[], action='append')
 argparser.add_argument('-t', '--top', help='Top verilog file')
 argparser.add_argument('-b', '--bitfile', help='Bit file to generate', default=None)
 argparser.add_argument('--cachedir', help='Cache directory', default='Cache')
@@ -473,6 +474,13 @@ if __name__=='__main__':
     exename = os.path.abspath(sys.argv[0])
     fpgamakedir = os.path.dirname(exename)
     options = argparser.parse_args()
+    for c in options.command:
+        args=[]
+        f = open(c)
+        for l in f:
+            args.append(l)
+        options = argparser.parse_args(args=args, namespace=options)
+
     expand_path()
 
     for v in options.vpath:
