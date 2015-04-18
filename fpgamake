@@ -484,12 +484,17 @@ if __name__=='__main__':
     expand_path()
 
     if not options.top:
-        sys.stderr.write('No top module specified.\n')
+        sys.stderr.write('Error: No top module specified.\n')
         argparser.print_usage(file=sys.stderr)
         sys.exit(-1)
     if not find_in_path(options.top, options.vpath):
-        sys.stderr.write('Module %s not found in path %s\n' % (options.top, ' '.join(options.vpath)))
+        sys.stderr.write('Error: Module %s not found in path %s\n' % (options.top, ' '.join(options.vpath)))
         sys.exit(-1)
+
+    for c in options.constraints:
+        if not os.path.exists(c):
+            sys.stderr.write('Error: Constraint file %s not found\n' % c)
+            sys.exit(-1)
 
     for v in options.vpath:
         if is_a_file(v, options.vpath):
