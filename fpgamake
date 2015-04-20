@@ -496,6 +496,11 @@ if __name__=='__main__':
             sys.stderr.write('Error: Constraint file %s not found\n' % c)
             sys.exit(-1)
 
+    for xci in options.xci:
+        if not os.path.exists(xci):
+            sys.stderr.write('Error: XCI file %s not found\n' % xci)
+            sys.exit(-1)
+
     for v in options.vpath:
         if is_a_file(v, options.vpath):
             verilog_files.append(is_a_file(v, options.vpath))
