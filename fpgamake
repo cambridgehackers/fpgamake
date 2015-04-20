@@ -501,6 +501,11 @@ if __name__=='__main__':
             sys.stderr.write('Error: XCI file %s not found\n' % xci)
             sys.exit(-1)
 
+    if options.floorplan:
+        if not os.path.exists(options.floorplan)
+            sys.stderr.write('Error: floorplan file %s not found\n' % options.floorplan)
+            sys.exit(-1)
+
     for v in options.vpath:
         if is_a_file(v, options.vpath):
             verilog_files.append(is_a_file(v, options.vpath))
