@@ -502,7 +502,7 @@ if __name__=='__main__':
             sys.exit(-1)
 
     if options.floorplan:
-        if not os.path.exists(options.floorplan)
+        if not os.path.exists(options.floorplan):
             sys.stderr.write('Error: floorplan file %s not found\n' % options.floorplan)
             sys.exit(-1)
 
