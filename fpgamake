@@ -502,6 +502,10 @@ if __name__=='__main__':
     options.vpath.extend(options.vfile)
     expand_path()
 
+    if options.vfile and not options.top:
+        options.top = os.path.splitext(os.path.basename(options.vfile[0]))[0]
+        print 'Top module', options.top
+
     if not options.top:
         sys.stderr.write('Error: No top module specified.\n')
         argparser.print_usage(file=sys.stderr)
