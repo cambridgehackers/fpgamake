@@ -488,7 +488,9 @@ if __name__=='__main__':
         f = open(c)
         for l in f:
             args.extend([ w for w in l.split() if w.strip() ])
+        saved_vfile = options.vfile
         (options, unknown_options) = argparser.parse_known_args(args=args, namespace=options)
+        options.vfile = saved_vfile + options.vfile
         simulator_options.extend(unknown_options)
 
     ## vfile is a positional argument, which will pick up things like +incdir+foo
