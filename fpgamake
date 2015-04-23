@@ -41,7 +41,8 @@ level design.
 '''
 
 argparser = argparse.ArgumentParser(description=description)
-argparser.add_argument('vpath', help='Verilog path', nargs='*')
+argparser.add_argument('vfile', help='Verilog file', default=[], nargs='*')
+argparser.add_argument('-y', '--vpath', help='Verilog path', default=[], action='append')
 argparser.add_argument('-D', '--define', help='Verilog defines', default=[], action='append')
 argparser.add_argument('--header', help='Verilog headers', default=[], action='append')
 argparser.add_argument('-o', '--output', help='Output make file', default='synth.mk')
@@ -481,6 +482,7 @@ if __name__=='__main__':
             args.append(l)
         options = argparser.parse_args(args=args, namespace=options)
 
+    options.vpath.extend(options.vfile)
     expand_path()
 
     if not options.top:
