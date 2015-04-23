@@ -481,23 +481,27 @@ if __name__=='__main__':
     exename = os.path.abspath(sys.argv[0])
     fpgamakedir = os.path.dirname(exename)
     options  = argparser.parse_args()
+
+    simulator_options=[]
+    for c in options.command:
+        args=[]
+        f = open(c)
+        for l in f:
+            args.extend([ w for w in l.split() if w.strip() ])
+        (options, unknown_options) = argparser.parse_known_args(args=args, namespace=options)
+        simulator_options.extend(unknown_options)
+
     ## vfile is a positional argument, which will pick up things like +incdir+foo
     ## so separate them out manually
     vfiles = []
-    simulator_options=[]
     for w in options.vfile:
         if is_simulator_option(w):
             simulator_options.append(w)
         else:
             vfiles.append(w)
     options.vfile = vfiles
-
-    for c in options.command:
-        args=[]
-        f = open(c)
-        for l in f:
-            args.append(l)
-        options = argparser.parse_args(args=args, namespace=options)
+    if simulator_options:
+        print('simulator_options', simulator_options)
 
     options.vpath.extend(options.vfile)
     expand_path()
