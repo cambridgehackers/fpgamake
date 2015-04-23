@@ -502,7 +502,7 @@ if __name__=='__main__':
     options.vpath.extend(options.vfile)
     expand_path()
 
-    if options.vfile and not options.top:
+    if options.vfile and options.vfile[0].endswith('.v') and not options.top:
         options.top = os.path.splitext(os.path.basename(options.vfile[0]))[0]
         print 'Top module', options.top
 
