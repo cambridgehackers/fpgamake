@@ -471,10 +471,27 @@ def expand_path():
                 options.vpath.append(f)
                 visitlist.append(f)
 
+def is_simulator_option(w):
+    for prefix in ['+']:
+        if w.startswith(prefix):
+            return True
+    return False
+
 if __name__=='__main__':
     exename = os.path.abspath(sys.argv[0])
     fpgamakedir = os.path.dirname(exename)
-    options = argparser.parse_args()
+    options  = argparser.parse_args()
+    ## vfile is a positional argument, which will pick up things like +incdir+foo
+    ## so separate them out manually
+    vfiles = []
+    simulator_options=[]
+    for w in options.vfile:
+        if is_simulator_option(w):
+            simulator_options.append(w)
+        else:
+            vfiles.append(w)
+    options.vfile = vfiles
+
     for c in options.command:
         args=[]
         f = open(c)
