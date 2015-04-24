@@ -117,21 +117,21 @@ def map_partname_to_family(partname):
 
 def add_to_verilog_used(parent_partition, submodule):
     if verilog_used.has_key(parent_partition):
-        verilog_used[parent_partition].append(submodule)
+        verilog_used[parent_partition][submodule] = submodule
     else:
-        verilog_used[parent_partition] = [submodule]
+        verilog_used[parent_partition] = {submodule: submodule}
 
 def add_to_vhdl_used(parent_partition, submodule):
     if vhdl_used.has_key(parent_partition):
-        vhdl_used[parent_partition].append(submodule)
+        vhdl_used[parent_partition][submodule] = submodule
     else:
-        vhdl_used[parent_partition] = [submodule]
+        vhdl_used[parent_partition] = {submodule:submodule}
 
 def add_to_vhdl_libraries_used(parent_partition, submodule):
     if vhdl_libraries_used.has_key(parent_partition):
-        vhdl_libraries_used[parent_partition].append(submodule)
+        vhdl_libraries_used[parent_partition][submodule] = submodule
     else:
-        vhdl_libraries_used[parent_partition] = [submodule]
+        vhdl_libraries_used[parent_partition] = {submodule: submodule}
 
 def scan_module(module, parent_partition=None, parent_module=None):
     if options.verbose:
@@ -349,9 +349,9 @@ def write_xilinx_makefile():
                                    'headerfiles': ' '.join([find_in_path(vfile, options.vpath) for vfile in set(options.header)]) if options.header else '',
                                    'vfiles': ' '.join([find_in_path(module, options.vpath)]
                                                       + verilog_files
-                                                      + [find_in_path(vfile, options.vpath) for vfile in (set(verilog_used[module]) if module in verilog_used else [])]
+                                                      + [find_in_path(vfile, options.vpath) for vfile in (verilog_used[module] if module in verilog_used else {})]
                                                       ),
-                                   'vhdfiles': ' '.join([find_in_path(vfile, options.vpath) for vfile in set(vhdl_used[module])]) if module in vhdl_used else '',
+                                   'vhdfiles': ' '.join([find_in_path(vfile, options.vpath) for vfile in vhdl_used[module]]) if module in vhdl_used else '',
                                    'vhdlibraries': ' '.join(set(vhdl_libraries_used[module])) if module in vhdl_libraries_used else '',
                                    'subinst': ' '.join(subinst),
                                    'module_stubs': ' '.join(module_stubs),
@@ -431,9 +431,9 @@ def write_altera_makefile():
                                  'module_path': find_in_path(module, options.vpath),
                                  'headerfiles': ' '.join([find_in_path(vfile, options.vpath) for vfile in set(options.header)]) if options.header else '',
                                  'vfiles': ' '.join([find_in_path(module, options.vpath)]
-                                                    + [find_in_path(vfile, options.vpath) for vfile in (set(verilog_used[module]) if module in verilog_used else [])]
+                                                    + [find_in_path(vfile, options.vpath) for vfile in (verilog_used[module] if module in verilog_used else {})]
                                                     ),
-                                 'vhdfiles': ' '.join([find_in_path(vfile, options.vpath) for vfile in set(vhdl_used[module])]) if module in vhdl_used else '',
+                                 'vhdfiles': ' '.join([find_in_path(vfile, options.vpath) for vfile in vhdl_used[module]]) if module in vhdl_used else '',
                                  'vhdlibraries': ' '.join(set(vhdl_libraries_used[module])) if module in vhdl_libraries_used else '',
                                  'subinst': ' '.join(subinst),
                                  'module_stubs': ' '.join(module_stubs),
