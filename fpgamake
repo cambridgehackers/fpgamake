@@ -349,8 +349,8 @@ def write_xilinx_makefile():
                                    'headerfiles': ' '.join([find_in_path(vfile, options.vpath) for vfile in set(options.header)]) if options.header else '',
                                    'vfiles': ' '.join([find_in_path(module, options.vpath)]
                                                       + verilog_files
-                                                      + [find_in_path(vfile, options.vpath) for vfile in set(verilog_used[module])]
-                                                      ) if module in verilog_used else '',
+                                                      + [find_in_path(vfile, options.vpath) for vfile in (set(verilog_used[module]) if module in verilog_used else [])]
+                                                      ),
                                    'vhdfiles': ' '.join([find_in_path(vfile, options.vpath) for vfile in set(vhdl_used[module])]) if module in vhdl_used else '',
                                    'vhdlibraries': ' '.join(set(vhdl_libraries_used[module])) if module in vhdl_libraries_used else '',
                                    'subinst': ' '.join(subinst),
@@ -431,8 +431,8 @@ def write_altera_makefile():
                                  'module_path': find_in_path(module, options.vpath),
                                  'headerfiles': ' '.join([find_in_path(vfile, options.vpath) for vfile in set(options.header)]) if options.header else '',
                                  'vfiles': ' '.join([find_in_path(module, options.vpath)]
-                                                    + [find_in_path(vfile, options.vpath) for vfile in set(verilog_used[module])]
-                                                    ) if module in verilog_used else '',
+                                                    + [find_in_path(vfile, options.vpath) for vfile in (set(verilog_used[module]) if module in verilog_used else [])]
+                                                    ),
                                  'vhdfiles': ' '.join([find_in_path(vfile, options.vpath) for vfile in set(vhdl_used[module])]) if module in vhdl_used else '',
                                  'vhdlibraries': ' '.join(set(vhdl_libraries_used[module])) if module in vhdl_libraries_used else '',
                                  'subinst': ' '.join(subinst),
