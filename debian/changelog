@@ -1,3 +1,9 @@
+fpgamake (15.04.2-1trusty1) trusty; urgency=medium
+
+  * 15.04.2
+
+ -- Jamey Hicks <jamey.hicks@gmail.com>  Mon, 27 Apr 2015 09:00:02 -0400
+
 fpgamake (15.04.1-1trusty1) trusty; urgency=medium
 
   * Updated instructions, added dependence on buildcache.
