@@ -119,14 +119,14 @@ proc fpgamake_altera_ipcore {core_name core_version ip_name file_set params} {
 
     exec -ignorestderr -- ip-generate \
             --project-directory=$ipdir/$boardname                            \
-            --output-directory=$ipdir/$boardname/synthesis                   \
+            --output-directory=$ipdir/$boardname/synthesis/$ip_name          \
             --file-set=$file_set                                             \
             --report-file=html:$ipdir/$boardname/$ip_name.html               \
             --report-file=sopcinfo:$ipdir/$boardname/$ip_name.sopcinfo       \
             --report-file=cmp:$ipdir/$boardname/$ip_name.cmp                 \
-            --report-file=qip:$ipdir/$boardname/synthesis/$ip_name.qip       \
-            --report-file=svd:$ipdir/$boardname/synthesis/$ip_name.svd       \
-            --report-file=regmap:$ipdir/$boardname/synthesis/$ip_name.regmap \
+            --report-file=qip:$ipdir/$boardname/synthesis/$ip_name/$ip_name.qip       \
+            --report-file=svd:$ipdir/$boardname/synthesis/$ip_name/$ip_name.svd       \
+            --report-file=regmap:$ipdir/$boardname/synthesis/$ip_name/$ip_name.regmap \
             --report-file=xml:$ipdir/$boardname/$ip_name.xml                 \
             --system-info=DEVICE_FAMILY=StratixV                             \
             --system-info=DEVICE=$partname                                   \
@@ -135,4 +135,24 @@ proc fpgamake_altera_ipcore {core_name core_version ip_name file_set params} {
             {*}$params\
             --component-name=$core_name                                      \
             --output-name=$ip_name
+}
+
+proc fpgamake_altera_qmegawiz {ip_path ip_name} {
+	global ipdir boardname
+	set generate_ip 0
+	if [file exists $ipdir/$boardname/$ip_name/$ip_name.qip] {
+	} else {
+		puts "no qip file $ip_name.qip"
+		set generate_ip 1
+	}
+
+	if $generate_ip {
+		file delete -force $ipdir/$boardname/synthesis/$ip_name
+		file mkdir $ipdir/$boardname/synthesis/$ip_name
+		puts "generate_ip $generate_ip"
+		file copy $ip_path/$ip_name.v $ipdir/$boardname/synthesis/$ip_name/$ip_name.v
+		exec -ignorestderr -- qmegawiz \
+			-silent \
+			$ipdir/$boardname/synthesis/$ip_name/$ip_name.v
+	}
 }
