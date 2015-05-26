@@ -22,6 +22,9 @@ spkg:
 	sed -i s/trusty/utopic/g debian/changelog
 	git buildpackage --git-debian-tag="v%s" --git-upstream-branch=master "--git-upstream-tag=v%(version)s" --git-debian-branch=ubuntu -S -tc '--git-upstream-tag=v%(version)s' --git-ignore-new
 	git checkout debian
+	sed -i s/trusty/vivid/g debian/changelog
+	git buildpackage --git-debian-tag="v%s" --git-upstream-branch=master "--git-upstream-tag=v%(version)s" --git-debian-branch=ubuntu -S -tc '--git-upstream-tag=v%(version)s' --git-ignore-new
+	git checkout debian
 
 upload:
 	git push origin v$(VERSION)
