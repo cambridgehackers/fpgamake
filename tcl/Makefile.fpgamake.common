@@ -107,7 +107,7 @@ Synth/$1/$1-map.dcp: $($1_PATH)
 	    VERILOG_DEFINES=$(VERILOG_DEFINES) \
 	    BUILDCACHE_CACHEDIR="$(CACHEDIR)/Synth/$(MODULE)" \
 	    BUILDCACHE_OUTPUTDIR="Synth/$(MODULE)" \
-	    $(BUILDCACHE) quartus_sh -t $(TCLDIR)/altera_map.tcl
+	    quartus_sh -t $(TCLDIR)/altera_map.tcl | tee altera_map.log
 endef
 
 # altera fit
@@ -127,7 +127,7 @@ Impl/Fit/$1-fit.dcp: $(FLOORPLAN) $(Fit_NETLISTS) Synth/$2/$2-map.dcp
 	     BUILDCACHE_CACHEDIR="$(CACHEDIR)/Impl/Fit" \
 	     BUILDCACHE_OUTPUTDIR="Impl/Fit" \
 	     REPORT_NWORST_TIMING_PATHS="$(REPORT_NWORST_TIMING_PATHS)" \
-	     $(BUILDCACHE) quartus_sh -t $(TCLDIR)/altera_fit.tcl
+	     quartus_sh -t $(TCLDIR)/altera_fit.tcl | tee altera_fit.log
 
 $3: Impl/Fit/$1-fit.dcp
 	$(Q)echo "copy bitfile if needed"
