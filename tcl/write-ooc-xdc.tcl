@@ -53,18 +53,18 @@ log_command "link_design" $outputDir/temp.log
 set subinsts $env(SUBINST)
 
 foreach subinst $subinsts {
-    set subinstCell [get_cells $subinst]
+    set subinstCell [get_cells -hier $subinst]
     set module [get_property REF_NAME $subinstCell]
     file mkdir "./Impl/$subinst"
     set xdcHandle [open "./Impl/$subinst/$subinst-ooc-clocks.xdc" w]
 
     puts "$subinst $module ============================================================"
     report_property $subinstCell
-    set pblock [get_pblocks -of [get_cells $subinst]]
+    set pblock [get_pblocks -of [get_cells -hier $subinst]]
     puts "pblock $pblock"
     report_property $pblock
 
-    set pins [get_pins -of [get_cells $subinst] -filter DIRECTION==IN]
+    set pins [get_pins -of [get_cells -hier $subinst] -filter DIRECTION==IN]
     foreach pin $pins {
 	set port [get_property REF_PIN_NAME $pin]
 	set clock [get_clocks -quiet -of $pin]
