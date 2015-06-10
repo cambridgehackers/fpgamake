@@ -36,7 +36,7 @@ Synth/$1/$1-synth.dcp: $($1_PATH)
 endef
 
 define IMPL_RULE
-Impl/$1/$1-post-route.dcp: Synth/$2/$2-synth.dcp $($2_NETLISTS) Impl/oocxdc.timestamp $(foreach item,$($(INST)_OOCXDC), Impl/$(INST)/$(item))
+Impl/$1/$1-post-route.dcp: Synth/$2/$2-synth.dcp $($(1)_NETLISTS) Impl/oocxdc.timestamp $(foreach item,$($(INST)_OOCXDC), Impl/$(INST)/$(item))
 	$(Q)$(eval MODULE=$2)
 	$(Q)$(eval INST=$1)
 	@echo fpgamake.mk Impl/$1/$1-post-route.dcp
