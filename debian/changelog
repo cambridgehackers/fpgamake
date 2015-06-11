@@ -1,3 +1,9 @@
+fpgamake (15.06.1-1trusty1) trusty; urgency=medium
+
+  * 15.06.1: make stubs stubbier
+
+ -- Jamey Hicks <jamey.hicks@gmail.com>  Thu, 11 Jun 2015 13:42:51 -0400
+
 fpgamake (15.04.2-1trusty1) trusty; urgency=medium
 
   * 15.04.2
