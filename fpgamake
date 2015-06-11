@@ -236,11 +236,19 @@ def make_stub(vpath, stubpath):
     if not os.path.isdir(stubdir):
         os.makedirs(stubdir)
     f = open(stubpath, 'w')
+    saw_module = False;
     for line in open(vpath):
         m = re.match('^\s*module ', line)
         if m:
+            saw_module = True
             f.write("(*black_box*)")
-        f.write(line)
+        if saw_module:
+            matchend = re.match(' +((wire)|(reg)).*', line)
+            if matchend:
+                saw_module = False
+                f.write('endmodule\n')
+            else:
+                f.write(line)
     f.close()
 
 makefileHeaderTemplate='''
