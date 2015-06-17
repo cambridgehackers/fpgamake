@@ -67,6 +67,46 @@ if {"$env(FLOORPLAN)" != ""} {
     }
 }
 
+
+if {"$env{DEBUG_NETS}" != ""} {
+    set debug_nets "$env{DEBUG_NETS}"
+    set debug_port 0
+    foreach debug_net $debug_nets {
+	set nets [get_nets "$debug_net[*]"]
+	puts "debug_port $debug_port nets $nets"
+	if {$debug_port < 1} {
+	    create_debug_core u_ila_0 ila
+	    set_property C_DATA_DEPTH 1024 [get_debug_cores u_ila_0]
+	    set_property C_TRIGIN_EN false [get_debug_cores u_ila_0]
+	    set_property C_TRIGOUT_EN false [get_debug_cores u_ila_0]
+	    set_property C_ADV_TRIGGER false [get_debug_cores u_ila_0]
+	    set_property C_INPUT_PIPE_STAGES 0 [get_debug_cores u_ila_0]
+	    set_property C_EN_STRG_QUAL false [get_debug_cores u_ila_0]
+	    set_property ALL_PROBE_SAME_MU true [get_debug_cores u_ila_0]
+	    set_property ALL_PROBE_SAME_MU_CNT 1 [get_debug_cores u_ila_0]
+
+	    set pins [get_pins -leaf -of_objects $nets -filter {DIRECTION==OUT}]
+	    puts "pins $pins"
+	    set cell [get_cells -of_objects [lindex $pins 0]]
+	    puts "cell $cell"
+
+	    set clock [get_clocks -of_objects [get_pins "$cell/C"]]
+	    puts "clock $clock"
+	    set_property port_width 1 [get_debug_ports u_ila_0/clk]
+	    connect_debug_port u_ila_0/clk [get_nets -of_objects $clock]
+
+	    set_property port_width [llength $nets] [get_debug_ports u_ila_0/probe0]
+	    connect_debug_port u_ila_0/probe0 $nets
+	} else { 
+	    create_debug_port u_ila_0 probe
+	    set_property port_width [llength $nets] [get_debug_ports u_ila_0/probe$debug_port]
+	    connect_debug_port u_ila_0/probe$debug_port $nets
+	}
+	incr debug_port
+    }
+    write_debug_probes -force $outputDir/debug_nets.ltx
+}
+
 if [info exists CFGBVS] {
     set_property CFGBVS $CFGBVS [current_design]
 }
