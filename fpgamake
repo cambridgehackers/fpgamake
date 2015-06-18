@@ -269,7 +269,8 @@ include $(TCLDIR)/Makefile.fpgamake.common
 
 makefileTrailerTemplate='''
 synth: $(SYNTH_NETLISTS)
-everything: $(SYNTH_NETLISTS) %(bitfile)s
+impl: $(IMPL_NETLISTS)
+everything: synth impl %(bitfile)s
 
 '''
 

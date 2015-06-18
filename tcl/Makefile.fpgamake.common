@@ -6,8 +6,9 @@ else
   Q=
 endif
 SYNTH_NETLISTS=
+IMPL_NETLISTS=
 ifneq ("$(FLOORPLAN)","")
-SYNTH_NETLISTS +=Impl/top/top-post-route.dcp
+IMPL_NETLISTS +=Impl/top/top-post-route.dcp
 endif
 
 define SYNTH_RULE
@@ -50,7 +51,7 @@ Impl/$1/$1-post-route.dcp: Synth/$2/$2-synth.dcp $($(1)_NETLISTS) Impl/oocxdc.ti
 endef
 
 define TOP_RULE
-SYNTH_NETLISTS += Impl/TopDown/$1-post-place.dcp
+IMPL_NETLISTS += Impl/TopDown/$1-post-place.dcp
 Impl/TopDown/$1-post-place.dcp: $(FLOORPLAN) $(TopDown_NETLISTS) Synth/$2/$2-synth.dcp
 	$(Q)$(eval MODULE=$2)
 	$(Q)$(eval INST=$1)
@@ -112,7 +113,7 @@ endef
 
 # altera fit
 define FIT_RULE
-SYNTH_NETLISTS += Impl/Fit/$1-fit.dcp
+IMPL_NETLISTS += Impl/Fit/$1-fit.dcp
 Impl/Fit/$1-fit.dcp: $(FLOORPLAN) $(Fit_NETLISTS) Synth/$2/$2-map.dcp
 	$(Q)$(eval MODULE=$2)
 	$(Q)$(eval INST=$1)
