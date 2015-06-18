@@ -68,8 +68,9 @@ if {"$env(FLOORPLAN)" != ""} {
 }
 
 
-if {"$env{DEBUG_NETS}" != ""} {
-    set debug_nets "$env{DEBUG_NETS}"
+## DEBUG_NETS="host_ep7_cfg_function_number host_ep7_cfg_device_number host_ep7_cfg_bus_number"
+if {"$env(DEBUG_NETS)" != ""} {
+    set debug_nets "$env(DEBUG_NETS)"
     set debug_port 0
     foreach debug_net $debug_nets {
 	set nets [get_nets "$debug_net[*]"]
