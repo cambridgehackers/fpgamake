@@ -290,15 +290,6 @@ synth_template='''
 $(eval $(call SYNTH_RULE,%(module)s))
 '''
 
-impl_template='''
-%(inst)s_XDC = %(constraint_files)s
-%(inst)s_OOCXDC = %(oocxdc)s
-%(inst)s_NETLISTS = %(module_routed_netlists)s
-%(inst)s_BITFILE = %(bitfile)s
-
-$(eval $(call IMPL_RULE,%(inst)s,%(module)s))
-'''
-
 topdown_template='''
 TopDown_XDC = %(constraint_files)s
 TopDown_NETLISTS = %(module_synth_netlists)s
@@ -369,24 +360,6 @@ def write_xilinx_makefile():
                                    'xcifiles': ' '.join(options.xci),
                                    'constraint_files': ' '.join([os.path.abspath(xdc) for xdc in constraint_files['top']]) if 'top' in constraint_files else '',
                                    })
-        for inst in set(module_instances[module]):
-            subinst_routed_netlists = []
-            if module in modules_used:
-                for submodule in set(modules_used[module]):
-                    if options.verbose:
-                        print 'inst', inst, 'submodule', submodule
-                    for subinst in module_instances[submodule]:
-                        if options.verbose:
-                            print '\t', subinst
-                        subinst_routed_netlists.append('Impl/%s/%s-post-route.dcp' % (subinst, subinst))
-
-            f.write(impl_template % { 'module': module,
-                                      'inst': inst,
-                                      'constraint_files': ' '.join([os.path.abspath(xdc) for xdc in constraint_files[inst]]) if inst in constraint_files else '',
-                                      'module_routed_netlists': ' '.join(subinst_routed_netlists),
-                                      'oocxdc': '%(inst)s-ooc.xdc %(inst)s-ooc-clocks.xdc %(inst)s-ooc-budget.xdc' % {'inst': inst} if inst != 'top' else '',
-                                      'bitfile': options.bitfile if (inst == 'top' and options.bitfile) else '',
-                                      })
 
     submodule_synth_netlists = []
     if options.top in modules_used:

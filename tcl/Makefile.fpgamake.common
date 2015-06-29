@@ -36,20 +36,6 @@ Synth/$1/$1-synth.dcp: $($1_PATH)
 	    $(BUILDCACHE) vivado -notrace -mode batch -source $(TCLDIR)/synth.tcl
 endef
 
-define IMPL_RULE
-Impl/$1/$1-post-route.dcp: Synth/$2/$2-synth.dcp $($(1)_NETLISTS) Impl/oocxdc.timestamp $(foreach item,$($(INST)_OOCXDC), Impl/$(INST)/$(item))
-	$(Q)$(eval MODULE=$2)
-	$(Q)$(eval INST=$1)
-	@echo fpgamake.mk Impl/$1/$1-post-route.dcp
-	$(Q)MODULE=$(MODULE) INST=$(INST) \
-	    XDC="$($(INST)_XDC) $(foreach item,$($(INST)_OOCXDC), Impl/$(INST)/$(item))" \
-	    MODULE_NETLISTS="$($(INST)_NETLISTS)" \
-	    BITFILE=$($(INST)_BITFILE) \
-            BUILDCACHE_CACHEDIR="$(CACHEDIR)/Impl/$(INST)" \
-            BUILDCACHE_OUTPUTDIR="Synth/$(INST)" \
-	    $(BUILDCACHE) vivado -notrace -mode batch -source $(TCLDIR)/impl.tcl
-endef
-
 define TOP_RULE
 IMPL_NETLISTS += Impl/TopDown/$1-post-place.dcp
 Impl/TopDown/$1-post-place.dcp: $(FLOORPLAN) $(TopDown_NETLISTS) Synth/$2/$2-synth.dcp
