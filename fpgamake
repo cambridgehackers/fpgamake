@@ -63,6 +63,7 @@ argparser.add_argument('--cachedir', help='Cache directory', default='Cache')
 argparser.add_argument('-v', '--verbose', help='Verbose operation', action='store_true', default=False)
 argparser.add_argument('--debug', help='Debug operation', action='store_true', default=False)
 argparser.add_argument('--prtop', help='Filename of previously synthesized top level for partial reconfiguration', default=None)
+argparser.add_argument('--reconfig', help='modules to set as reconfigurable', default=[], action='append')
 
 verilog_files=[]
 module_instances={}
@@ -293,6 +294,7 @@ $(eval $(call SYNTH_RULE,%(module)s))
 topdown_template='''
 TopDown_XDC = %(constraint_files)s
 TopDown_NETLISTS = %(module_synth_netlists)s
+TopDown_RECONFIG = %(module_reconfig_netlists)s
 TopDown_SUBINST = %(subinst)s
 
 $(eval $(call TOP_RULE,%(inst)s,%(module)s,%(bitfile)s,%(bitbase)s))
@@ -301,7 +303,9 @@ $(eval $(call TOP_RULE,%(inst)s,%(module)s,%(bitfile)s,%(bitbase)s))
 retop_template='''
 ReTop_XDC = %(constraint_files)s
 ReTop_NETLISTS = %(module_synth_netlists)s
+ReTop_RECONFIG = %(module_reconfig_netlists)s
 ReTop_SUBINST = %(subinst)s
+ReTop_PRTOP = %(prtop)s
 
 $(eval $(call RETOP_RULE,%(inst)s,%(module)s,%(bitfile)s,%(bitbase)s))
 '''
@@ -390,8 +394,10 @@ def write_xilinx_makefile():
                                  'constraint_files': topdown_xdc_files,
                                  'floorplan': os.path.abspath(options.floorplan) if options.floorplan else '',
                                  'module_synth_netlists': ' '.join(submodule_synth_netlists),
+                                 'module_reconfig_netlists': ' '.join(options.reconfig) if options.reconfig else '',
                                  'bitfile': options.bitfile if options.bitfile else '',
                                  'bitbase': os.path.splitext(options.bitfile)[0] if options.bitfile else '',
+                                 'prtop': options.prtop,
             }
     if options.prtop:
         f.write(retop_template % substparam)

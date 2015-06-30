@@ -46,6 +46,7 @@ Impl/TopDown/$1-post-place.dcp: $(FLOORPLAN) $(TopDown_NETLISTS) Synth/$2/$2-syn
 	$(Q) MODULE=$(MODULE) INST=$(INST) \
 	     SUBINST="$(TopDown_SUBINST)" \
 	     MODULE_NETLISTS="$(TopDown_NETLISTS)" \
+	     RECONFIG_NETLISTS="$(TopDown_RECONFIG)" \
 	     XDC="$(TopDown_XDC)" \
 	     FLOORPLAN="$(FLOORPLAN)" \
 	     BITFILE=Impl/TopDown/mkTop.bit \
@@ -79,7 +80,9 @@ Impl/ReTop/$1-post-place.dcp: $(FLOORPLAN) $(ReTop_NETLISTS) Synth/$2/$2-synth.d
 	$(Q) MODULE=$(MODULE) INST=$(INST) \
 	     SUBINST="$(ReTop_SUBINST)" \
 	     MODULE_NETLISTS="$(ReTop_NETLISTS)" \
+	     RECONFIG_NETLISTS="$(ReTop_RECONFIG)" \
 	     XDC="$(ReTop_XDC)" \
+	     PRTOP="$(ReTop_PRTOP)" \
 	     FLOORPLAN="$(FLOORPLAN)" \
 	     BITFILE=Impl/ReTop/mkTop.bit \
 	     BUILDCACHE_CACHEDIR="$(CACHEDIR)/Impl/ReTop" \

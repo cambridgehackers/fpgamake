@@ -48,20 +48,26 @@ set errorfilehandle [open "$errorlog.log" w]
 
 set impl_start_time [clock seconds]
 
-set dcp_name "./Synth/$module/$module-synth.dcp"
+set dcp_name $env(PRTOP)
 log_command "open_checkpoint $dcp_name" "$outputDir/[file tail $dcp_name].log"
-foreach xdc $env(XDC) {
-    log_command "read_xdc $xdc" "$outputDir/[file tail $xdc].log"
-}
 set cellparam ""
 foreach name $env(RECONFIG_NETLISTS) {
     set cellparam "-cell top/$name"
-    set_property RESET_AFTER_RECONFIG 1 [get_pblocks pblock_$name]
-    set_property HD.RECONFIGURABLE 1 [get_cells top/$name]
+    update_design -cells top/$name -black_box
+    lock_design -level routing
 }
 foreach dcp $env(MODULE_NETLISTS) {
     log_command "read_checkpoint $cellparam $dcp" "$outputDir/[file tail $dcp].log"
 }
+foreach xdc $env(XDC) {
+    log_command "read_xdc $xdc" "$outputDir/[file tail $xdc].log"
+}
+if {"$env(FLOORPLAN)" != ""} {
+    foreach pblock [get_pblocks] {
+	set_property HD.PARTITION 1 [get_cells -of $pblock]
+    }
+}
+
 
 ## DEBUG_NETS="host_ep7_cfg_function_number host_ep7_cfg_device_number host_ep7_cfg_bus_number"
 if [info exists env(DEBUG_NETS)] {
