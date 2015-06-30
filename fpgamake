@@ -62,6 +62,7 @@ argparser.add_argument('-b', '--bitfile', help='Bit file to generate', default='
 argparser.add_argument('--cachedir', help='Cache directory', default='Cache')
 argparser.add_argument('-v', '--verbose', help='Verbose operation', action='store_true', default=False)
 argparser.add_argument('--debug', help='Debug operation', action='store_true', default=False)
+argparser.add_argument('--prtop', help='Filename of previously synthesized top level for partial reconfiguration', default=None)
 
 verilog_files=[]
 module_instances={}
@@ -269,8 +270,7 @@ include $(TCLDIR)/Makefile.fpgamake.common
 
 makefileTrailerTemplate='''
 synth: $(SYNTH_NETLISTS)
-impl: $(IMPL_NETLISTS)
-everything: synth impl %(bitfile)s
+everything: synth %(bitfile)s
 
 '''
 
@@ -296,6 +296,14 @@ TopDown_NETLISTS = %(module_synth_netlists)s
 TopDown_SUBINST = %(subinst)s
 
 $(eval $(call TOP_RULE,%(inst)s,%(module)s,%(bitfile)s,%(bitbase)s))
+'''
+
+retop_template='''
+ReTop_XDC = %(constraint_files)s
+ReTop_NETLISTS = %(module_synth_netlists)s
+ReTop_SUBINST = %(subinst)s
+
+$(eval $(call RETOP_RULE,%(inst)s,%(module)s,%(bitfile)s,%(bitbase)s))
 '''
 
 ## Altera Flow
@@ -372,7 +380,7 @@ def write_xilinx_makefile():
     submodules = []
     if options.top in modules_used:
         submodules = set(modules_used[options.top])
-    f.write(topdown_template % { 'module': options.top,
+    substparam = { 'module': options.top,
                                  'inst': inst,
                                  'subinst': ' '.join([' '.join(module_instances[submodule]) for submodule in submodules]),
                                  'oocxdc': ' '.join([' '.join(['Impl/%(inst)s/%(inst)s-ooc-clocks.xdc Impl/%(inst)s/%(inst)s-ooc.xdc'
@@ -384,7 +392,11 @@ def write_xilinx_makefile():
                                  'module_synth_netlists': ' '.join(submodule_synth_netlists),
                                  'bitfile': options.bitfile if options.bitfile else '',
                                  'bitbase': os.path.splitext(options.bitfile)[0] if options.bitfile else '',
-            })
+            }
+    if options.prtop:
+        f.write(retop_template % substparam)
+    else:
+        f.write(topdown_template % substparam)
     f.write(makefileTrailerTemplate % { 'bitfile': options.bitfile if options.bitfile else '' })
     f.close()
 

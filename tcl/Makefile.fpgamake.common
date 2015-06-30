@@ -69,6 +69,39 @@ $(foreach inst, $(TopDown_SUBINST), Impl/$(inst)/$(inst)-ooc.xdc Impl/$(inst)/$(
 
 endef
 
+define RETOP_RULE
+IMPL_NETLISTS += Impl/TopDown/$1-post-place.dcp
+Impl/ReTop/$1-post-place.dcp: $(FLOORPLAN) $(ReTop_NETLISTS) Synth/$2/$2-synth.dcp
+	$(Q)$(eval MODULE=$2)
+	$(Q)$(eval INST=$1)
+	@echo fpgamake.mk Impl/ReTop/$1-post-place.dcp
+	$(Q)mkdir -p Impl/ReTop/
+	$(Q) MODULE=$(MODULE) INST=$(INST) \
+	     SUBINST="$(ReTop_SUBINST)" \
+	     MODULE_NETLISTS="$(ReTop_NETLISTS)" \
+	     XDC="$(ReTop_XDC)" \
+	     FLOORPLAN="$(FLOORPLAN)" \
+	     BITFILE=Impl/ReTop/mkTop.bit \
+	     BUILDCACHE_CACHEDIR="$(CACHEDIR)/Impl/ReTop" \
+	     BUILDCACHE_OUTPUTDIR="Impl/ReTop" \
+	     REPORT_NWORST_TIMING_PATHS="$(REPORT_NWORST_TIMING_PATHS)" \
+	     $(BUILDCACHE) vivado -notrace -mode batch -source $(TCLDIR)/retopdown.tcl
+
+$3: Impl/ReTop/$1-post-place.dcp
+	$(Q)cp -v Impl/ReTop/mkTop.bit $4.bit
+	$(Q)cp -v Impl/ReTop/mkTop.bin $4.bin
+
+Impl/oocxdc.timestamp: Impl/ReTop/$1-post-place.dcp
+	@echo fpgamake.mk Impl/oocxdc.timestamp
+	INST=$1 MODULE=$2 \
+	SUBINST="$(ReTop_SUBINST)" \
+	$(BUILDCACHE) vivado -notrace -mode batch -source $(TCLDIR)/write-ooc-xdc.tcl
+	touch Impl/oocxdc.timestamp
+
+$(foreach inst, $(ReTop_SUBINST), Impl/$(inst)/$(inst)-ooc.xdc Impl/$(inst)/$(inst)-ooc-budget.xdc Impl/$(inst)/$(inst)-ooc-clocks.xdc): Impl/oocxdc.timestamp
+
+endef
+
 ##
 ## Altera Makefile
 ##
