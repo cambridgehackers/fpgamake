@@ -180,4 +180,4 @@ if {[info exists env(BITFILE)] && $env(BITFILE) != ""} {
 	log_command "write_bitstream -bin_file -force $env(BITFILE)" $outputDir/write_bitstream.log
 }
 set impl_end_time [clock seconds]
-puts "topdown.tcl elapsed time [expr $impl_end_time - $impl_start_time] seconds"
+puts "retopdown.tcl elapsed time [expr $impl_end_time - $impl_start_time] seconds"
