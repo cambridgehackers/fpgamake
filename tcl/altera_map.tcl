@@ -105,7 +105,6 @@ export_assignments
 # STEP#2:
 set quartus_map_args [dict create]
 dict set quartus_map_args rev      $module
-dict set quartus_map_args parallel 16
 dict set quartus_map_args family   "$env(FPGAMAKE_FAMILY)"
 dict set quartus_map_args part     "$partname"
 
