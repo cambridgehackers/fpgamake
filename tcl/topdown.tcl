@@ -49,29 +49,32 @@ set errorfilehandle [open "$errorlog.log" w]
 set impl_start_time [clock seconds]
 
 set dcp_name "./Synth/$module/$module-synth.dcp"
-if {"$env(PRTOP)" != ""} {
+if {"$env(PRTOP)" == ""} {
+    log_command "read_checkpoint $dcp_name" "$outputDir/[file tail $dcp_name].log"
+} else {
     set dcp_name $env(PRTOP)
     log_command "open_checkpoint $dcp_name" "$outputDir/[file tail $dcp_name].log"
-} else {
-    log_command "read_checkpoint $dcp_name" "$outputDir/[file tail $dcp_name].log"
-}
-set cellparam ""
-set cellname ""
-set pblockname ""
-foreach name $env(RECONFIG_NETLISTS) {
-    set cellparam "-cell top/$name"
-    if {"$env(PRTOP)" != ""} {
-        set cellname top/$name
-        set pblockname pblock_$name
-        update_design -cells top/$name -black_box
-        lock_design -level routing
-    } else {
-        set_property RESET_AFTER_RECONFIG 1 [get_pblocks pblock_$name]
-        set_property HD.RECONFIGURABLE 1 [get_cells top/$name]
+    set cellparam ""
+    set cellname ""
+    set pblockname ""
+    foreach name $env(RECONFIG_NETLISTS) {
+	set cellparam "-cell top/$name"
+	if {"$env(PRTOP)" != ""} {
+	    set cellname top/$name
+	    set pblockname pblock_$name
+	    update_design -cells top/$name -black_box
+	    lock_design -level routing
+	    set cellmodule [get_property REF_NAME [get_cells "top/$name"]]
+	    set dcp "./Synth/$cellmodule/$cellmodule-synth.dcp"
+	    log_command "read_checkpoint $cellparam $dcp" "$outputDir/[file tail $dcp].log"
+	} else {
+	    set_property RESET_AFTER_RECONFIG 1 [get_pblocks pblock_$name]
+	    set_property HD.RECONFIGURABLE 1 [get_cells top/$name]
+	}
     }
 }
 foreach dcp $env(MODULE_NETLISTS) {
-    log_command "read_checkpoint $cellparam $dcp" "$outputDir/[file tail $dcp].log"
+    log_command "read_checkpoint $dcp" "$outputDir/[file tail $dcp].log"
 }
 foreach xdc $env(XDC) {
     log_command "read_xdc $xdc" "$outputDir/[file tail $xdc].log"
