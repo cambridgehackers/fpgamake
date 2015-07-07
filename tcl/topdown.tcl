@@ -195,11 +195,17 @@ report_datasheet -file $outputDir/$instance-post-route_datasheet.rpt > $outputDi
 if {[info exists env(BITFILE)] && $env(BITFILE) != ""} {
 	set bitfileroot [file rootname $env(BITFILE)]
 	## commented out -logic_location_file for now because the files are huge -Jamey
-        if {$cellname == ""} {
-	log_command "write_bitstream -bin_file -force $env(BITFILE)" $outputDir/write_bitstream.log
+        if {"$env(PRTOP)" == ""} {
+	    log_command "write_bitstream -bin_file -force $env(BITFILE)" $outputDir/write_bitstream.log
         } else {
-	log_command "write_bitstream -bin_file -force $env(BITFILE)" $outputDir/write_bitstream.log
-	#log_command "write_bitstream -bin_file -force -cell [get_cells $cellname] $env(BITFILE)" $outputDir/write_bitstream.log
+	    log_command "write_bitstream -bin_file -force $env(BITFILE)" $outputDir/write_bitstream.log
+	    set write_cell_bitstream_works 0
+	    if $write_cell_bitstream_works {
+		foreach name $env(RECONFIG_NETLISTS) {
+		    set cellname top/$name
+		    log_command "write_bitstream -bin_file -force -cell [get_cells $cellname] $env(BITFILE)" $outputDir/write_bitstream.log
+		}
+	    }
         }
 }
 set impl_end_time [clock seconds]
