@@ -297,7 +297,7 @@ TopDown_RECONFIG = %(module_reconfig_netlists)s
 TopDown_SUBINST = %(subinst)s
 TopDown_PRTOP = %(prtop)s
 
-$(eval $(call TOP_RULE,%(inst)s,%(module)s,%(bitfile)s,%(bitbase)s,%(script)s))
+$(eval $(call TOP_RULE,%(inst)s,%(module)s,%(bitfile)s,%(bitbase)s))
 '''
 
 ## Altera Flow
@@ -387,9 +387,8 @@ def write_xilinx_makefile():
                                  'module_synth_netlists': ' '.join(submodule_synth_netlists),
                                  'module_reconfig_netlists': ' '.join(options.reconfig) if options.reconfig else '',
                                  'bitfile': options.bitfile if options.bitfile else '',
-                                 'bitbase': os.path.splitext(options.bitfile)[0] if options.bitfile else '',
+                                 'bitbase': os.path.dirname(os.path.abspath(options.bitfile)) if options.bitfile else '',
                                  'prtop': options.prtop,
-                                 'script': 'topdown.tcl' if options.prtop == '' else 'retopdown.tcl',
             }
     f.write(topdown_template % substparam)
     f.write(makefileTrailerTemplate % { 'bitfile': options.bitfile if options.bitfile else '' })

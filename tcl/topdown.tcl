@@ -49,18 +49,30 @@ set errorfilehandle [open "$errorlog.log" w]
 set impl_start_time [clock seconds]
 
 set dcp_name "./Synth/$module/$module-synth.dcp"
-log_command "open_checkpoint $dcp_name" "$outputDir/[file tail $dcp_name].log"
-foreach xdc $env(XDC) {
-    log_command "read_xdc $xdc" "$outputDir/[file tail $xdc].log"
+if {"$env(PRTOP)" != ""} {
+    set dcp_name $env(PRTOP)
 }
+log_command "open_checkpoint $dcp_name" "$outputDir/[file tail $dcp_name].log"
 set cellparam ""
+set cellname ""
+set pblockname ""
 foreach name $env(RECONFIG_NETLISTS) {
     set cellparam "-cell top/$name"
-    set_property RESET_AFTER_RECONFIG 1 [get_pblocks pblock_$name]
-    set_property HD.RECONFIGURABLE 1 [get_cells top/$name]
+    if {"$env(PRTOP)" != ""} {
+        set cellname top/$name
+        set pblockname pblock_$name
+        update_design -cells top/$name -black_box
+        lock_design -level routing
+    } else {
+        set_property RESET_AFTER_RECONFIG 1 [get_pblocks pblock_$name]
+        set_property HD.RECONFIGURABLE 1 [get_cells top/$name]
+    }
 }
 foreach dcp $env(MODULE_NETLISTS) {
     log_command "read_checkpoint $cellparam $dcp" "$outputDir/[file tail $dcp].log"
+}
+foreach xdc $env(XDC) {
+    log_command "read_xdc $xdc" "$outputDir/[file tail $xdc].log"
 }
 
 ## DEBUG_NETS="host_ep7_cfg_function_number host_ep7_cfg_device_number host_ep7_cfg_bus_number"
@@ -174,7 +186,12 @@ report_datasheet -file $outputDir/$instance-post-route_datasheet.rpt > $outputDi
 if {[info exists env(BITFILE)] && $env(BITFILE) != ""} {
 	set bitfileroot [file rootname $env(BITFILE)]
 	## commented out -logic_location_file for now because the files are huge -Jamey
-	log_command "write_bitstream -bin_file -force $env(BITFILE)" $outputDir/write_bitstream.log
+        if {$cellname == ""} {
+	log_command {write_bitstream -bin_file -force $env(BITFILE)} $outputDir/write_bitstream.log
+        } else {
+	log_command {write_bitstream -bin_file -force $env(BITFILE)} $outputDir/write_bitstream.log
+	#log_command {write_bitstream -bin_file -force -cell [get_cells $cellname] $env(BITFILE)} $outputDir/write_bitstream.log
+        }
 }
 set impl_end_time [clock seconds]
 puts "topdown.tcl elapsed time [expr $impl_end_time - $impl_start_time] seconds"

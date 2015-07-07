@@ -2,8 +2,10 @@
 V=0
 ifeq ($(V),0)
   Q=@
+  NOTRACE=-notrace
 else
   Q=
+  NOTRACE=
 endif
 SYNTH_NETLISTS=
 IMPL_NETLISTS=
@@ -33,7 +35,7 @@ Synth/$1/$1-synth.dcp: $($1_PATH)
 	    XDC="$($(MODULE)_XDC)" \
 	    BUILDCACHE_CACHEDIR="$(CACHEDIR)/Synth/$(MODULE)" \
 	    BUILDCACHE_OUTPUTDIR="Synth/$(MODULE)" \
-	    $(BUILDCACHE) vivado -notrace -mode batch -source $(TCLDIR)/synth.tcl
+	    $(BUILDCACHE) vivado $(NOTRACE) -mode batch -source $(TCLDIR)/synth.tcl
 endef
 
 define TOP_RULE
@@ -54,17 +56,16 @@ Impl/TopDown/$1-post-place.dcp: $(FLOORPLAN) $(TopDown_NETLISTS) $(SYNTH_NETLIST
 	     BUILDCACHE_CACHEDIR="$(CACHEDIR)/Impl/TopDown" \
 	     BUILDCACHE_OUTPUTDIR="Impl/TopDown" \
 	     REPORT_NWORST_TIMING_PATHS="$(REPORT_NWORST_TIMING_PATHS)" \
-	     $(BUILDCACHE) vivado -notrace -mode batch -source $(TCLDIR)/$5
+	     $(BUILDCACHE) vivado $(NOTRACE) -mode batch -source $(TCLDIR)/topdown.tcl
 
 $3: Impl/TopDown/$1-post-place.dcp
-	$(Q)cp -v Impl/TopDown/mkTop.bit $4.bit
-	$(Q)cp -v Impl/TopDown/mkTop.bin $4.bin
+	$(Q)cp -v Impl/TopDown/mkTop*.bi[nt] $4
 
 Impl/oocxdc.timestamp: Impl/TopDown/$1-post-place.dcp
 	@echo fpgamake.mk Impl/oocxdc.timestamp
 	INST=$1 MODULE=$2 \
 	SUBINST="$(TopDown_SUBINST)" \
-	$(BUILDCACHE) vivado -notrace -mode batch -source $(TCLDIR)/write-ooc-xdc.tcl
+	$(BUILDCACHE) vivado $(NOTRACE) -mode batch -source $(TCLDIR)/write-ooc-xdc.tcl
 	touch Impl/oocxdc.timestamp
 
 $(foreach inst, $(TopDown_SUBINST), Impl/$(inst)/$(inst)-ooc.xdc Impl/$(inst)/$(inst)-ooc-budget.xdc Impl/$(inst)/$(inst)-ooc-clocks.xdc): Impl/oocxdc.timestamp
