@@ -125,7 +125,7 @@ if [info exists CONFIG_VOLTAGE] {
 log_command "write_checkpoint -force $outputDir/$instance-post-link.dcp" $outputDir/temp.log
 report_timing_summary -file $outputDir/$instance-post-link-timing-summary.rpt > $outputDir/temp.log
 report_timing -sort_by group -max_paths 100 -path_type summary -file $outputDir/$instance-post-link-timing.rpt > $outputDir/temp.log
-if {[version -short >= "2014.3"]} {
+if {[version -short] >= "2014.3"} {
     report_cdc -file $outputDir/$instance-post-link-cdc.rpt > $outputDir/temp.log
 }
 if {"$env(REPORT_NWORST_TIMING_PATHS)" != ""} {
