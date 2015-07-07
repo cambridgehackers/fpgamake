@@ -366,7 +366,7 @@ def write_xilinx_makefile():
 
     submodule_synth_netlists = []
     if options.top in modules_used:
-        for submodule in modules_used[options.top]:
+        for submodule in set(modules_used[options.top]):
             submodule_synth_netlists.append('Synth/%s/%s-synth.dcp' % (submodule, submodule))
 
     inst = 'top'
