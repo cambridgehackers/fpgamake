@@ -51,8 +51,10 @@ set impl_start_time [clock seconds]
 set dcp_name "./Synth/$module/$module-synth.dcp"
 if {"$env(PRTOP)" != ""} {
     set dcp_name $env(PRTOP)
+    log_command "open_checkpoint $dcp_name" "$outputDir/[file tail $dcp_name].log"
+} else {
+    log_command "read_checkpoint $dcp_name" "$outputDir/[file tail $dcp_name].log"
 }
-log_command "open_checkpoint $dcp_name" "$outputDir/[file tail $dcp_name].log"
 set cellparam ""
 set cellname ""
 set pblockname ""
@@ -73,6 +75,10 @@ foreach dcp $env(MODULE_NETLISTS) {
 }
 foreach xdc $env(XDC) {
     log_command "read_xdc $xdc" "$outputDir/[file tail $xdc].log"
+}
+
+if {"$env(PRTOP)" == ""} {
+    log_command "link_design" "$outputDir/link_design.log"
 }
 
 ## DEBUG_NETS="host_ep7_cfg_function_number host_ep7_cfg_device_number host_ep7_cfg_bus_number"
