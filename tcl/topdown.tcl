@@ -53,6 +53,8 @@ if {"$env(PRTOP)" == ""} {
     log_command "read_checkpoint $dcp_name" "$outputDir/[file tail $dcp_name].log"
 } else {
     set dcp_name $env(PRTOP)
+}
+if {"$env(RECONFIG_NETLISTS)" != ""} {
     log_command "open_checkpoint $dcp_name" "$outputDir/[file tail $dcp_name].log"
     set cellparam ""
     set cellname ""
@@ -80,7 +82,7 @@ foreach xdc $env(XDC) {
     log_command "read_xdc $xdc" "$outputDir/[file tail $xdc].log"
 }
 
-if {"$env(PRTOP)" == ""} {
+if {"$env(RECONFIG_NETLISTS)" == ""} {
     log_command "link_design" "$outputDir/link_design.log"
 }
 
@@ -199,6 +201,7 @@ if {[info exists env(BITFILE)] && $env(BITFILE) != ""} {
 	    log_command "write_bitstream -bin_file -force $env(BITFILE)" $outputDir/write_bitstream.log
         } else {
 	    log_command "write_bitstream -bin_file -force $env(BITFILE)" $outputDir/write_bitstream.log
+	    log_command "write_xdc -force $outputDir/$bitfileroot.xdc" $outputDir/write_bitstream.log
 	    set write_cell_bitstream_works 0
 	    if $write_cell_bitstream_works {
 		foreach name $env(RECONFIG_NETLISTS) {
