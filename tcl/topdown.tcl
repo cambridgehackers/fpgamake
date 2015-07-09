@@ -49,13 +49,22 @@ set errorfilehandle [open "$errorlog.log" w]
 set impl_start_time [clock seconds]
 
 set dcp_name "./Synth/$module/$module-synth.dcp"
-if {"$env(PRTOP)" == ""} {
-    log_command "read_checkpoint $dcp_name" "$outputDir/[file tail $dcp_name].log"
-} else {
+if {"$env(PRTOP)" != ""} {
     set dcp_name $env(PRTOP)
 }
+log_command "read_checkpoint $dcp_name" "$outputDir/[file tail $dcp_name].log"
+
+foreach dcp $env(MODULE_NETLISTS) {
+    log_command "read_checkpoint $dcp" "$outputDir/[file tail $dcp].log"
+}
+
+foreach xdc $env(XDC) {
+    log_command "read_xdc $xdc" "$outputDir/[file tail $xdc].log"
+}
+
+log_command "link_design" "$outputDir/link_design.log"
+
 if {"$env(RECONFIG_NETLISTS)" != ""} {
-    log_command "open_checkpoint $dcp_name" "$outputDir/[file tail $dcp_name].log"
     set cellparam ""
     set cellname ""
     set pblockname ""
@@ -74,16 +83,6 @@ if {"$env(RECONFIG_NETLISTS)" != ""} {
 	    set_property HD.RECONFIGURABLE 1 [get_cells top/$name]
 	}
     }
-}
-foreach dcp $env(MODULE_NETLISTS) {
-    log_command "read_checkpoint $dcp" "$outputDir/[file tail $dcp].log"
-}
-foreach xdc $env(XDC) {
-    log_command "read_xdc $xdc" "$outputDir/[file tail $xdc].log"
-}
-
-if {"$env(RECONFIG_NETLISTS)" == ""} {
-    log_command "link_design" "$outputDir/link_design.log"
 }
 
 ## DEBUG_NETS="host_ep7_cfg_function_number host_ep7_cfg_device_number host_ep7_cfg_bus_number"
