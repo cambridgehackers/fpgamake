@@ -195,11 +195,12 @@ report_io -file $outputDir/$instance-post-route-io.rpt > $outputDir/temp.log
 report_datasheet -file $outputDir/$instance-post-route_datasheet.rpt > $outputDir/temp.log
 if {[info exists env(BITFILE)] && $env(BITFILE) != ""} {
 	## commented out -logic_location_file for now because the files are huge -Jamey
+	#log_command "write_xdc -no_fixed_only -force $outputDir/$instance-post-route.xdc" $outputDir/write_bitstream.log
+	#log_command "write_edif -force $outputDir/$instance-post-route.edif" $outputDir/write_bitstream.log
         if {"$env(PRTOP)" == ""} {
 	    log_command "write_bitstream -bin_file -force $env(BITFILE)" $outputDir/write_bitstream.log
         } else {
 	    log_command "write_bitstream -bin_file -force $env(BITFILE)" $outputDir/write_bitstream.log
-	    log_command "write_xdc -force $outputDir/$instance-post-route.xdc" $outputDir/write_bitstream.log
 	    set write_cell_bitstream_works 0
 	    if $write_cell_bitstream_works {
 		foreach name $env(RECONFIG_NETLISTS) {
