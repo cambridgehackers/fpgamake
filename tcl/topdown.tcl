@@ -73,9 +73,9 @@ if {"$env(RECONFIG_NETLISTS)" != ""} {
 	if {"$env(PRTOP)" != ""} {
 	    set cellname top/$name
 	    set pblockname pblock_$name
+	    set cellmodule [get_property REF_NAME [get_cells "top/$name"]]
 	    update_design -cells top/$name -black_box
 	    lock_design -level routing
-	    set cellmodule [get_property REF_NAME [get_cells "top/$name"]]
 	    set dcp "./Synth/$cellmodule/$cellmodule-synth.dcp"
 	    log_command "read_checkpoint $cellparam $dcp" "$outputDir/[file tail $dcp].log"
 	} else {
