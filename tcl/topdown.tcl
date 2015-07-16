@@ -65,22 +65,22 @@ foreach xdc $env(XDC) {
 log_command "link_design" "$outputDir/link_design.log"
 
 if {"$env(RECONFIG_NETLISTS)" != ""} {
-    set cellparam ""
     set cellname ""
     set pblockname ""
     foreach name $env(RECONFIG_NETLISTS) {
-	set cellparam "-cell top/$name"
 	if {"$env(PRTOP)" != ""} {
-	    set cellname top/$name
-	    set pblockname pblock_$name
-	    set cellmodule [get_property REF_NAME [get_cells "top/$name"]]
+	    set cell [get_cells -hier $name]
+	    set pblock [get_pblocks -of_objects $cell]
+	    set pblock [get_pblocks pblock_$name]
+	    set cellmodule [get_property REF_NAME $cell]
 	    update_design -cells top/$name -black_box
 	    lock_design -level routing
 	    set dcp "./Synth/$cellmodule/$cellmodule-synth.dcp"
-	    log_command "read_checkpoint $cellparam $dcp" "$outputDir/[file tail $dcp].log"
+	    log_command "read_checkpoint -cell $cell $dcp" "$outputDir/[file tail $dcp].log"
 	} else {
+	    set cell [get_cells -hier $name]
+	    set_property HD.RECONFIGURABLE 1 $cell
 	    set_property RESET_AFTER_RECONFIG 1 [get_pblocks pblock_$name]
-	    set_property HD.RECONFIGURABLE 1 [get_cells top/$name]
 	}
     }
 }
