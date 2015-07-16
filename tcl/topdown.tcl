@@ -64,10 +64,10 @@ foreach xdc $env(XDC) {
 
 log_command "link_design" "$outputDir/link_design.log"
 
-if {"$env(RECONFIG_NETLISTS)" != ""} {
+if {"$env(RECONFIG_INSTANCES)" != ""} {
     set cellname ""
     set pblockname ""
-    foreach name $env(RECONFIG_NETLISTS) {
+    foreach name $env(RECONFIG_INSTANCES) {
 	if {"$env(PRTOP)" != ""} {
 	    set cell [get_cells -hier $name]
 	    set pblock [get_pblocks -of_objects $cell]

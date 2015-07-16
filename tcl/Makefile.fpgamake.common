@@ -48,7 +48,7 @@ Impl/TopDown/$1-post-place.dcp: $(FLOORPLAN) $(TopDown_NETLISTS) $(SYNTH_NETLIST
 	$(Q) MODULE=$(MODULE) INST=$(INST) \
 	     SUBINST="$(TopDown_SUBINST)" \
 	     MODULE_NETLISTS="$(TopDown_NETLISTS)" \
-	     RECONFIG_NETLISTS="$(TopDown_RECONFIG)" \
+	     RECONFIG_INSTANCES="$(TopDown_RECONFIG)" \
 	     XDC="$(TopDown_XDC)" \
 	     PRTOP="$(TopDown_PRTOP)" \
 	     FLOORPLAN="$(FLOORPLAN)" \
