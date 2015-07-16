@@ -52,6 +52,7 @@ argparser.add_argument('-p', '--part', help='Target part name', default='xc7z020
 argparser.add_argument('--xci', help='XCI file to use', default=[], action='append')
 argparser.add_argument('--chipscope', help='chipscope file to use', default=[], action='append')
 argparser.add_argument('--constraints', help='Constraints file to use (.xdc for Xilinx, .sdc for Altera)', default=[], action='append')
+argparser.add_argument('--implconstraints', help='Physical constraints file to use (.xdc for Xilinx, .sdc for Altera)', default=[], action='append')
 argparser.add_argument('--tcl', help='User tcl script to use', default=[], action='append')
 argparser.add_argument('--floorplan', help='Floorplan XDC.', default=None)
 argparser.add_argument('--preserve-clock-gates', help='Do not delete clock gate pins if set to 1', default=0)
@@ -73,6 +74,7 @@ verilog_used={}
 vhdl_used={}
 vhdl_libraries_used={}
 constraint_files={}
+impl_constraint_files={}
 
 parameterizedModuleRe = r'^\s*(\w+)\s*#'
 plainModuleRe = r'^\s*(\w+)\s+(\w+)\s*\(?'
@@ -370,7 +372,7 @@ def write_xilinx_makefile():
             submodule_synth_netlists.append('Synth/%s/%s-synth.dcp' % (submodule, submodule))
 
     inst = 'top'
-    topdown_xdc_files = (' '.join([os.path.abspath(xdc) for xdc in constraint_files[inst]]) if (inst in constraint_files) else '')
+    topdown_xdc_files = (' '.join([os.path.abspath(xdc) for xdc in impl_constraint_files[inst]]) if (inst in impl_constraint_files) else '')
 
     submodules = []
     if options.top in modules_used:
@@ -514,6 +516,11 @@ if __name__=='__main__':
             sys.stderr.write('Error: Constraint file %s not found\n' % c)
             sys.exit(-1)
 
+    for c in options.implconstraints:
+        if not os.path.exists(c):
+            sys.stderr.write('Error: Constraint file %s not found\n' % c)
+            sys.exit(-1)
+
     for xci in options.xci:
         if not os.path.exists(xci):
             sys.stderr.write('Error: XCI file %s not found\n' % xci)
@@ -543,7 +550,8 @@ if __name__=='__main__':
         print "verilog_used"
         print verilog_used
 
-    constraint_files['top'] = options.constraints
+    constraint_files['top']      = options.constraints
+    impl_constraint_files['top'] = options.implconstraints
 
     process_modules()
 
