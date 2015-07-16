@@ -64,7 +64,7 @@ argparser.add_argument('--cachedir', help='Cache directory', default='Cache')
 argparser.add_argument('-v', '--verbose', help='Verbose operation', action='store_true', default=False)
 argparser.add_argument('--debug', help='Debug operation', action='store_true', default=False)
 argparser.add_argument('--prtop', help='Filename of previously synthesized top level for partial reconfiguration', default='')
-argparser.add_argument('--reconfig', help='modules to set as reconfigurable', default=[], action='append')
+argparser.add_argument('--reconfig', help='module instance names to set as reconfigurable', default=[], action='append')
 
 verilog_files=[]
 module_instances={}
