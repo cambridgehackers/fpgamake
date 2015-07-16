@@ -46,12 +46,12 @@ proc show_errors { logfile } {
 	close $loghandle
 	foreach logmessage [split $logmessages '\n'] {
 	    if [string match "CRITICAL WARNING*" $logmessage] {
-		puts "\t$logmessage"
-		puts $errorfilehandle "$logmessage"
+		puts $logmessage
+		puts $errorfilehandle $logmessage
 	    }
 	    if [string match "ERROR:*" $logmessage] {
-		puts "$logmessage"
-		puts $errorfilehandle "$logmessage"
+		puts $logmessage
+		puts $errorfilehandle $logmessage
 	    }
 	}
     }
