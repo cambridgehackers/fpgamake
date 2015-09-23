@@ -2,12 +2,15 @@
 V=0
 ifeq ($(V),0)
   Q=@
+  NOTRACE=-notrace
 else
   Q=
+  NOTRACE=
 endif
 SYNTH_NETLISTS=
+IMPL_NETLISTS=
 ifneq ("$(FLOORPLAN)","")
-SYNTH_NETLISTS +=Impl/top/top-post-route.dcp
+IMPL_NETLISTS +=Impl/top/top-post-route.dcp
 endif
 
 define SYNTH_RULE
@@ -32,26 +35,12 @@ Synth/$1/$1-synth.dcp: $($1_PATH)
 	    XDC="$($(MODULE)_XDC)" \
 	    BUILDCACHE_CACHEDIR="$(CACHEDIR)/Synth/$(MODULE)" \
 	    BUILDCACHE_OUTPUTDIR="Synth/$(MODULE)" \
-	    $(BUILDCACHE) vivado -notrace -mode batch -source $(TCLDIR)/synth.tcl
-endef
-
-define IMPL_RULE
-Impl/$1/$1-post-route.dcp: Synth/$2/$2-synth.dcp $($(1)_NETLISTS) Impl/oocxdc.timestamp $(foreach item,$($(INST)_OOCXDC), Impl/$(INST)/$(item))
-	$(Q)$(eval MODULE=$2)
-	$(Q)$(eval INST=$1)
-	@echo fpgamake.mk Impl/$1/$1-post-route.dcp
-	$(Q)MODULE=$(MODULE) INST=$(INST) \
-	    XDC="$($(INST)_XDC) $(foreach item,$($(INST)_OOCXDC), Impl/$(INST)/$(item))" \
-	    MODULE_NETLISTS="$($(INST)_NETLISTS)" \
-	    BITFILE=$($(INST)_BITFILE) \
-            BUILDCACHE_CACHEDIR="$(CACHEDIR)/Impl/$(INST)" \
-            BUILDCACHE_OUTPUTDIR="Synth/$(INST)" \
-	    $(BUILDCACHE) vivado -notrace -mode batch -source $(TCLDIR)/impl.tcl
+	    $(BUILDCACHE) vivado $(NOTRACE) -mode batch -source $(TCLDIR)/synth.tcl
 endef
 
 define TOP_RULE
-SYNTH_NETLISTS += Impl/TopDown/$1-post-place.dcp
-Impl/TopDown/$1-post-place.dcp: $(FLOORPLAN) $(TopDown_NETLISTS) Synth/$2/$2-synth.dcp
+IMPL_NETLISTS += Impl/TopDown/$1-post-place.dcp
+Impl/TopDown/$1-post-place.dcp: $(FLOORPLAN) $(TopDown_NETLISTS) $(SYNTH_NETLISTS)
 	$(Q)$(eval MODULE=$2)
 	$(Q)$(eval INST=$1)
 	@echo fpgamake.mk Impl/TopDown/$1-post-place.dcp
@@ -59,23 +48,24 @@ Impl/TopDown/$1-post-place.dcp: $(FLOORPLAN) $(TopDown_NETLISTS) Synth/$2/$2-syn
 	$(Q) MODULE=$(MODULE) INST=$(INST) \
 	     SUBINST="$(TopDown_SUBINST)" \
 	     MODULE_NETLISTS="$(TopDown_NETLISTS)" \
+	     RECONFIG_INSTANCES="$(TopDown_RECONFIG)" \
 	     XDC="$(TopDown_XDC)" \
+	     PRTOP="$(TopDown_PRTOP)" \
 	     FLOORPLAN="$(FLOORPLAN)" \
 	     BITFILE=Impl/TopDown/mkTop.bit \
 	     BUILDCACHE_CACHEDIR="$(CACHEDIR)/Impl/TopDown" \
 	     BUILDCACHE_OUTPUTDIR="Impl/TopDown" \
 	     REPORT_NWORST_TIMING_PATHS="$(REPORT_NWORST_TIMING_PATHS)" \
-	     $(BUILDCACHE) vivado -notrace -mode batch -source $(TCLDIR)/topdown.tcl
+	     $(BUILDCACHE) vivado $(NOTRACE) -mode batch -source $(TCLDIR)/topdown.tcl
 
 $3: Impl/TopDown/$1-post-place.dcp
-	$(Q)cp -v Impl/TopDown/mkTop.bit $4.bit
-	$(Q)cp -v Impl/TopDown/mkTop.bin $4.bin
+	$(Q)cp -v Impl/TopDown/mkTop*.bi[nt] $4
 
 Impl/oocxdc.timestamp: Impl/TopDown/$1-post-place.dcp
 	@echo fpgamake.mk Impl/oocxdc.timestamp
 	INST=$1 MODULE=$2 \
 	SUBINST="$(TopDown_SUBINST)" \
-	$(BUILDCACHE) vivado -notrace -mode batch -source $(TCLDIR)/write-ooc-xdc.tcl
+	$(BUILDCACHE) vivado $(NOTRACE) -mode batch -source $(TCLDIR)/write-ooc-xdc.tcl
 	touch Impl/oocxdc.timestamp
 
 $(foreach inst, $(TopDown_SUBINST), Impl/$(inst)/$(inst)-ooc.xdc Impl/$(inst)/$(inst)-ooc-budget.xdc Impl/$(inst)/$(inst)-ooc-clocks.xdc): Impl/oocxdc.timestamp
@@ -107,12 +97,12 @@ Synth/$1/$1-map.dcp: $($1_PATH)
 	    VERILOG_DEFINES=$(VERILOG_DEFINES) \
 	    BUILDCACHE_CACHEDIR="$(CACHEDIR)/Synth/$(MODULE)" \
 	    BUILDCACHE_OUTPUTDIR="Synth/$(MODULE)" \
-	    $(BUILDCACHE) quartus_sh -t $(TCLDIR)/altera_map.tcl
+	    quartus_sh -t $(TCLDIR)/altera_map.tcl | tee altera_map.log
 endef
 
 # altera fit
 define FIT_RULE
-SYNTH_NETLISTS += Impl/Fit/$1-fit.dcp
+IMPL_NETLISTS += Impl/Fit/$1-fit.dcp
 Impl/Fit/$1-fit.dcp: $(FLOORPLAN) $(Fit_NETLISTS) Synth/$2/$2-map.dcp
 	$(Q)$(eval MODULE=$2)
 	$(Q)$(eval INST=$1)
@@ -127,7 +117,7 @@ Impl/Fit/$1-fit.dcp: $(FLOORPLAN) $(Fit_NETLISTS) Synth/$2/$2-map.dcp
 	     BUILDCACHE_CACHEDIR="$(CACHEDIR)/Impl/Fit" \
 	     BUILDCACHE_OUTPUTDIR="Impl/Fit" \
 	     REPORT_NWORST_TIMING_PATHS="$(REPORT_NWORST_TIMING_PATHS)" \
-	     $(BUILDCACHE) quartus_sh -t $(TCLDIR)/altera_fit.tcl
+	     quartus_sh -t $(TCLDIR)/altera_fit.tcl | tee altera_fit.log
 
 $3: Impl/Fit/$1-fit.dcp
 	$(Q)echo "copy bitfile if needed"

@@ -52,6 +52,7 @@ argparser.add_argument('-p', '--part', help='Target part name', default='xc7z020
 argparser.add_argument('--xci', help='XCI file to use', default=[], action='append')
 argparser.add_argument('--chipscope', help='chipscope file to use', default=[], action='append')
 argparser.add_argument('--constraints', help='Constraints file to use (.xdc for Xilinx, .sdc for Altera)', default=[], action='append')
+argparser.add_argument('--implconstraints', help='Physical constraints file to use (.xdc for Xilinx, .sdc for Altera)', default=[], action='append')
 argparser.add_argument('--tcl', help='User tcl script to use', default=[], action='append')
 argparser.add_argument('--floorplan', help='Floorplan XDC.', default=None)
 argparser.add_argument('--preserve-clock-gates', help='Do not delete clock gate pins if set to 1', default=0)
@@ -62,6 +63,8 @@ argparser.add_argument('-b', '--bitfile', help='Bit file to generate', default='
 argparser.add_argument('--cachedir', help='Cache directory', default='Cache')
 argparser.add_argument('-v', '--verbose', help='Verbose operation', action='store_true', default=False)
 argparser.add_argument('--debug', help='Debug operation', action='store_true', default=False)
+argparser.add_argument('--prtop', help='Filename of previously synthesized top level for partial reconfiguration', default='')
+argparser.add_argument('--reconfig', help='module instance names to set as reconfigurable', default=[], action='append')
 
 verilog_files=[]
 module_instances={}
@@ -71,6 +74,7 @@ verilog_used={}
 vhdl_used={}
 vhdl_libraries_used={}
 constraint_files={}
+impl_constraint_files={}
 
 parameterizedModuleRe = r'^\s*(\w+)\s*#'
 plainModuleRe = r'^\s*(\w+)\s+(\w+)\s*\(?'
@@ -268,7 +272,7 @@ include $(TCLDIR)/Makefile.fpgamake.common
 '''
 
 makefileTrailerTemplate='''
-everything: $(SYNTH_NETLISTS) %(bitfile)s
+everything: %(bitfile)s
 
 '''
 
@@ -288,19 +292,12 @@ synth_template='''
 $(eval $(call SYNTH_RULE,%(module)s))
 '''
 
-impl_template='''
-%(inst)s_XDC = %(constraint_files)s
-%(inst)s_OOCXDC = %(oocxdc)s
-%(inst)s_NETLISTS = %(module_routed_netlists)s
-%(inst)s_BITFILE = %(bitfile)s
-
-$(eval $(call IMPL_RULE,%(inst)s,%(module)s))
-'''
-
 topdown_template='''
 TopDown_XDC = %(constraint_files)s
 TopDown_NETLISTS = %(module_synth_netlists)s
+TopDown_RECONFIG = %(module_reconfig_netlists)s
 TopDown_SUBINST = %(subinst)s
+TopDown_PRTOP = %(prtop)s
 
 $(eval $(call TOP_RULE,%(inst)s,%(module)s,%(bitfile)s,%(bitbase)s))
 '''
@@ -351,7 +348,8 @@ def write_xilinx_makefile():
             subinst = ([' '.join(module_instances[submodule]) for submodule in set(modules_used[options.top])])
         if module in modules_used:
             module_stubs = ['%s-stub.v' % (m) for m in set(modules_used[module])]
-        print constraint_files
+        if options.debug:
+            print 'fpgamake: constraint_files', constraint_files
         f.write(synth_template % { 'module': module,
                                    'module_path': find_in_path(module, options.vpath),
                                    'headerfiles': ' '.join([find_in_path(vfile, options.vpath) for vfile in set(options.header)]) if options.header else '',
@@ -367,37 +365,19 @@ def write_xilinx_makefile():
                                    'xcifiles': ' '.join(options.xci),
                                    'constraint_files': ' '.join([os.path.abspath(xdc) for xdc in constraint_files['top']]) if 'top' in constraint_files else '',
                                    })
-        for inst in set(module_instances[module]):
-            subinst_routed_netlists = []
-            if module in modules_used:
-                for submodule in set(modules_used[module]):
-                    if options.verbose:
-                        print 'inst', inst, 'submodule', submodule
-                    for subinst in module_instances[submodule]:
-                        if options.verbose:
-                            print '\t', subinst
-                        subinst_routed_netlists.append('Impl/%s/%s-post-route.dcp' % (subinst, subinst))
-
-            f.write(impl_template % { 'module': module,
-                                      'inst': inst,
-                                      'constraint_files': ' '.join([os.path.abspath(xdc) for xdc in constraint_files[inst]]) if inst in constraint_files else '',
-                                      'module_routed_netlists': ' '.join(subinst_routed_netlists),
-                                      'oocxdc': '%(inst)s-ooc.xdc %(inst)s-ooc-clocks.xdc %(inst)s-ooc-budget.xdc' % {'inst': inst} if inst != 'top' else '',
-                                      'bitfile': options.bitfile if (inst == 'top' and options.bitfile) else '',
-                                      })
 
     submodule_synth_netlists = []
     if options.top in modules_used:
-        for submodule in modules_used[options.top]:
+        for submodule in set(modules_used[options.top]):
             submodule_synth_netlists.append('Synth/%s/%s-synth.dcp' % (submodule, submodule))
 
     inst = 'top'
-    topdown_xdc_files = (' '.join([os.path.abspath(xdc) for xdc in constraint_files[inst]]) if (inst in constraint_files) else '')
+    topdown_xdc_files = (' '.join([os.path.abspath(xdc) for xdc in impl_constraint_files[inst]]) if (inst in impl_constraint_files) else '')
 
     submodules = []
     if options.top in modules_used:
         submodules = set(modules_used[options.top])
-    f.write(topdown_template % { 'module': options.top,
+    substparam = { 'module': options.top,
                                  'inst': inst,
                                  'subinst': ' '.join([' '.join(module_instances[submodule]) for submodule in submodules]),
                                  'oocxdc': ' '.join([' '.join(['Impl/%(inst)s/%(inst)s-ooc-clocks.xdc Impl/%(inst)s/%(inst)s-ooc.xdc'
@@ -407,9 +387,12 @@ def write_xilinx_makefile():
                                  'constraint_files': topdown_xdc_files,
                                  'floorplan': os.path.abspath(options.floorplan) if options.floorplan else '',
                                  'module_synth_netlists': ' '.join(submodule_synth_netlists),
+                                 'module_reconfig_netlists': ' '.join(options.reconfig) if options.reconfig else '',
                                  'bitfile': options.bitfile if options.bitfile else '',
-                                 'bitbase': os.path.splitext(options.bitfile)[0] if options.bitfile else '',
-            })
+                                 'bitbase': os.path.dirname(os.path.abspath(options.bitfile)) if options.bitfile else '',
+                                 'prtop': options.prtop,
+            }
+    f.write(topdown_template % substparam)
     f.write(makefileTrailerTemplate % { 'bitfile': options.bitfile if options.bitfile else '' })
     f.close()
 
@@ -533,6 +516,11 @@ if __name__=='__main__':
             sys.stderr.write('Error: Constraint file %s not found\n' % c)
             sys.exit(-1)
 
+    for c in options.implconstraints:
+        if not os.path.exists(c):
+            sys.stderr.write('Error: Constraint file %s not found\n' % c)
+            sys.exit(-1)
+
     for xci in options.xci:
         if not os.path.exists(xci):
             sys.stderr.write('Error: XCI file %s not found\n' % xci)
@@ -547,7 +535,8 @@ if __name__=='__main__':
         if is_a_file(v, options.vpath):
             verilog_files.append(is_a_file(v, options.vpath))
 
-    module_instances[options.top] = ['top']
+    if options.prtop == '':
+        module_instances[options.top] = ['top']
     scan_module(options.top)
     for m in options.synth:
         scan_module(m)
@@ -561,7 +550,8 @@ if __name__=='__main__':
         print "verilog_used"
         print verilog_used
 
-    constraint_files['top'] = options.constraints
+    constraint_files['top']      = options.constraints
+    impl_constraint_files['top'] = options.implconstraints
 
     process_modules()
 

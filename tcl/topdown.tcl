@@ -49,22 +49,80 @@ set errorfilehandle [open "$errorlog.log" w]
 set impl_start_time [clock seconds]
 
 set dcp_name "./Synth/$module/$module-synth.dcp"
+if {"$env(PRTOP)" != ""} {
+    set dcp_name $env(PRTOP)
+}
 log_command "read_checkpoint $dcp_name" "$outputDir/[file tail $dcp_name].log"
+
 foreach dcp $env(MODULE_NETLISTS) {
     log_command "read_checkpoint $dcp" "$outputDir/[file tail $dcp].log"
 }
+
 foreach xdc $env(XDC) {
     log_command "read_xdc $xdc" "$outputDir/[file tail $xdc].log"
 }
-foreach xdc $env(FLOORPLAN) {
-    log_command "read_xdc $xdc" "$outputDir/[file tail $xdc].log"
+
+log_command "link_design" "$outputDir/link_design.log"
+
+if {"$env(RECONFIG_INSTANCES)" != ""} {
+    set cellname ""
+    set pblockname ""
+    foreach name $env(RECONFIG_INSTANCES) {
+	if {"$env(PRTOP)" != ""} {
+	    set cell [get_cells -hier $name]
+	    set pblock [get_pblocks -of_objects $cell]
+	    set pblock [get_pblocks pblock_$name]
+	    set cellmodule [get_property REF_NAME $cell]
+	    update_design -cells top/$name -black_box
+	    lock_design -level routing
+	    set dcp "./Synth/$cellmodule/$cellmodule-synth.dcp"
+	    log_command "read_checkpoint -cell $cell $dcp" "$outputDir/[file tail $dcp].log"
+	} else {
+	    set cell [get_cells -hier $name]
+	    set_property HD.RECONFIGURABLE 1 $cell
+	    set_property RESET_AFTER_RECONFIG 1 [get_pblocks pblock_$name]
+	}
+    }
 }
 
-log_command "link_design -top $module" $outputDir/link_design.log
-if {"$env(FLOORPLAN)" != ""} {
-    foreach pblock [get_pblocks] {
-	set_property HD.PARTITION 1 [get_cells -of $pblock]
+## DEBUG_NETS="host_ep7_cfg_function_number host_ep7_cfg_device_number host_ep7_cfg_bus_number"
+if [info exists env(DEBUG_NETS)] {
+    set debug_nets "$env(DEBUG_NETS)"
+    set debug_port 0
+    foreach debug_net $debug_nets {
+	set nets [get_nets "$debug_net[*]"]
+	puts "debug_port $debug_port nets $nets"
+	if {$debug_port < 1} {
+	    create_debug_core u_ila_0 ila
+	    set_property C_DATA_DEPTH 1024 [get_debug_cores u_ila_0]
+	    set_property C_TRIGIN_EN false [get_debug_cores u_ila_0]
+	    set_property C_TRIGOUT_EN false [get_debug_cores u_ila_0]
+	    set_property C_ADV_TRIGGER false [get_debug_cores u_ila_0]
+	    set_property C_INPUT_PIPE_STAGES 0 [get_debug_cores u_ila_0]
+	    set_property C_EN_STRG_QUAL false [get_debug_cores u_ila_0]
+	    set_property ALL_PROBE_SAME_MU true [get_debug_cores u_ila_0]
+	    set_property ALL_PROBE_SAME_MU_CNT 1 [get_debug_cores u_ila_0]
+
+	    set pins [get_pins -leaf -of_objects $nets -filter {DIRECTION==OUT}]
+	    puts "pins $pins"
+	    set cell [get_cells -of_objects [lindex $pins 0]]
+	    puts "cell $cell"
+
+	    set clock [get_clocks -of_objects [get_pins "$cell/C"]]
+	    puts "clock $clock"
+	    set_property port_width 1 [get_debug_ports u_ila_0/clk]
+	    connect_debug_port u_ila_0/clk [get_nets -of_objects $clock]
+
+	    set_property port_width [llength $nets] [get_debug_ports u_ila_0/probe0]
+	    connect_debug_port u_ila_0/probe0 $nets
+	} else { 
+	    create_debug_port u_ila_0 probe
+	    set_property port_width [llength $nets] [get_debug_ports u_ila_0/probe$debug_port]
+	    connect_debug_port u_ila_0/probe$debug_port $nets
+	}
+	incr debug_port
     }
+    write_debug_probes -force $outputDir/debug_nets.ltx
 }
 
 if [info exists CFGBVS] {
@@ -77,6 +135,9 @@ if [info exists CONFIG_VOLTAGE] {
 log_command "write_checkpoint -force $outputDir/$instance-post-link.dcp" $outputDir/temp.log
 report_timing_summary -file $outputDir/$instance-post-link-timing-summary.rpt > $outputDir/temp.log
 report_timing -sort_by group -max_paths 100 -path_type summary -file $outputDir/$instance-post-link-timing.rpt > $outputDir/temp.log
+if {[version -short] >= "2014.3"} {
+    report_cdc -verbose -file $outputDir/$instance-post-link-cdc.rpt > $outputDir/temp.log
+}
 if {"$env(REPORT_NWORST_TIMING_PATHS)" != ""} {
     report_timing -nworst $env(REPORT_NWORST_TIMING_PATHS) -sort_by slack -path_type summary -slack_lesser_than 0.2 -unique_pins
     puts "****************************************"
@@ -115,29 +176,39 @@ report_utilization -file $outputDir/$instance-post-place-util.rpt
 report_timing_summary -file $outputDir/$instance-post-place-timing-summary.rpt
 report_io -file $outputDir/$instance-post-place-io.rpt > $outputDir/temp.log
 
-if {"$env(FLOORPLAN)" == ""} {
-    # just do top down build
-    log_command "phys_opt_design" $outputDir/phys-opt-design.log
-    log_command "write_checkpoint -force $outputDir/$instance-post-phys-opt.dcp" $outputDir/temp.log
-    log_command "route_design" $outputDir/route-design.log
-    log_command "write_checkpoint -force $outputDir/$instance-post-route.dcp" $outputDir/temp.log
-    if {"$env(REPORT_NWORST_TIMING_PATHS)" != ""} {
+# just do top down build
+log_command "phys_opt_design" $outputDir/phys-opt-design.log
+log_command "write_checkpoint -force $outputDir/$instance-post-phys-opt.dcp" $outputDir/temp.log
+log_command "route_design" $outputDir/route-design.log
+log_command "write_checkpoint -force $outputDir/$instance-post-route.dcp" $outputDir/temp.log
+if {"$env(REPORT_NWORST_TIMING_PATHS)" != ""} {
 	report_timing -nworst $env(REPORT_NWORST_TIMING_PATHS) -sort_by slack -path_type summary -slack_lesser_than 0.2 -unique_pins
 	puts "****************************************"
 	puts "If timing report says 'No timing paths found.' then the design met the timing constraints."
 	puts "If it reported negative slack, then the design did not meet the timing constraints."
 	puts "****************************************"
-    }
-    report_utilization -file $outputDir/$instance-post-route-util.rpt
-    report_timing_summary -file $outputDir/$instance-post-route-timing-summary.rpt
-    report_timing -sort_by group -max_paths 100 -path_type summary -file $outputDir/$instance-post-route-timing.rpt > $outputDir/temp.log
-    report_io -file $outputDir/$instance-post-route-io.rpt > $outputDir/temp.log
-    report_datasheet -file $outputDir/$instance-post-route_datasheet.rpt > $outputDir/temp.log
-    if {[info exists env(BITFILE)] && $env(BITFILE) != ""} {
-	set bitfileroot [file rootname $env(BITFILE)]
+}
+report_utilization -file $outputDir/$instance-post-route-util.rpt
+report_timing_summary -file $outputDir/$instance-post-route-timing-summary.rpt
+report_timing -sort_by group -max_paths 100 -path_type summary -file $outputDir/$instance-post-route-timing.rpt > $outputDir/temp.log
+report_io -file $outputDir/$instance-post-route-io.rpt > $outputDir/temp.log
+report_datasheet -file $outputDir/$instance-post-route_datasheet.rpt > $outputDir/temp.log
+if {[info exists env(BITFILE)] && $env(BITFILE) != ""} {
 	## commented out -logic_location_file for now because the files are huge -Jamey
-	log_command "write_bitstream -bin_file -force $env(BITFILE)" $outputDir/write_bitstream.log
-    }
+	#log_command "write_xdc -no_fixed_only -force $outputDir/$instance-post-route.xdc" $outputDir/write_bitstream.log
+	#log_command "write_edif -force $outputDir/$instance-post-route.edif" $outputDir/write_bitstream.log
+        if {"$env(PRTOP)" == ""} {
+	    log_command "write_bitstream -bin_file -force $env(BITFILE)" $outputDir/write_bitstream.log
+        } else {
+	    log_command "write_bitstream -bin_file -force $env(BITFILE)" $outputDir/write_bitstream.log
+	    set write_cell_bitstream_works 0
+	    if $write_cell_bitstream_works {
+		foreach name $env(RECONFIG_NETLISTS) {
+		    set cellname top/$name
+		    log_command "write_bitstream -bin_file -force -cell [get_cells $cellname] $env(BITFILE)" $outputDir/write_bitstream.log
+		}
+	    }
+        }
 }
 set impl_end_time [clock seconds]
 puts "topdown.tcl elapsed time [expr $impl_end_time - $impl_start_time] seconds"
