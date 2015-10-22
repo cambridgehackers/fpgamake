@@ -1,3 +1,9 @@
+fpgamake (15.10.1-1trusty1) trusty; urgency=medium
+
+  * 15.10.1: fixed a problem where synthesis would fail if module had no submodules
+
+ -- Jamey Hicks <jamey.hicks@gmail.com>  Thu, 22 Oct 2015 13:40:48 -0400
+
 fpgamake (15.09.1-1trusty1) trusty; urgency=medium
 
   * 15.09.1: --implconstraint 
