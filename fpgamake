@@ -279,7 +279,7 @@ everything: %(bitfile)s
 ## Xilinx flow
 synth_template='''
 %(module)s_HEADERFILES = %(headerfiles)s
-%(module)s_VFILES = %(vfiles)s
+%(module)s_VFILES = %(module_path)s %(vfiles)s
 %(module)s_VHDFILES = %(vhdfiles)s
 %(module)s_VHDL_LIBRARIES = %(vhdlibraries)s
 %(module)s_STUBS = %(module_stubs)s
@@ -305,7 +305,7 @@ $(eval $(call TOP_RULE,%(inst)s,%(module)s,%(bitfile)s,%(bitbase)s))
 ## Altera Flow
 map_template='''
 %(module)s_HEADERFILES = %(headerfiles)s
-%(module)s_VFILES = %(vfiles)s
+%(module)s_VFILES = %(module_path)s %(vfiles)s
 %(module)s_VHDFILES = %(vhdfiles)s
 %(module)s_VHDL_LIBRARIES = %(vhdlibraries)s
 %(module)s_STUBS = %(module_stubs)s
