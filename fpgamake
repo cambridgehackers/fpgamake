@@ -183,7 +183,7 @@ def scan_module(module, parent_partition=None, parent_module=None):
                     continue
                 if inst in verilog_keywords:
                     continue
-                #print 'submodule', submodule, inst
+                print 'submodule', submodule, inst
                 submodules.append(submodule)
                 if submodule in options.synth:
                     if options.verbose:
@@ -326,6 +326,37 @@ fit_template='''
 $(eval $(call FIT_RULE,%(inst)s,%(module)s,%(bitfile)s, %(bitbase)s))
 '''
 
+altera_synth_template='''
+%(module)s_HEADERFILES = %(headerfiles)s
+%(module)s_VFILES = %(module_path)s %(vfiles)s
+%(module)s_VHDFILES = %(vhdfiles)s
+%(module)s_VHDL_LIBRARIES = %(vhdlibraries)s
+%(module)s_STUBS = %(module_stubs)s
+%(module)s_PATH = %(module_path)s
+%(module)s_USER_TCL_SCRIPT = %(user_tcl)s
+%(module)s_IP = %(xcifiles)s
+%(module)s_SDC = %(constraint_files)s
+
+$(eval $(call ALTERA_SYNTH_RULE,%(module)s))
+'''
+
+altera_topdown_template='''
+TopDown_HEADERFILES = %(headerfiles)s
+TopDown_VFILES = %(module_path)s %(vfiles)s
+TopDown_VHDFILES = %(vhdfiles)s
+TopDown_VHDL_LIBRARIES = %(vhdlibraries)s
+TopDown_USER_TCL_SCRIPT = %(user_tcl)s
+TopDown_STUBS = %(module_stubs)s
+TopDown_SDC = %(constraint_files)s
+TopDown_NETLISTS = %(module_synth_netlists)s
+TopDown_IP = %(xcifiles)s
+TopDown_PARTITIONS = %(partitions)s
+TopDown_SUBINST = %(subinst)s
+TopDown_PRTOP = %(prtop)s
+
+$(eval $(call ALTERA_TOP_RULE,%(inst)s,%(module)s,%(bitfile)s,%(bitbase)s))
+'''
+
 
 def write_xilinx_makefile():
     f = open(options.output, 'w')
@@ -411,45 +442,82 @@ def write_altera_makefile():
                                        'preserve_clock_gates': options.preserve_clock_gates,
                                        'report_nworst_timing_paths': options.report_nworst_timing_paths,
                                        })
+
+    # Generate lower level project
     for module in module_instances:
+        # skip top level module
+        if module == options.top:
+            continue
         subinst = []
         module_stubs = []
         if options.top in modules_used:
             subinst = ([' '.join(module_instances[submodule]) for submodule in set(modules_used[options.top])])
         if module in modules_used:
             module_stubs = ['%s-stub.v' % (m) for m in set(modules_used[module])]
-        f.write(map_template % { 'module': module,
-                                 'module_path': find_in_path(module, options.vpath),
-                                 'headerfiles': ' '.join([find_in_path(vfile, options.vpath) for vfile in set(options.header)]) if options.header else '',
-                                 'vfiles': ' '.join([find_in_path(module, options.vpath)]
-                                                    + [find_in_path(vfile, options.vpath) for vfile in set(verilog_used[module])]
-                                                    ) if module in verilog_used else '',
-                                 'vhdfiles': ' '.join([find_in_path(vfile, options.vpath) for vfile in set(vhdl_used[module])]) if module in vhdl_used else '',
-                                 'vhdlibraries': ' '.join(set(vhdl_libraries_used[module])) if module in vhdl_libraries_used else '',
-                                 'subinst': ' '.join(subinst),
-                                 'module_stubs': ' '.join(module_stubs),
-                                 'user_tcl': ' '.join(options.tcl) if options.tcl else '',
-                                 'xcifiles': ' '.join(options.xci),
-                                 'stpfiles': ' '.join(options.chipscope),
-                                 })
-        for inst in set(module_instances[module]):
-            subinst_routed_netlists = []
-            if module in modules_used:
-                for submodule in set(modules_used[module]):
-                    if options.verbose:
-                        print 'inst', inst, 'submodule', submodule
-                    for subinst in module_instances[submodule]:
-                        if options.verbose:
-                            print '\t', subinst
-                        subinst_routed_netlists.append('Impl/%s/%s-post-route.dcp' % (subinst, subinst))
+        substparam = { 'module': module,
+                       'module_path': find_in_path(module, options.vpath),
+                       'headerfiles': ' '.join([os.path.abspath(find_in_path(vfile, options.vpath)) for vfile in set(options.header)]) if options.header else '',
+                       'vfiles': ' '.join([os.path.abspath(find_in_path(module, options.vpath))]
+                                          + [os.path.abspath(find_in_path(vfile, options.vpath)) for vfile in set(verilog_used[module])]
+                                          ) if module in verilog_used else '',
+                       'vhdfiles': ' '.join([os.path.abspath(find_in_path(vfile, options.vpath)) for vfile in set(vhdl_used[module])]) if module in vhdl_used else '',
+                       'vhdlibraries': ' '.join(set(vhdl_libraries_used[module])) if module in vhdl_libraries_used else '',
+                       'module_stubs': ' '.join(module_stubs),
+                       'user_tcl': ' '.join(options.tcl) if options.tcl else '',
+                       'constraint_files': ' '.join([os.path.abspath(xdc) for xdc in constraint_files['top']]) if 'top' in constraint_files else '',
+                       'xcifiles': ' '.join(options.xci),
+        }
+        f.write(altera_synth_template % substparam)
 
-            f.write(fit_template % { 'module': module,
-                                     'inst': inst,
-                                     'constraint_files': ' '.join([os.path.abspath(sdc) for sdc in constraint_files[inst]]) if inst in constraint_files else '',
-                                     'module_routed_netlists': ' '.join(subinst_routed_netlists),
-                                     'bitfile': options.bitfile if options.bitfile else '',
-                                     'bitbase': os.path.splitext(options.bitfile)[0] if options.bitfile else '',
-                                     })
+    # Generate top level project
+    submodule_synth_netlists = []
+    if options.top in modules_used:
+        for submodule in set(modules_used[options.top]):
+            submodule_synth_netlists.append('Synth/%s/%s-synth.qxp' % (submodule, submodule))
+
+    module = options.top
+    inst = 'top'
+    topdown_xdc_files = (' '.join([os.path.abspath(xdc) for xdc in impl_constraint_files[inst]]) if (inst in impl_constraint_files) else '')
+
+    submodules = []
+    if options.top in modules_used:
+        submodules = set(modules_used[module])
+
+    module_stubs = []
+    if module in modules_used:
+        module_stubs = ['%s-stub.v' % (m) for m in set(modules_used[module])]
+
+    partitions = []
+    for submodule in submodules:
+        partitions.append(submodule+":"+"".join(module_instances[submodule]))
+
+    substparam = { 'module': options.top,
+                   'inst': inst,
+                   'module_path': find_in_path(module, options.vpath),
+                   'headerfiles': ' '.join([find_in_path(vfile, options.vpath) for vfile in set(options.header)]) if options.header else '',
+                   'vfiles': ' '.join([find_in_path(module, options.vpath)]
+                       + [find_in_path(vfile, options.vpath) for vfile in set(verilog_used[module])]
+                       ) if module in verilog_used else '',
+                   'vhdfiles': ' '.join([find_in_path(vfile, options.vpath) for vfile in set(vhdl_used[module])]) if module in vhdl_used else '',
+                   'vhdlibraries': ' '.join(set(vhdl_libraries_used[module])) if module in vhdl_libraries_used else '',
+                   'module_stubs': ' '.join(module_stubs),
+                   'xcifiles': ' '.join(options.xci),
+                   'partitions' : ' '.join(partitions),
+                   'subinst': ' '.join(subinst),
+                   'oocxdc': ' '.join([' '.join(['Impl/%(inst)s/%(inst)s-ooc-clocks.xdc Impl/%(inst)s/%(inst)s-ooc.xdc'
+                                                 % {'inst': inst}
+                                                 for inst in module_instances[submodule]])
+                                       for submodule in submodules]),
+                   'constraint_files': topdown_xdc_files,
+                   'user_tcl': ' '.join(options.tcl) if options.tcl else '',
+                   'floorplan': os.path.abspath(options.floorplan) if options.floorplan else '',
+                   'module_synth_netlists': ' '.join(submodule_synth_netlists),
+                   'module_reconfig_netlists': ' '.join(options.reconfig) if options.reconfig else '',
+                   'bitfile': options.bitfile if options.bitfile else '',
+                   'bitbase': os.path.dirname(os.path.abspath(options.bitfile)) if options.bitfile else '',
+                   'prtop': options.prtop,
+    }
+    f.write(altera_topdown_template % substparam)
     f.write(makefileTrailerTemplate % { 'bitfile': options.bitfile if options.bitfile else '' })
     f.close()
 
