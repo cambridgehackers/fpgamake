@@ -183,7 +183,7 @@ dict set quartus_cdb_args incremental_compilation_export "$module-synth.qxp"
 set component_parameters [to_parameter_string $quartus_cdb_args]
 if {[catch {execute_module -tool cdb -args "$component_parameters"} result]} {
     puts "\nResult: $result\n"
-    puts "ERROR: Analysis & Synthesis failed. See the report file.\n"
+    puts "ERROR: Exporting Netlist failed. See the report file.\n"
     project_close
     exit 1
 }

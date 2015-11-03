@@ -71,7 +71,7 @@ if {![is_project_open]} {
 #
 set include_dirs [dict create]
 foreach headerfile $env(HEADERFILES) {
-#    log_command "read_verilog $headerfile" $outputDir/temp.log
+    #log_command "read_verilog $headerfile" $outputDir/temp.log
     dict set include_dirs [file dirname $headerfile] "True"
 }
 
@@ -147,7 +147,7 @@ dict set quartus_cdb_args incremental_compilation_import on
 set component_parameters [to_parameter_string $quartus_cdb_args]
 if {[catch {execute_module -tool cdb -args "$component_parameters"} result]} {
     puts "\nResult: $result\n"
-    puts "ERROR: Analysis & Synthesis failed. See the report file.\n"
+    puts "ERROR: Import QXP failed. See the report file.\n"
     project_close
     exit 1
 }
@@ -190,7 +190,7 @@ if {[catch {execute_module -tool fit -args "$component_parameters"} result]} {
 
 if {[catch {execute_module -tool asm} result]} {
     puts "\nResult: $result\n"
-    puts "ERROR: Timing Analysis failed. See the report file.\n"
+    puts "ERROR: Bitstream Generation failed. See the report file.\n"
     project_close
     exit 1
 } else {
