@@ -183,7 +183,7 @@ def scan_module(module, parent_partition=None, parent_module=None):
                     continue
                 if inst in verilog_keywords:
                     continue
-                print 'submodule', submodule, inst
+                #print 'submodule', submodule, inst
                 submodules.append(submodule)
                 if submodule in options.synth:
                     if options.verbose:
@@ -303,29 +303,6 @@ $(eval $(call TOP_RULE,%(inst)s,%(module)s,%(bitfile)s,%(bitbase)s))
 '''
 
 ## Altera Flow
-map_template='''
-%(module)s_HEADERFILES = %(headerfiles)s
-%(module)s_VFILES = %(module_path)s %(vfiles)s
-%(module)s_VHDFILES = %(vhdfiles)s
-%(module)s_VHDL_LIBRARIES = %(vhdlibraries)s
-%(module)s_STUBS = %(module_stubs)s
-%(module)s_IP = %(xcifiles)s
-%(module)s_STP = %(stpfiles)s
-%(module)s_SUBINST = %(subinst)s
-%(module)s_PATH = %(module_path)s
-%(module)s_USER_TCL_SCRIPT = %(user_tcl)s
-
-$(eval $(call MAP_RULE,%(module)s))
-'''
-
-fit_template='''
-%(inst)s_SDC = %(constraint_files)s
-%(inst)s_NETLISTS = %(module_routed_netlists)s
-%(inst)s_BITFILE = %(bitfile)s
-
-$(eval $(call FIT_RULE,%(inst)s,%(module)s,%(bitfile)s, %(bitbase)s))
-'''
-
 altera_synth_template='''
 %(module)s_HEADERFILES = %(headerfiles)s
 %(module)s_VFILES = %(module_path)s %(vfiles)s
