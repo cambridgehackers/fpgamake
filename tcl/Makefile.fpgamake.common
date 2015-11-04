@@ -76,13 +76,14 @@ define ALTERA_SYNTH_RULE
 SYNTH_NETLISTS += Synth/$1/$1-synth.qxp
 Synth/$1/$1-synth.qxp:
 	$(Q) $(eval MODULE=$1)
-	$(Q) MODULE=$(MODULE) \
+	$(Q) MODULE=$(MODULE) INST=$(INST) \
 	    HEADERFILES="$($(MODULE)_HEADERFILES)" \
 	    VFILES="$($(MODULE)_VFILES) $(foreach item,$($(MODULE)_STUBS), Synth/stubs/$(item))" \
 	    VHDFILES="$($(MODULE)_VHDFILES)" \
 	    VHDL_LIBRARIES="$($(MODULE)_VHDL_LIBRARIES)" \
 	    IP="$($(MODULE)_IP)" \
 	    SDC="$($(MODULE)_SDC)" \
+	    FLOORPLAN="$(FLOORPLAN)" \
 	    USER_TCL_SCRIPT="$($(MODULE)_USER_TCL_SCRIPT)" \
 	    FPGAMAKE_PARTNAME=$(FPGAMAKE_PARTNAME) \
 	    FPGAMAKE_BOARDNAME=$(FPGAMAKE_BOARDNAME) \
@@ -92,6 +93,7 @@ Synth/$1/$1-synth.qxp:
 	    BUILDCACHE_OUTPUTDIR="Synth/$(MODULE)" \
 	$(BUILDCACHE) quartus_cdb -t $(TCLDIR)/altera_synth.tcl
 endef
+
 
 # altera topdown
 define ALTERA_TOP_RULE
@@ -110,6 +112,7 @@ Impl/TopDown/$2.sta.rpt: $(SYNTH_NETLISTS)
 	     IP="$(TopDown_IP)" \
 	     SDC="$(TopDown_SDC)" \
 	     STP="$(TopDown_STP)" \
+	     FLOORPLAN="$(FLOORPLAN)" \
 	     USER_TCL_SCRIPT="$(TopDown_USER_TCL_SCRIPT)" \
 	     FPGAMAKE_PARTNAME=$(FPGAMAKE_PARTNAME) \
 	     FPGAMAKE_BOARDNAME=$(FPGAMAKE_BOARDNAME) \
