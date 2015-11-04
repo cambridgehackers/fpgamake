@@ -69,6 +69,8 @@ argparser.add_argument('--reconfig', help='module instance names to set as recon
 verilog_files=[]
 module_instances={}
 modules_used={}
+modules_graph={}
+all_module_instances={}
 modules_visited={}
 verilog_used={}
 vhdl_used={}
@@ -97,6 +99,20 @@ def find_in_path(fname, path):
                 return os.path.join(p, fname.upper())
             if os.path.exists(os.path.join(p, fname.lower())):
                 return os.path.join(p, fname.lower())
+    return None
+
+# find a path between two nodes in a graph
+# graph is a dictionary whose keys are the nodes of the graph
+def graph_find_path(graph, start, end, path=[]):
+    path = path + [start]
+    if start == end:
+        return path
+    if not graph.has_key(start):
+        return None
+    for node in graph[start]:
+        if node not in path:
+            newpath = graph_find_path(graph, node, end, path)
+            if newpath: return newpath
     return None
 
 def is_a_file(fname, path):
@@ -142,6 +158,7 @@ def scan_module(module, parent_partition=None, parent_module=None):
         print 'scanning module %s ====================' % module
     vpath = find_in_path(module, options.vpath)
     modules_visited[module] = vpath
+    immediate_parent_module = None
     if not parent_partition:
         parent_partition = module
     submodules=[]
@@ -156,6 +173,7 @@ def scan_module(module, parent_partition=None, parent_module=None):
         if vpath in vseen:
             continue
         vseen.append(vpath)
+        immediate_parent_module=os.path.splitext(os.path.basename(vpath))[0]
         if options.debug:
             print 'scan_module, scanning', vpath
         for line in open(vpath):
@@ -206,6 +224,16 @@ def scan_module(module, parent_partition=None, parent_module=None):
                             add_to_vhdl_used(parent_partition, submodule)
                     elif options.verbose:
                         print 'fpgamake: could not find module "%s" in path' % submodule
+                # add edges to graph
+                if modules_graph.has_key(immediate_parent_module):
+                    modules_graph[immediate_parent_module].append(submodule)
+                else:
+                    modules_graph[immediate_parent_module] = [submodule]
+                # collect all module to inst mapping
+                if all_module_instances.has_key(submodule):
+                    all_module_instances[submodule].append(inst)
+                else:
+                    all_module_instances[submodule] = [inst]
             elif m2:
                 submodule = m2.group(1)
                 if submodule in verilog_keywords:
@@ -466,7 +494,13 @@ def write_altera_makefile():
 
     partitions = []
     for submodule in submodules:
-        partitions.append(submodule+":"+"".join(module_instances[submodule]))
+        path = graph_find_path(modules_graph, options.top, submodule)
+        hierarchy = []
+        for node in path[1:]:
+            hierarchy.append(node+":"+all_module_instances[node][0])
+        partition = "|".join(hierarchy)
+        #print "partition", partition
+        partitions.append(partition)
 
     substparam = { 'module': options.top,
                    'inst': inst,
@@ -582,6 +616,7 @@ if __name__=='__main__':
 
     if options.prtop == '':
         module_instances[options.top] = ['top']
+        all_module_instances[options.top] = ['top']
     scan_module(options.top)
     for m in options.synth:
         scan_module(m)
@@ -594,6 +629,8 @@ if __name__=='__main__':
         print modules_used
         print "verilog_used"
         print verilog_used
+        print 'modules_graph'
+        print modules_graph
 
     constraint_files['top']      = options.constraints
     impl_constraint_files['top'] = options.implconstraints
