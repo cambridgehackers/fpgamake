@@ -460,6 +460,7 @@ def write_altera_makefile():
         if module in modules_used:
             module_stubs = ['%s-stub.v' % (m) for m in set(modules_used[module])]
         substparam = { 'module': module,
+                       'inst': ' '.join(module_instances[module]),
                        'module_path': find_in_path(module, options.vpath),
                        'headerfiles': ' '.join([os.path.abspath(find_in_path(vfile, options.vpath)) for vfile in set(options.header)]) if options.header else '',
                        'vfiles': ' '.join([os.path.abspath(find_in_path(module, options.vpath))]
@@ -471,6 +472,7 @@ def write_altera_makefile():
                        'user_tcl': ' '.join(options.tcl) if options.tcl else '',
                        'constraint_files': ' '.join([os.path.abspath(xdc) for xdc in constraint_files['top']]) if 'top' in constraint_files else '',
                        'xcifiles': ' '.join(options.xci),
+                       'floorplan': os.path.abspath(options.floorplan) if options.floorplan else '',
         }
         f.write(altera_synth_template % substparam)
 
