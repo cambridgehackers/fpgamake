@@ -64,10 +64,8 @@ if [file exists {board.tcl}] {
 }
 
 set module $env(MODULE)
+set inst $env(INST)
 set outputDir ./Synth/$module
-
-set scriptdir [file dirname $argv0]
-source $scriptdir/log.tcl
 
 #  Create the project if it does not exist 
 if {[is_project_open]} {
@@ -87,7 +85,6 @@ if {![is_project_open]} {
 #
 set include_dirs [dict create]
 foreach headerfile $env(HEADERFILES) {
-#    log_command "read_verilog $headerfile" $outputDir/temp.log
     dict set include_dirs [file dirname $headerfile] "True"
 }
 
@@ -115,18 +112,23 @@ set_global_assignment -name DEVICE $partname
 set_global_assignment -name TOP_LEVEL_ENTITY $module
 set_global_assignment -name INCREMENTAL_COMPILATION FULL_INCREMENTAL_COMPILATION
 set_global_assignment -name SMART_RECOMPILE ON
-#set_global_assignment -name VERILOG_FILE auto_max.v
 set_global_assignment -name DEVICE_FILTER_SPEED_GRADE FASTEST
 set_global_assignment -name ERROR_CHECK_FREQUENCY_DIVISOR 1
-#set_global_assignment -name LL_ORIGIN LAB_X25_Y1 -section_id auto_max
-#set_global_assignment -name LL_HEIGHT 4 -section_id auto_max
-#set_global_assignment -name LL_WIDTH 4 -section_id auto_max
-#set_global_assignment -name LL_STATE LOCKED -section_id auto_max
-#set_global_assignment -name LL_AUTO_SIZE OFF -section_id auto_max
-#set_global_assignment -name LL_RESERVED OFF -section_id auto_max
-#set_global_assignment -name LL_MEMBER_STATE LOCKED -section_id auto_max
-#set_global_assignment -name LL_SOFT OFF -section_id auto_max
-#set_global_assignment -name LL_MEMBER_OF auto_max -section_id auto_max
+
+foreach floorplan $env(FLOORPLAN) {
+    if {[file exists $floorplan]} {
+        set fd [open $floorplan "r"]
+        while {[gets $fd line] != -1} {
+            if [regexp -all -- $module $line] {
+                eval $line
+            }
+        }
+        close $fd
+    } else {
+        post_message -type critical_warning "FLOORPLAN: $floorplan not found\n"
+    }
+}
+
 set_global_assignment -name QIC_EXPORT_FILE $module.qxp
 set_global_assignment -name QIC_EXPORT_NETLIST_TYPE POST_FIT
 set_global_assignment -name QIC_EXPORT_ROUTING OFF
