@@ -133,10 +133,10 @@ if [info exists CONFIG_VOLTAGE] {
 }
 
 log_command "write_checkpoint -force $outputDir/$instance-post-link.dcp" $outputDir/temp.log
-report_timing_summary -file $outputDir/$instance-post-link-timing-summary.rpt > $outputDir/temp.log
-report_timing -sort_by group -max_paths 100 -path_type summary -file $outputDir/$instance-post-link-timing.rpt > $outputDir/temp.log
+report_timing_summary -file $outputDir/$instance-post-link-timing-summary.txt > $outputDir/temp.log
+report_timing -sort_by group -max_paths 100 -path_type summary -file $outputDir/$instance-post-link-timing.txt > $outputDir/temp.log
 if {[version -short] >= "2014.3"} {
-    report_cdc -verbose -file $outputDir/$instance-post-link-cdc.rpt > $outputDir/temp.log
+    report_cdc -verbose -file $outputDir/$instance-post-link-cdc.txt > $outputDir/temp.log
 }
 if {"$env(REPORT_NWORST_TIMING_PATHS)" != ""} {
     report_timing -nworst $env(REPORT_NWORST_TIMING_PATHS) -sort_by slack -path_type summary -slack_lesser_than 0.2 -unique_pins
@@ -146,7 +146,7 @@ if {"$env(REPORT_NWORST_TIMING_PATHS)" != ""} {
     puts "****************************************"
 }
 
-report_utilization -file $outputDir/$instance-post-link-util.rpt
+report_utilization -file $outputDir/$instance-post-link-util.txt
 
 log_command opt_design $outputDir/opt_design.log
 log_command "write_checkpoint -force $outputDir/$instance-post-opt.dcp" $outputDir/temp.log
@@ -157,12 +157,12 @@ if {"$env(REPORT_NWORST_TIMING_PATHS)" != ""} {
     puts "If it reported negative slack, then the design did not meet the timing constraints."
     puts "****************************************"
 }
-report_timing_summary -file $outputDir/$instance-post-opt-timing-summary.rpt > $outputDir/temp.log
-report_utilization -file $outputDir/$instance-post-link-util.rpt
+report_timing_summary -file $outputDir/$instance-post-opt-timing-summary.txt > $outputDir/temp.log
+report_utilization -file $outputDir/$instance-post-link-util.txt
 foreach pblock [get_pblocks] {
-    report_utilization -pblocks $pblock -file $outputDir/$pblock-post-link-util.rpt > $outputDir/temp.log
+    report_utilization -pblocks $pblock -file $outputDir/$pblock-post-link-util.txt > $outputDir/temp.log
 }
-report_drc -file $outputDir/pre_place_drc.rpt
+report_drc -file $outputDir/pre_place_drc.txt
 log_command place_design    $outputDir/place_design.log
 log_command "write_checkpoint -force $outputDir/$instance-post-place.dcp" $outputDir/temp.log
 if {"$env(REPORT_NWORST_TIMING_PATHS)" != ""} {
@@ -172,9 +172,9 @@ if {"$env(REPORT_NWORST_TIMING_PATHS)" != ""} {
     puts "If it reported negative slack, then the design did not meet the timing constraints."
     puts "****************************************"
 }
-report_utilization -file $outputDir/$instance-post-place-util.rpt
-report_timing_summary -file $outputDir/$instance-post-place-timing-summary.rpt
-report_io -file $outputDir/$instance-post-place-io.rpt > $outputDir/temp.log
+report_utilization -file $outputDir/$instance-post-place-util.txt
+report_timing_summary -file $outputDir/$instance-post-place-timing-summary.txt
+report_io -file $outputDir/$instance-post-place-io.txt > $outputDir/temp.log
 
 # just do top down build
 log_command "phys_opt_design" $outputDir/phys-opt-design.log
@@ -188,11 +188,11 @@ if {"$env(REPORT_NWORST_TIMING_PATHS)" != ""} {
 	puts "If it reported negative slack, then the design did not meet the timing constraints."
 	puts "****************************************"
 }
-report_utilization -file $outputDir/$instance-post-route-util.rpt
-report_timing_summary -file $outputDir/$instance-post-route-timing-summary.rpt
-report_timing -sort_by group -max_paths 100 -path_type summary -file $outputDir/$instance-post-route-timing.rpt > $outputDir/temp.log
-report_io -file $outputDir/$instance-post-route-io.rpt > $outputDir/temp.log
-report_datasheet -file $outputDir/$instance-post-route_datasheet.rpt > $outputDir/temp.log
+report_utilization -file $outputDir/$instance-post-route-util.txt
+report_timing_summary -file $outputDir/$instance-post-route-timing-summary.txt
+report_timing -sort_by group -max_paths 100 -path_type summary -file $outputDir/$instance-post-route-timing.txt > $outputDir/temp.log
+report_io -file $outputDir/$instance-post-route-io.txt > $outputDir/temp.log
+report_datasheet -file $outputDir/$instance-post-route_datasheet.txt > $outputDir/temp.log
 if {[info exists env(BITFILE)] && $env(BITFILE) != ""} {
 	## commented out -logic_location_file for now because the files are huge -Jamey
 	#log_command "write_xdc -no_fixed_only -force $outputDir/$instance-post-route.xdc" $outputDir/write_bitstream.log
