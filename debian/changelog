@@ -1,3 +1,9 @@
+fpgamake (15.11.1-1trusty1) trusty; urgency=medium
+
+  * Added support for Quartus to synthesize separate netlists
+
+ -- Jamey Hicks <jamey.hicks@gmail.com>  Thu, 19 Nov 2015 16:09:20 -0500
+
 fpgamake (15.10.1-1trusty1) trusty; urgency=medium
 
   * 15.10.1: fixed a problem where synthesis would fail if module had no submodules
