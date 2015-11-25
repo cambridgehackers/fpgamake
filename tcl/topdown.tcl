@@ -136,7 +136,7 @@ log_command "write_checkpoint -force $outputDir/$instance-post-link.dcp" $output
 report_timing_summary -file $outputDir/$instance-post-link-timing-summary.txt > $outputDir/temp.log
 report_timing -sort_by group -max_paths 100 -path_type summary -file $outputDir/$instance-post-link-timing.txt > $outputDir/temp.log
 if {[version -short] >= "2014.3"} {
-    report_cdc -verbose -file $outputDir/$instance-post-link-cdc.txt > $outputDir/temp.log
+    report_cdc -details -verbose -file $outputDir/$instance-post-link-cdc.txt > $outputDir/temp.log
 }
 if {"$env(REPORT_NWORST_TIMING_PATHS)" != ""} {
     report_timing -nworst $env(REPORT_NWORST_TIMING_PATHS) -sort_by slack -path_type summary -slack_lesser_than 0.2 -unique_pins
