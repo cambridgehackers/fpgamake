@@ -68,3 +68,36 @@ if [info exists env(DEBUG_NETS)] {
     }
     write_debug_probes -force debug_probes.ltx
 }
+
+## load vc707g2/Impl/TopDown/top-post-link.dcp
+## mark signals to debug
+## push the "Set up debug" to launch the wizard to instantiate the ILA (integrated logic analyzer)
+##
+## Synthesis often mangles internal signals. If you use BSV mkProbe,
+## those signals will be annotated (* mark_debug = "true" *) in the
+## verilog and more of them will survive synthesis. Chips that cross
+## netlist boundaries will also be easier to find post synthesis.
+##
+## If it complains that some of the signals are partially defined or
+## have unknown clocks, push the "more info" link and then try the
+## "assign clocks" link.
+## 
+## when that is done, source this file
+##    source scripts/chipscope.tcl
+
+## This script writes two files. The first is the bitstream and the second describes the signals that the ILA captures.
+##   debug.bit
+##   debug.ltx
+## Program the board via Vivado, giving it the two file names.
+## Add, configure, and click the run button to have it wait for triggers
+## Then run
+##   pciescanportal
+##   NOPROGRAM=1 vc707g2/bin/ubuntu.exe
+## Hopefully something triggered
+opt_design
+place_design
+phys_opt_design
+route_design
+write_bitstream -force debug.bit
+write_debug_probes -force debug.ltx
+report_timing_summary -file debug_timing_summary.txt
