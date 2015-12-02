@@ -126,4 +126,5 @@ $3: Impl/TopDown/$2.sta.rpt
 	$(Q) echo "generate bitfiles"
 endef
 
+synth: $(SYNTH_NETLISTS)
 all: everything
