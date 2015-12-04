@@ -1,3 +1,11 @@
+fpgamake (15.12.1-1trusty1) trusty; urgency=medium
+
+  * Added synth target to Makefile.fpgamake.common
+  * Run report_cdc in Vivado to find unsafe clock domain crossings
+  * Imported batch_insert_ila.tcl from Xilinx forums
+	
+ -- Jamey Hicks <jamey.hicks@gmail.com>  Fri, 04 Dec 2015 12:35:24 -0500
+
 fpgamake (15.11.1-1trusty1) trusty; urgency=medium
 
   * Added support for Quartus to synthesize separate netlists
