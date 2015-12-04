@@ -72,56 +72,59 @@ $(foreach inst, $(TopDown_SUBINST), Impl/$(inst)/$(inst)-ooc.xdc Impl/$(inst)/$(
 
 endef
 
-##
-## Altera Makefile
-##
-define MAP_RULE
-SYNTH_NETLISTS += Synth/$1/$1-map.dcp
-Synth/$1/$1-map.dcp: $($1_PATH)
-	$(Q)$(eval MODULE=$1)
-	@echo fpgamake.mk Synth/$1/$1-map.dcp
-	$(Q)mkdir -p Synth/$(MODULE)
-	$(Q)MODULE=$(MODULE) \
+define ALTERA_SYNTH_RULE
+SYNTH_NETLISTS += Synth/$1/$1-synth.qxp
+Synth/$1/$1-synth.qxp:
+	$(Q) $(eval MODULE=$1)
+	$(Q) MODULE=$(MODULE) INST=$(INST) \
 	    HEADERFILES="$($(MODULE)_HEADERFILES)" \
 	    VFILES="$($(MODULE)_VFILES) $(foreach item,$($(MODULE)_STUBS), Synth/stubs/$(item))" \
 	    VHDFILES="$($(MODULE)_VHDFILES)" \
 	    VHDL_LIBRARIES="$($(MODULE)_VHDL_LIBRARIES)" \
 	    IP="$($(MODULE)_IP)" \
-	    STP="$($(MODULE)_STP)" \
-	    SUBINST="$($(MODULE)_SUBINST)" \
+	    SDC="$($(MODULE)_SDC)" \
+	    FLOORPLAN="$(FLOORPLAN)" \
 	    USER_TCL_SCRIPT="$($(MODULE)_USER_TCL_SCRIPT)" \
-            FPGAMAKE_PARTNAME=$(FPGAMAKE_PARTNAME) \
-            FPGAMAKE_BOARDNAME=$(FPGAMAKE_BOARDNAME) \
-            FPGAMAKE_TOPMODULE=$(FPGAMAKE_TOPMODULE) \
-            FPGAMAKE_FAMILY=$(FPGAMAKE_FAMILY) \
-	    VERILOG_DEFINES=$(VERILOG_DEFINES) \
+	    FPGAMAKE_PARTNAME=$(FPGAMAKE_PARTNAME) \
+	    FPGAMAKE_BOARDNAME=$(FPGAMAKE_BOARDNAME) \
+	    FPGAMAKE_TOPMODULE=$(FPGAMAKE_TOPMODULE) \
+	    FPGAMAKE_FAMILY=$(FPGAMAKE_FAMILY) \
 	    BUILDCACHE_CACHEDIR="$(CACHEDIR)/Synth/$(MODULE)" \
 	    BUILDCACHE_OUTPUTDIR="Synth/$(MODULE)" \
-	    quartus_sh -t $(TCLDIR)/altera_map.tcl | tee altera_map.log
+	$(BUILDCACHE) quartus_cdb -t $(TCLDIR)/altera_synth.tcl
 endef
 
-# altera fit
-define FIT_RULE
-IMPL_NETLISTS += Impl/Fit/$1-fit.dcp
-Impl/Fit/$1-fit.dcp: $(FLOORPLAN) $(Fit_NETLISTS) Synth/$2/$2-map.dcp
-	$(Q)$(eval MODULE=$2)
-	$(Q)$(eval INST=$1)
-	@echo fpgamake.mk Impl/Fit/$1-fit.dcp
-	$(Q)mkdir -p Impl/Fit/
-	$(Q) MODULE=$(MODULE) INST=$(INST) \
-	     SUBINST="$(Fit_SUBINST)" \
-	     MODULE_NETLISTS="$(Fit_NETLISTS)" \
-	     SDC="$(top_SDC)" \
+
+# altera topdown
+define ALTERA_TOP_RULE
+Impl/TopDown/$2.sta.rpt: $(SYNTH_NETLISTS)
+	$(eval MODULE=$2)
+	$(eval INST=$1)
+	mkdir -p Impl/TopDown/
+	$(Q) MODULE=$(MODULE) \
+	     MODULE_NETLISTS="$(TopDown_NETLISTS)" \
+	     PARTITIONS="$(TopDown_PARTITIONS)" \
+	     SUBINST="$(TopDown_SUBINST)" \
+	     HEADERFILES="$(TopDown_HEADERFILES)" \
+	     VFILES="$(TopDown_VFILES) $(foreach item,$(TopDown_STUBS), Synth/stubs/$(item))" \
+	     VHDFILES="$(TopDown_VHDFILES)" \
+	     VHDL_LIBRARIES="$(TopDown_VHDL_LIBRARIES)" \
+	     IP="$(TopDown_IP)" \
+	     SDC="$(TopDown_SDC)" \
+	     STP="$(TopDown_STP)" \
 	     FLOORPLAN="$(FLOORPLAN)" \
-	     BITFILE=Impl/Fit/$(MODULE).sof \
-	     BUILDCACHE_CACHEDIR="$(CACHEDIR)/Impl/Fit" \
-	     BUILDCACHE_OUTPUTDIR="Impl/Fit" \
-	     REPORT_NWORST_TIMING_PATHS="$(REPORT_NWORST_TIMING_PATHS)" \
-	     quartus_sh -t $(TCLDIR)/altera_fit.tcl | tee altera_fit.log
+	     USER_TCL_SCRIPT="$(TopDown_USER_TCL_SCRIPT)" \
+	     FPGAMAKE_PARTNAME=$(FPGAMAKE_PARTNAME) \
+	     FPGAMAKE_BOARDNAME=$(FPGAMAKE_BOARDNAME) \
+	     FPGAMAKE_TOPMODULE=$(FPGAMAKE_TOPMODULE) \
+	     FPGAMAKE_FAMILY=$(FPGAMAKE_FAMILY) \
+	     BUILDCACHE_CACHEDIR="$(CACHEDIR)/Impl/TopDown" \
+	     BUILDCACHE_OUTPUTDIR="Impl/TopDown" \
+	$(BUILDCACHE) quartus_sh -t $(TCLDIR)/altera_topdown.tcl
 
-$3: Impl/Fit/$1-fit.dcp
-	$(Q)echo "copy bitfile if needed"
-
+$3: Impl/TopDown/$2.sta.rpt
+	$(Q) echo "generate bitfiles"
 endef
 
 all: everything
+synth: $(SYNTH_NETLISTS)
