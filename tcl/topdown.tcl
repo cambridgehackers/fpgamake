@@ -150,8 +150,10 @@ report_utilization -file $outputDir/$instance-post-link-util.txt
 
 ## now clear the MARK_DEBUG so that it does not interfere with meeting timing
 set debug_nets [get_nets -hier -filter { MARK_DEBUG==TRUE }]
-set_property MARK_DEBUG false $debug_nets
-set_property DONT_TOUCH false $debug_nets
+if {[llength $debug_nets] > 0} {
+    set_property MARK_DEBUG false $debug_nets
+    set_property DONT_TOUCH false $debug_nets
+}
 
 log_command opt_design $outputDir/opt_design.log
 log_command "write_checkpoint -force $outputDir/$instance-post-opt.dcp" $outputDir/temp.log
