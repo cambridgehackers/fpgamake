@@ -58,11 +58,11 @@ foreach dcp $env(MODULE_NETLISTS) {
     log_command "read_checkpoint $dcp" "$outputDir/[file tail $dcp].log"
 }
 
+log_command "link_design" "$outputDir/link_design.log"
+
 foreach xdc $env(XDC) {
     log_command "read_xdc $xdc" "$outputDir/[file tail $xdc].log"
 }
-
-log_command "link_design" "$outputDir/link_design.log"
 
 if {"$env(RECONFIG_INSTANCES)" != ""} {
     set cellname ""
