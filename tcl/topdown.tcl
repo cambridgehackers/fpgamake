@@ -58,11 +58,11 @@ foreach dcp $env(MODULE_NETLISTS) {
     log_command "read_checkpoint $dcp" "$outputDir/[file tail $dcp].log"
 }
 
+log_command "link_design" "$outputDir/link_design.log"
+
 foreach xdc $env(XDC) {
     log_command "read_xdc $xdc" "$outputDir/[file tail $xdc].log"
 }
-
-log_command "link_design" "$outputDir/link_design.log"
 
 if {"$env(RECONFIG_INSTANCES)" != ""} {
     set cellname ""
@@ -147,6 +147,13 @@ if {"$env(REPORT_NWORST_TIMING_PATHS)" != ""} {
 }
 
 report_utilization -file $outputDir/$instance-post-link-util.txt
+
+## now clear the MARK_DEBUG so that it does not interfere with meeting timing
+set debug_nets [get_nets -hier -filter { MARK_DEBUG==TRUE }]
+if {[llength $debug_nets] > 0} {
+    set_property MARK_DEBUG false $debug_nets
+    set_property DONT_TOUCH false $debug_nets
+}
 
 log_command opt_design $outputDir/opt_design.log
 log_command "write_checkpoint -force $outputDir/$instance-post-opt.dcp" $outputDir/temp.log
