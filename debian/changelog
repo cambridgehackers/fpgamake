@@ -1,9 +1,16 @@
+fpgamake (16.02.1-1trusty1) trusty; urgency=medium
+
+  * Released version 16.02.1
+  * Clear MARK_DEBUG property is Xilinx ILA is not used to make it easier to meet timing.
+
+ -- Jamey Hicks <jamey.hicks@gmail.com>  Tue, 02 Feb 2016 10:43:53 -0500
+
 fpgamake (15.12.1-1trusty1) trusty; urgency=medium
 
   * Added synth target to Makefile.fpgamake.common
   * Run report_cdc in Vivado to find unsafe clock domain crossings
   * Imported batch_insert_ila.tcl from Xilinx forums
-	
+
  -- Jamey Hicks <jamey.hicks@gmail.com>  Fri, 04 Dec 2015 12:35:24 -0500
 
 fpgamake (15.11.1-1trusty1) trusty; urgency=medium
