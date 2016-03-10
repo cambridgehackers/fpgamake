@@ -15,7 +15,7 @@ endif
 
 define SYNTH_RULE
 SYNTH_NETLISTS += Synth/$1/$1-synth.dcp
-Synth/$1/$1-synth.dcp: $($1_PATH)
+Synth/$1/$1-synth.dcp: $($1_PATH) $($(MODULE)_XDC)
 	$(Q)$(eval MODULE=$1)
 	@echo fpgamake.mk Synth/$1/$1-synth.dcp
 	$(Q)mkdir -p Synth/$(MODULE)
@@ -40,7 +40,7 @@ endef
 
 define TOP_RULE
 IMPL_NETLISTS += Impl/TopDown/$1-post-place.dcp
-Impl/TopDown/$1-post-place.dcp: $(FLOORPLAN) $(TopDown_NETLISTS) $(SYNTH_NETLISTS)
+Impl/TopDown/$1-post-place.dcp: $(FLOORPLAN) $(TopDown_NETLISTS) $(SYNTH_NETLISTS) $(TopDown_XDC)
 	$(Q)$(eval MODULE=$2)
 	$(Q)$(eval INST=$1)
 	@echo fpgamake.mk Impl/TopDown/$1-post-place.dcp
