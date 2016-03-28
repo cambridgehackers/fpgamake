@@ -15,7 +15,7 @@ endif
 
 define SYNTH_RULE
 SYNTH_NETLISTS += Synth/$1/$1-synth.dcp
-Synth/$1/$1-synth.dcp: $($1_PATH) $($(MODULE)_XDC)
+Synth/$1/$1-synth.dcp: $($1_PATH) $($(MODULE)_XDC) $($(MODULE)_IP)
 	$(Q)$(eval MODULE=$1)
 	@echo fpgamake.mk Synth/$1/$1-synth.dcp
 	$(Q)mkdir -p Synth/$(MODULE)
