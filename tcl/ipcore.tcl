@@ -112,6 +112,7 @@ proc fpgamake_ipcore {core_name core_version ip_name params} {
         #log_command "synth_design -top $ip_name -mode out_of_context" "$ipdir/$boardname/temp.log"
 	puts "AFTER: synth_ip"
     }
+    export_simulation -simulator xsim -force -directory $ipdir/$boardname/$ip_name
 }
 
 proc fpgamake_altera_ipcore {core_name core_version ip_name file_set params} {
