@@ -33,9 +33,7 @@ Synth/$1/$1-synth.dcp: $($1_PATH)
 	    PRESERVE_CLOCK_GATES=$(PRESERVE_CLOCK_GATES) \
 	    VERILOG_DEFINES=$(VERILOG_DEFINES) \
 	    XDC="$($(MODULE)_XDC)" \
-	    BUILDCACHE_CACHEDIR="$(CACHEDIR)/Synth/$(MODULE)" \
-	    BUILDCACHE_OUTPUTDIR="Synth/$(MODULE)" \
-	    $(BUILDCACHE) vivado $(NOTRACE) -mode batch -source $(TCLDIR)/synth.tcl
+	    vivado $(NOTRACE) -mode batch -source $(TCLDIR)/synth.tcl
 endef
 
 define TOP_RULE
@@ -53,10 +51,8 @@ Impl/TopDown/$1-post-place.dcp: $(FLOORPLAN) $(TopDown_NETLISTS) $(SYNTH_NETLIST
 	     PRTOP="$(TopDown_PRTOP)" \
 	     FLOORPLAN="$(FLOORPLAN)" \
 	     BITFILE=Impl/TopDown/mkTop.bit \
-	     BUILDCACHE_CACHEDIR="$(CACHEDIR)/Impl/TopDown" \
-	     BUILDCACHE_OUTPUTDIR="Impl/TopDown" \
 	     REPORT_NWORST_TIMING_PATHS="$(REPORT_NWORST_TIMING_PATHS)" \
-	     $(BUILDCACHE) vivado $(NOTRACE) -mode batch -source $(TCLDIR)/topdown.tcl
+	     vivado $(NOTRACE) -mode batch -source $(TCLDIR)/topdown.tcl
 
 $3: Impl/TopDown/$1-post-place.dcp
 	$(Q)cp -v Impl/TopDown/mkTop*.bi[nt] $4
@@ -65,7 +61,7 @@ Impl/oocxdc.timestamp: Impl/TopDown/$1-post-place.dcp
 	@echo fpgamake.mk Impl/oocxdc.timestamp
 	INST=$1 MODULE=$2 \
 	SUBINST="$(TopDown_SUBINST)" \
-	$(BUILDCACHE) vivado $(NOTRACE) -mode batch -source $(TCLDIR)/write-ooc-xdc.tcl
+	vivado $(NOTRACE) -mode batch -source $(TCLDIR)/write-ooc-xdc.tcl
 	touch Impl/oocxdc.timestamp
 
 $(foreach inst, $(TopDown_SUBINST), Impl/$(inst)/$(inst)-ooc.xdc Impl/$(inst)/$(inst)-ooc-budget.xdc Impl/$(inst)/$(inst)-ooc-clocks.xdc): Impl/oocxdc.timestamp
@@ -91,7 +87,7 @@ Synth/$1/$1-synth.qxp:
 	    FPGAMAKE_FAMILY=$(FPGAMAKE_FAMILY) \
 	    BUILDCACHE_CACHEDIR="$(CACHEDIR)/Synth/$(MODULE)" \
 	    BUILDCACHE_OUTPUTDIR="Synth/$(MODULE)" \
-	$(BUILDCACHE) quartus_cdb -t $(TCLDIR)/altera_synth.tcl
+	quartus_cdb -t $(TCLDIR)/altera_synth.tcl
 endef
 
 
@@ -120,7 +116,7 @@ Impl/TopDown/$2.sta.rpt: $(SYNTH_NETLISTS)
 	     FPGAMAKE_FAMILY=$(FPGAMAKE_FAMILY) \
 	     BUILDCACHE_CACHEDIR="$(CACHEDIR)/Impl/TopDown" \
 	     BUILDCACHE_OUTPUTDIR="Impl/TopDown" \
-	$(BUILDCACHE) quartus_sh -t $(TCLDIR)/altera_topdown.tcl
+	quartus_sh -t $(TCLDIR)/altera_topdown.tcl
 
 $3: Impl/TopDown/$2.sta.rpt
 	$(Q) echo "generate bitfiles"
