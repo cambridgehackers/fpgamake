@@ -1,3 +1,9 @@
+fpgamake (18.05.1-1trusty1) trusty; urgency=medium
+
+  * Added support to detect Xilinx Ultrascale and UltrascalePlus parts
+
+ -- Jamey Hicks <jamey.hicks@gmail.com>  Tue, 29 May 2018 12:47:12 -0400
+
 fpgamake (16.02.1-1trusty1) trusty; urgency=medium
 
   * Released version 16.02.1
