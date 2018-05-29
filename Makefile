@@ -10,7 +10,7 @@ install:
 	find $(INSTALL_DIRS) -type f -exec install -m644 {} $(DESTDIR)/usr/share/fpgamake/{} \; -print
 	install -m755 fpgamake $(DESTDIR)/usr/share/fpgamake/fpgamake
 
-VERSION=16.02.1
+VERSION=18.05.1
 
 dpkg:
 	git buildpackage --git-debian-tag="v%s" --git-upstream-branch=master --git-debian-branch=ubuntu/precise -S -tc
