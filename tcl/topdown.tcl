@@ -146,7 +146,7 @@ if {"$env(REPORT_NWORST_TIMING_PATHS)" != ""} {
     puts "****************************************"
 }
 
-report_utilization -file $outputDir/$instance-post-link-util.txt
+report_utilization -hierarchical -file $outputDir/$instance-post-link-util.txt
 
 ## now clear the MARK_DEBUG so that it does not interfere with meeting timing
 set debug_nets [get_nets -hier -filter { MARK_DEBUG==TRUE }]
@@ -165,7 +165,7 @@ if {"$env(REPORT_NWORST_TIMING_PATHS)" != ""} {
     puts "****************************************"
 }
 report_timing_summary -file $outputDir/$instance-post-opt-timing-summary.txt > $outputDir/temp.log
-report_utilization -file $outputDir/$instance-post-link-util.txt
+report_utilization -hierarchical -file $outputDir/$instance-post-link-util.txt
 foreach pblock [get_pblocks] {
     report_utilization -pblocks $pblock -file $outputDir/$pblock-post-link-util.txt > $outputDir/temp.log
 }
@@ -179,7 +179,7 @@ if {"$env(REPORT_NWORST_TIMING_PATHS)" != ""} {
     puts "If it reported negative slack, then the design did not meet the timing constraints."
     puts "****************************************"
 }
-report_utilization -file $outputDir/$instance-post-place-util.txt
+report_utilization -hierarchical -file $outputDir/$instance-post-place-util.txt
 report_timing_summary -file $outputDir/$instance-post-place-timing-summary.txt
 report_io -file $outputDir/$instance-post-place-io.txt > $outputDir/temp.log
 
@@ -195,11 +195,13 @@ if {"$env(REPORT_NWORST_TIMING_PATHS)" != ""} {
 	puts "If it reported negative slack, then the design did not meet the timing constraints."
 	puts "****************************************"
 }
-report_utilization -file $outputDir/$instance-post-route-util.txt
+report_utilization -hierarchical -file $outputDir/$instance-post-route-util.txt
 report_timing_summary -file $outputDir/$instance-post-route-timing-summary.txt
 report_timing -sort_by group -max_paths 100 -path_type summary -file $outputDir/$instance-post-route-timing.txt > $outputDir/temp.log
 report_io -file $outputDir/$instance-post-route-io.txt > $outputDir/temp.log
 report_datasheet -file $outputDir/$instance-post-route_datasheet.txt > $outputDir/temp.log
+set_property "BITSTREAM.STARTUP.MATCH_CYCLE" NoWait [current_design]
+
 if {[info exists env(BITFILE)] && $env(BITFILE) != ""} {
 	## commented out -logic_location_file for now because the files are huge -Jamey
 	#log_command "write_xdc -no_fixed_only -force $outputDir/$instance-post-route.xdc" $outputDir/write_bitstream.log

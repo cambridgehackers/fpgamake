@@ -125,14 +125,19 @@ def is_a_file(fname, path):
 
 def map_partname_to_family(partname):
     family=''
-    mapping={'5sg': '\"StratixV\"',  \
-             'ep4': '\"StratixIV\"', \
-             'xc7':  '\"Virtex7\"',   \
+    mapping={'5sg': '\"StratixV\"',
+             'ep4': '\"StratixIV\"',
+             'xc7':  '\"Virtex7\"',
+             'xczu':  '\"ZynqUltrascale\"',
+             'xcku':  '\"KintexUltrascale\"',
+             'xcvu':  '\"VirtexUltrascale\"',
              }
-    try:
-        family = mapping[partname[0:3].lower()]
-    except:
-        print "Unknown partname s" % partname
+    prefixes = (partname[0:3].lower(), partname[0:4].lower())
+    for prefix in prefixes:
+        if prefix in mapping:
+            family = mapping[prefix]
+    if not family:
+        print "Unknown partname %s" % partname
     return family
 
 def add_to_verilog_used(parent_partition, submodule):
