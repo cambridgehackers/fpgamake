@@ -109,6 +109,13 @@ foreach xdc $env(XDC) {
     log_command "read_xdc $xdc" "$outputDir/[file tail $xdc].log"
 }
 
+# Use the following lines to write the 'elaborated design' (i.e., before synthesis)
+#log_command "synth_design -rtl $verilog_defines -name $module -top $module -part $partname -flatten rebuilt -include_dirs \"[dict keys $include_dirs]\" -mode $mode" "$outputDir/synth_design.log"
+#set elab_name "$outputDir/elaboratedDesign.v"
+#log_command "write_verilog -mode design $elab_name" "$outputDir/synth_design.log"
+#set elabedif_name "$outputDir/elaborated.edf"
+#log_command "write_edif -force $elabedif_name" "$outputDir/synth_design.log"
+
 # STEP#2: run synthesis, report utilization and timing estimates, write checkpoint design
 #
 log_command "synth_design $verilog_defines -name $module -top $module -part $partname -flatten rebuilt -include_dirs \"[dict keys $include_dirs]\" -mode $mode" "$outputDir/synth_design.log"
@@ -137,3 +144,5 @@ if {[info exists env(USER_TCL_SCRIPT)]} {
 
 set dcp_name "$outputDir/$module-synth.dcp"
 log_command "write_checkpoint -force $dcp_name" $outputDir/temp.log
+#set synthedif_name "$outputDir/synth.edf"
+#log_command "write_edif -force $synthedif_name" "$outputDir/synth_design.log"
