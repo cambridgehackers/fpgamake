@@ -40,7 +40,7 @@ endef
 
 define TOP_RULE
 IMPL_NETLISTS += Impl/TopDown/$1-post-place.dcp
-Impl/TopDown/$1-post-place.dcp: $(FLOORPLAN) $(TopDown_NETLISTS) $(SYNTH_NETLISTS) $(TopDown_XDC)
+Impl/TopDown/$1-post-place.dcp: $(FLOORPLAN) $(TopDown_NETLISTS) $(SYNTH_NETLISTS) $(TopDown_XDC) $(TopDown_UNMANAGED_XDC)
 	$(Q)$(eval MODULE=$2)
 	$(Q)$(eval INST=$1)
 	@echo fpgamake.mk Impl/TopDown/$1-post-place.dcp
@@ -50,6 +50,7 @@ Impl/TopDown/$1-post-place.dcp: $(FLOORPLAN) $(TopDown_NETLISTS) $(SYNTH_NETLIST
 	     MODULE_NETLISTS="$(TopDown_NETLISTS)" \
 	     RECONFIG_INSTANCES="$(TopDown_RECONFIG)" \
 	     XDC="$(TopDown_XDC)" \
+	     UNMANAGED_XDC="$(TopDown_UNMANAGED_XDC)" \
 	     PRTOP="$(TopDown_PRTOP)" \
 	     FLOORPLAN="$(FLOORPLAN)" \
 	     BITFILE=Impl/TopDown/mkTop.bit \

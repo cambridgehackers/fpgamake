@@ -64,6 +64,10 @@ foreach xdc $env(XDC) {
     log_command "read_xdc $xdc" "$outputDir/[file tail $xdc].log"
 }
 
+foreach xdc $env(UNMANAGED_XDC) {
+    log_command "read_xdc -unmanaged $xdc" "$outputDir/[file tail $xdc].log"
+}
+
 if {"$env(RECONFIG_INSTANCES)" != ""} {
     set cellname ""
     set pblockname ""

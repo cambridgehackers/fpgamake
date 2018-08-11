@@ -53,6 +53,7 @@ argparser.add_argument('--xci', help='XCI file to use', default=[], action='appe
 argparser.add_argument('--chipscope', help='chipscope file to use', default=[], action='append')
 argparser.add_argument('--constraints', help='Constraints file to use (.xdc for Xilinx, .sdc for Altera)', default=[], action='append')
 argparser.add_argument('--implconstraints', help='Physical constraints file to use (.xdc for Xilinx, .sdc for Altera)', default=[], action='append')
+argparser.add_argument('--unmanaged-implconstraints', help='Unmanaged physical constraints file to use (allows for full tcl scripting inside of .xdc files)', default=[], action='append')
 argparser.add_argument('--tcl', help='User tcl script to use', default=[], action='append')
 argparser.add_argument('--floorplan', help='Floorplan XDC.', default=None)
 argparser.add_argument('--preserve-clock-gates', help='Do not delete clock gate pins if set to 1', default=0)
@@ -77,6 +78,7 @@ vhdl_used={}
 vhdl_libraries_used={}
 constraint_files={}
 impl_constraint_files={}
+unmanaged_impl_constraint_files={}
 
 parameterizedModuleRe = r'^\s*(\w+)\s*#'
 plainModuleRe = r'^\s*(\w+)\s+(\w+)\s*\(?'
@@ -327,6 +329,7 @@ $(eval $(call SYNTH_RULE,%(module)s))
 
 topdown_template='''
 TopDown_XDC = %(constraint_files)s
+TopDown_UNMANAGED_XDC = %(unmanaged_constraint_files)s
 TopDown_NETLISTS = %(module_synth_netlists)s
 TopDown_RECONFIG = %(module_reconfig_netlists)s
 TopDown_SUBINST = %(subinst)s
@@ -414,6 +417,7 @@ def write_xilinx_makefile():
 
     inst = 'top'
     topdown_xdc_files = (' '.join([os.path.abspath(xdc) for xdc in impl_constraint_files[inst]]) if (inst in impl_constraint_files) else '')
+    unmanaged_topdown_xdc_files = (' '.join([os.path.abspath(xdc) for xdc in unmanaged_impl_constraint_files[inst]]) if (inst in unmanaged_impl_constraint_files) else '')
 
     submodules = []
     if options.top in modules_used:
@@ -426,6 +430,7 @@ def write_xilinx_makefile():
                                                                for inst in module_instances[submodule]])
                                                      for submodule in submodules]),
                                  'constraint_files': topdown_xdc_files,
+                                 'unmanaged_constraint_files': unmanaged_topdown_xdc_files,
                                  'floorplan': os.path.abspath(options.floorplan) if options.floorplan else '',
                                  'module_synth_netlists': ' '.join(submodule_synth_netlists),
                                  'module_reconfig_netlists': ' '.join(options.reconfig) if options.reconfig else '',
@@ -607,6 +612,11 @@ if __name__=='__main__':
             sys.stderr.write('Error: Constraint file %s not found\n' % c)
             sys.exit(-1)
 
+    for c in options.unmanaged_implconstraints:
+        if not os.path.exists(c):
+            sys.stderr.write('Error: Unmanaged constraint file %s not found\n' % c)
+            sys.exit(-1)
+
     for xci in options.xci:
         if not os.path.exists(xci):
             sys.stderr.write('Error: XCI file %s not found\n' % xci)
@@ -641,6 +651,7 @@ if __name__=='__main__':
 
     constraint_files['top']      = options.constraints
     impl_constraint_files['top'] = options.implconstraints
+    unmanaged_impl_constraint_files['top'] = options.unmanaged_implconstraints
 
     process_modules()
 
