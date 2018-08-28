@@ -10,7 +10,7 @@ install:
 	find $(INSTALL_DIRS) -type f -exec install -m644 {} $(DESTDIR)/usr/share/fpgamake/{} \; -print
 	install -m755 fpgamake $(DESTDIR)/usr/share/fpgamake/fpgamake
 
-VERSION=18.05.1
+VERSION=18.08.1
 
 spkg:
 	gbp buildpackage --git-ignore-new --git-debian-tag="v%s" --git-upstream-branch=master "--git-upstream-tag=v%(version)s" --git-debian-branch=ubuntu -S -tc -pgpg2 '--git-upstream-tag=v%(version)s'
