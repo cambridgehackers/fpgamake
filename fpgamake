@@ -89,7 +89,7 @@ verilog_keywords = ['assign', 'defparam', 'input', 'module', 'output', 'paramete
 
 def find_in_path(fname, path):
     (basename,ext) = os.path.splitext(fname)
-    extensions = ['.v', '.vhd', '.vhdl']
+    extensions = ['.v', '.sv', '.vhd', '.vhdl']
     if len(ext)>0:
         extensions = [ext]
     for ext in extensions:
