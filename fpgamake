@@ -84,6 +84,7 @@ parameterizedModuleRe = r'^\s*(\w+)\s*#'
 plainModuleRe = r'^\s*(\w+)\s+(\w+)\s*\(?'
 vhdlLibraryRe = r'^\s*library\s+(\w+);'
 vhdlComponentRe = r'^\s*component\s+(\w+)'
+includeRe = r'^`include\s"*(.+)"'
 
 verilog_keywords = ['assign', 'defparam', 'input', 'module', 'output', 'parameter', 'reg', 'wire', 'if', 'else', 'or', 'integer', 'negedge', 'localparam', 'initial', 'genvar', 'time', 'function', 'generate']
 
@@ -188,6 +189,7 @@ def scan_module(module, parent_partition=None, parent_module=None):
             m2 = re.match(parameterizedModuleRe, line)
             ml = re.match(vhdlLibraryRe, line)
             mc = re.match(vhdlComponentRe, line)
+            mi = re.match(includeRe, line)
             if ml:
                 library = ml.group(1)
                 #print 'vhdl library', ml.group(1)
@@ -246,6 +248,17 @@ def scan_module(module, parent_partition=None, parent_module=None):
                 if submodule in verilog_keywords:
                     continue
                 #print 'submodule#', m2.group(1)
+                submodules.append(submodule)
+                submodulepath=find_in_path(submodule, options.vpath)
+                if submodulepath:
+                    vlist.append(submodulepath)
+                    if submodulepath.lower().endswith('.v'):
+                        add_to_verilog_used(parent_partition, submodule)
+                    else:
+                        add_to_vhdl_used(parent_partition, submodule)
+            elif mi:
+                #print "include file", mi.group(1)
+                submodule = mi.group(1)
                 submodules.append(submodule)
                 submodulepath=find_in_path(submodule, options.vpath)
                 if submodulepath:
