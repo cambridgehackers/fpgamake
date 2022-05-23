@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 ## Copyright (c) 2014 Quanta Research Cambridge, Inc.
 
@@ -22,6 +22,7 @@
 ## CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ## SOFTWARE.
 
+import collections
 import os
 import sys
 import re
@@ -68,28 +69,29 @@ argparser.add_argument('--prtop', help='Filename of previously synthesized top l
 argparser.add_argument('--reconfig', help='module instance names to set as reconfigurable', default=[], action='append')
 
 verilog_files=[]
-module_instances={}
-modules_used={}
-modules_graph={}
-all_module_instances={}
-modules_visited={}
-verilog_used={}
-vhdl_used={}
-vhdl_libraries_used={}
-constraint_files={}
-impl_constraint_files={}
-unmanaged_impl_constraint_files={}
+module_instances=collections.defaultdict(lambda : [])
+modules_used=collections.defaultdict(lambda : [])
+modules_graph=collections.defaultdict(lambda : [])
+all_module_instances=collections.defaultdict(lambda : [])
+modules_visited=collections.defaultdict(lambda : [])
+verilog_used=collections.defaultdict(lambda : [])
+vhdl_used=collections.defaultdict(lambda : [])
+vhdl_libraries_used=collections.defaultdict(lambda : [])
+constraint_files=collections.defaultdict(lambda : [])
+impl_constraint_files=collections.defaultdict(lambda : [])
+unmanaged_impl_constraint_files=collections.defaultdict(lambda : [])
 
 parameterizedModuleRe = r'^\s*(\w+)\s*#'
 plainModuleRe = r'^\s*(\w+)\s+(\w+)\s*\(?'
 vhdlLibraryRe = r'^\s*library\s+(\w+);'
 vhdlComponentRe = r'^\s*component\s+(\w+)'
+includeRe = r'^`include\s"*(.+)"'
 
 verilog_keywords = ['assign', 'defparam', 'input', 'module', 'output', 'parameter', 'reg', 'wire', 'if', 'else', 'or', 'integer', 'negedge', 'localparam', 'initial', 'genvar', 'time', 'function', 'generate']
 
 def find_in_path(fname, path):
     (basename,ext) = os.path.splitext(fname)
-    extensions = ['.v', '.vhd', '.vhdl']
+    extensions = ['.v', '.sv', '.vhd', '.vhdl']
     if len(ext)>0:
         extensions = [ext]
     for ext in extensions:
@@ -109,7 +111,7 @@ def graph_find_path(graph, start, end, path=[]):
     path = path + [start]
     if start == end:
         return path
-    if not graph.has_key(start):
+    if not start in graph:
         return None
     for node in graph[start]:
         if node not in path:
@@ -139,30 +141,21 @@ def map_partname_to_family(partname):
         if prefix in mapping:
             family = mapping[prefix]
     if not family:
-        print "Unknown partname %s" % partname
+        print("Unknown partname %s" % partname)
     return family
 
 def add_to_verilog_used(parent_partition, submodule):
-    if verilog_used.has_key(parent_partition):
-        verilog_used[parent_partition].append(submodule)
-    else:
-        verilog_used[parent_partition] = [submodule]
+    verilog_used[parent_partition].append(submodule)
 
 def add_to_vhdl_used(parent_partition, submodule):
-    if vhdl_used.has_key(parent_partition):
-        vhdl_used[parent_partition].append(submodule)
-    else:
-        vhdl_used[parent_partition] = [submodule]
+    vhdl_used[parent_partition].append(submodule)
 
 def add_to_vhdl_libraries_used(parent_partition, submodule):
-    if vhdl_libraries_used.has_key(parent_partition):
-        vhdl_libraries_used[parent_partition].append(submodule)
-    else:
-        vhdl_libraries_used[parent_partition] = [submodule]
+    vhdl_libraries_used[parent_partition].append(submodule)
 
 def scan_module(module, parent_partition=None, parent_module=None):
     if options.verbose:
-        print 'scanning module %s ====================' % module
+        print('scanning module %s ====================' % module)
     vpath = find_in_path(module, options.vpath)
     modules_visited[module] = vpath
     immediate_parent_module = None
@@ -182,15 +175,16 @@ def scan_module(module, parent_partition=None, parent_module=None):
         vseen.append(vpath)
         immediate_parent_module=os.path.splitext(os.path.basename(vpath))[0]
         if options.debug:
-            print 'scan_module, scanning', vpath
+            print('scan_module, scanning', vpath)
         for line in open(vpath):
             m = re.match(plainModuleRe, line)
             m2 = re.match(parameterizedModuleRe, line)
             ml = re.match(vhdlLibraryRe, line)
             mc = re.match(vhdlComponentRe, line)
+            mi = re.match(includeRe, line)
             if ml:
                 library = ml.group(1)
-                #print 'vhdl library', ml.group(1)
+                #print('vhdl library', ml.group(1))
                 for d in options.vpath:
                     if os.path.basename(d) == library:
                         add_to_vhdl_libraries_used(parent_partition, d)
@@ -208,19 +202,13 @@ def scan_module(module, parent_partition=None, parent_module=None):
                     continue
                 if inst in verilog_keywords:
                     continue
-                #print 'submodule', submodule, inst
+                #print('submodule', submodule, inst)
                 submodules.append(submodule)
                 if submodule in options.synth:
                     if options.verbose:
-                        print 'separate synth', submodule, inst
-                    if module_instances.has_key(submodule):
-                        module_instances[submodule].append(inst)
-                    else:
-                        module_instances[submodule] = [inst]
-                    if modules_used.has_key(parent_partition):
-                        modules_used[parent_partition].append(submodule)
-                    else:
-                        modules_used[parent_partition] = [submodule]
+                        print('separate synth', submodule, inst)
+                    module_instances[submodule].append(inst)
+                    modules_used[parent_partition].append(submodule)
                 else:
                     submodulepath=find_in_path(submodule, options.vpath)
                     if submodulepath and os.path.exists(submodulepath):
@@ -230,22 +218,27 @@ def scan_module(module, parent_partition=None, parent_module=None):
                         else:
                             add_to_vhdl_used(parent_partition, submodule)
                     elif options.verbose:
-                        print 'fpgamake: could not find module "%s" in path' % submodule
+                        print('fpgamake: could not find module "%s" in path' % submodule)
                 # add edges to graph
-                if modules_graph.has_key(immediate_parent_module):
-                    modules_graph[immediate_parent_module].append(submodule)
-                else:
-                    modules_graph[immediate_parent_module] = [submodule]
+                modules_graph[immediate_parent_module].append(submodule)
                 # collect all module to inst mapping
-                if all_module_instances.has_key(submodule):
-                    all_module_instances[submodule].append(inst)
-                else:
-                    all_module_instances[submodule] = [inst]
+                all_module_instances[submodule].append(inst)
             elif m2:
                 submodule = m2.group(1)
                 if submodule in verilog_keywords:
                     continue
-                #print 'submodule#', m2.group(1)
+                #print('submodule#', m2.group(1))
+                submodules.append(submodule)
+                submodulepath=find_in_path(submodule, options.vpath)
+                if submodulepath:
+                    vlist.append(submodulepath)
+                    if submodulepath.lower().endswith('.v'):
+                        add_to_verilog_used(parent_partition, submodule)
+                    else:
+                        add_to_vhdl_used(parent_partition, submodule)
+            elif mi:
+                #print("include file", mi.group(1))
+                submodule = mi.group(1)
                 submodules.append(submodule)
                 submodulepath=find_in_path(submodule, options.vpath)
                 if submodulepath:
@@ -260,8 +253,8 @@ def process_modules():
         vfile = '%s.v' % module
         vpath = find_in_path(module, options.vpath)
         if options.debug:
-            print "process_modules, module and vpath"
-            print module, vpath
+            print("process_modules, module and vpath")
+            print(module, vpath)
         synthdir = os.path.join('Synth', module)
         if not os.path.isdir(synthdir):
             os.makedirs(synthdir)
@@ -393,7 +386,7 @@ def write_xilinx_makefile():
         if module in modules_used:
             module_stubs = ['%s-stub.v' % (m) for m in set(modules_used[module])]
         if options.debug:
-            print 'fpgamake: constraint_files', constraint_files
+            print('fpgamake: constraint_files', constraint_files)
         f.write(synth_template % { 'module': module,
                                    'module_path': find_in_path(module, options.vpath),
                                    'headerfiles': ' '.join([find_in_path(vfile, options.vpath) for vfile in set(options.header)]) if options.header else '',
@@ -511,7 +504,7 @@ def write_altera_makefile():
         for node in path[1:]:
             hierarchy.append(node+":"+all_module_instances[node][0])
         partition = "|".join(hierarchy)
-        #print "partition", partition
+        #print("partition", partition)
         partitions.append(partition)
 
     substparam = { 'module': options.top,
@@ -592,7 +585,7 @@ if __name__=='__main__':
 
     if options.vfile and options.vfile[0].endswith('.v') and not options.top:
         options.top = os.path.splitext(os.path.basename(options.vfile[0]))[0]
-        print 'Top module', options.top
+        print('Top module', options.top)
 
     if not options.top:
         sys.stderr.write('Error: No top module specified.\n')
@@ -638,16 +631,16 @@ if __name__=='__main__':
     for m in options.synth:
         scan_module(m)
     if options.debug:
-        print "verilog_files"
-        print verilog_files
-        print "module_instances"
-        print module_instances
-        print "module_used"
-        print modules_used
-        print "verilog_used"
-        print verilog_used
-        print 'modules_graph'
-        print modules_graph
+        print("verilog_files")
+        print(verilog_files)
+        print("module_instances")
+        print(module_instances)
+        print("module_used")
+        print(modules_used)
+        print("verilog_used")
+        print(verilog_used)
+        print('modules_graph')
+        print(modules_graph)
 
     constraint_files['top']      = options.constraints
     impl_constraint_files['top'] = options.implconstraints

@@ -10,19 +10,19 @@ install:
 	find $(INSTALL_DIRS) -type f -exec install -m644 {} $(DESTDIR)/usr/share/fpgamake/{} \; -print
 	install -m755 fpgamake $(DESTDIR)/usr/share/fpgamake/fpgamake
 
-VERSION=18.08.1
+VERSION=22.05.23
 
 spkg:
 	gbp buildpackage --git-ignore-new --git-debian-tag="v%s" --git-upstream-branch=master "--git-upstream-tag=v%(version)s" --git-debian-branch=ubuntu -S -tc -pgpg2 '--git-upstream-tag=v%(version)s'
-	sed -i s/trusty/precise/g debian/changelog
-	git clean -fdx
-	gbp buildpackage --git-ignore-new --git-debian-tag="v%s" --git-upstream-branch=master "--git-upstream-tag=v%(version)s" --git-debian-branch=ubuntu -S -tc -pgpg2 '--git-upstream-tag=v%(version)s' --git-ignore-new
 	git checkout debian
 	git clean -fdx
 	sed -i s/trusty/xenial/g debian/changelog
 	gbp buildpackage --git-ignore-new --git-debian-tag="v%s" --git-upstream-branch=master "--git-upstream-tag=v%(version)s" --git-debian-branch=ubuntu -S -tc -pgpg2 '--git-upstream-tag=v%(version)s' --git-ignore-new
 	git checkout debian
 	sed -i s/trusty/bionic/g debian/changelog
+	gbp buildpackage --git-ignore-new --git-debian-tag="v%s" --git-upstream-branch=master "--git-upstream-tag=v%(version)s" --git-debian-branch=ubuntu -S -tc -pgpg2 '--git-upstream-tag=v%(version)s' --git-ignore-new
+	git checkout debian
+	sed -i s/trusty/jammy/g debian/changelog
 	gbp buildpackage --git-ignore-new --git-debian-tag="v%s" --git-upstream-branch=master "--git-upstream-tag=v%(version)s" --git-debian-branch=ubuntu -S -tc -pgpg2 '--git-upstream-tag=v%(version)s' --git-ignore-new
 	git checkout debian
 
