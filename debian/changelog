@@ -1,3 +1,9 @@
+fpgamake (22.05.23-2trusty2) trusty; urgency=medium
+
+  * change dependence from python to python3
+
+ --  <jamey.hicks@gmail.com>  Tue, 24 May 2022 17:05:30 -0400
+
 fpgamake (22.05.23-1trusty1) trusty; urgency=medium
 
   * python3 support, build for jammy jellyfish
